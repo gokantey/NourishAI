@@ -11,4 +11,6 @@ urlpatterns = [
     path('meal/<int:pk>/regenerate/', views.regenerate_meal, name='regenerate_meal'),
     path('plan/<int:pk>/save/', views.toggle_save_plan, name='toggle_save_plan'),
     path('plan/<int:pk>/confirm-save/', views.confirm_save_plan, name='confirm_save_plan'),
+    path('meal/<int:pk>/rate/', views.rate_meal, name='rate_meal'),
+    path('history/', views.meal_plan_history, name='meal_plan_history'),
 ]

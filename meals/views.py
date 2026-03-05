@@ -217,3 +217,28 @@ def confirm_save_plan(request, pk):
         messages.success(request, f'Meal plan saved as "{meal_plan.title}"!')
         return redirect('meals:dashboard')
     return redirect('meals:meal_plan_detail', pk=pk)
+
+@login_required
+def rate_meal(request, pk):
+    meal = get_object_or_404(Meal, pk=pk, meal_plan__user_profile=request.user.profile)
+    if request.method == 'POST':
+        rating = request.POST.get('rating')
+        if rating and rating.isdigit() and 1 <= int(rating) <= 5:
+            meal.rating = int(rating)
+            meal.save()
+            messages.success(request, f'Rated {meal.title} {rating} stars!')
+        else:
+            messages.error(request, 'Invalid rating. Please select 1-5 stars.')
+    return redirect('meals:meal_detail', pk=pk)
+
+@login_required
+def meal_plan_history(request):
+    profile = request.user.profile
+    all_plans = MealPlan.objects.filter(
+        user_profile=profile
+    ).order_by('-created_at')
+
+    context = {
+        'all_plans': all_plans,
+    }
+    return render(request, 'meals/meal_plan_history.html', context)

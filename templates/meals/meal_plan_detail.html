@@ -80,7 +80,10 @@
                         <h6 class="fw-bold">{{ meal.title }}</h6>
                         <p class="text-muted small mb-2">{{ meal.description|truncatechars:80 }}</p>
                         <small class="text-muted">🔥 {{ meal.calories }} kcal</small>
-                        <div class="mt-2 d-flex gap-2">
+{% if meal.rating %}
+<small class="text-muted d-block">⭐ {{ meal.rating }}/5</small>
+{% endif %}
+<div class="mt-2 d-flex gap-2">
                             <a href="{% url 'meals:meal_detail' meal.pk %}"
                                class="btn btn-sm btn-outline-success">View</a>
                             <form method="post" action="{% url 'meals:regenerate_meal' meal.pk %}"

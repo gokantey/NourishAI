@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% block title %}Meal Plan History — NourishAI{% endblock %}
+{% block content %}
+
+<div class="row mb-4">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="fw-bold" style="color:#1B4332">Meal Plan History</h2>
+            <p class="text-muted mb-0">All your generated meal plans</p>
+        </div>
+        <a href="{% url 'meals:generate_plan' %}" class="btn btn-primary">
+            🥗 Generate New Plan
+        </a>
+    </div>
+</div>
+
+{% if all_plans %}
+<div class="row">
+    {% for plan in all_plans %}
+    <div class="col-md-4 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header text-white fw-bold"
+                 style="background-color:#2D6A4F">
+                {{ plan.title|default:"7-Day Meal Plan" }}
+                {% if plan.is_saved %}
+                <span class="badge bg-warning text-dark float-end">🔖 Saved</span>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                <small class="text-muted d-block mb-1">
+                    📅 Week of {{ plan.week_start_date }}
+                </small>
+                <small class="text-muted d-block mb-1">
+                    🍽 {{ plan.meals.count }} meals
+                </small>
+                <small class="text-muted d-block mb-1">
+                    🕒 Generated {{ plan.created_at|date:"d M Y, H:i" }}
+                </small>
+
+                <!-- Nutrition snapshot -->
+                <div class="row text-center mt-3 mb-3">
+                    <div class="col-4">
+                        <div class="bg-light rounded p-1">
+                            <div class="fw-bold small" style="color:#2D6A4F">
+                                {{ plan.meals.all|length }}
+                            </div>
+                            <div style="font-size:0.65rem" class="text-muted">Meals</div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="bg-light rounded p-1">
+                            <div class="fw-bold small" style="color:#2D6A4F">
+                                {% with rated=plan.meals.all %}
+                                {{ rated|length }}
+                                {% endwith %}
+                            </div>
+                            <div style="font-size:0.65rem" class="text-muted">Days</div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="bg-light rounded p-1">
+                            <div class="fw-bold small" style="color:#2D6A4F">
+                                {% if plan.is_saved %}✅{% else %}—{% endif %}
+                            </div>
+                            <div style="font-size:0.65rem" class="text-muted">Saved</div>
+                        </div>
+                    </div>
+                </div>
+
+                <a href="{% url 'meals:meal_plan_detail' plan.pk %}"
+                   class="btn btn-outline-success btn-sm w-100">
+                    View Plan
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% else %}
+<div class="card shadow-sm">
+    <div class="card-body text-center py-5">
+        <div style="font-size:3rem">🍽</div>
+        <h4 class="fw-bold mt-3" style="color:#1B4332">No meal plans yet</h4>
+        <p class="text-muted">Generate your first AI-powered 7-day meal plan</p>
+        <a href="{% url 'meals:generate_plan' %}" class="btn btn-primary btn-lg px-5">
+            🥗 Generate Meal Plan
+        </a>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

@@ -7,4 +7,5 @@ urlpatterns = [
     path('users/', include('users.urls')),
     path('meals/', include('meals.urls')),
     path('', RedirectView.as_view(url='/users/login/', permanent=False)),
+    
 ]
