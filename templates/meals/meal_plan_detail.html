@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+{% load meal_filters %}
+{% block title %}My Meal Plan — NourishAI{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold" style="color:#1B4332">Your 7-Day Meal Plan</h2>
+        <p class="text-muted mb-0">Week of {{ meal_plan.week_start_date }}</p>
+    </div>
+    <div class="d-flex gap-2">
+        <!-- Save / Unsave button -->
+        <form method="post" action="{% url 'meals:toggle_save_plan' meal_plan.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn {% if meal_plan.is_saved %}btn-success{% else %}btn-outline-success{% endif %}">
+                {% if meal_plan.is_saved %}
+                    ✅ Saved
+                {% else %}
+                     Save Plan
+                {% endif %}
+            </button>
+        </form>
+        <a href="{% url 'meals:generate_plan' %}" class="btn btn-primary">🔄 New Plan</a>
+    </div>
+</div>
+
+<!-- Weekly Nutrition Summary -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h6 class="fw-bold mb-3" style="color:#1B4332">📊 Weekly Nutrition Summary</h6>
+                <div class="row text-center">
+                    <div class="col">
+                        <h5 class="fw-bold" style="color:#2D6A4F">{{ nutrition_totals.calories }}</h5>
+                        <small class="text-muted">Total Calories</small>
+                    </div>
+                    <div class="col">
+                        <h5 class="fw-bold" style="color:#2D6A4F">{{ nutrition_totals.protein }}g</h5>
+                        <small class="text-muted">Protein</small>
+                    </div>
+                    <div class="col">
+                        <h5 class="fw-bold" style="color:#2D6A4F">{{ nutrition_totals.carbohydrates }}g</h5>
+                        <small class="text-muted">Carbs</small>
+                    </div>
+                    <div class="col">
+                        <h5 class="fw-bold" style="color:#2D6A4F">{{ nutrition_totals.fats }}g</h5>
+                        <small class="text-muted">Fats</small>
+                    </div>
+                    <div class="col">
+                        <h5 class="fw-bold" style="color:#2D6A4F">{{ nutrition_totals.fibre }}g</h5>
+                        <small class="text-muted">Fibre</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Meal Plan Grid -->
+{% for day in days %}
+<div class="card shadow-sm mb-3">
+    <div class="card-header fw-bold text-white" style="background-color:#2D6A4F">
+        {{ day|title }}
+    </div>
+    <div class="card-body">
+        <div class="row">
+            {% for meal_type in meal_types %}
+            <div class="col-md-4 mb-3">
+                {% with meal=plan_grid|get_item:day|get_item:meal_type %}
+                {% if meal %}
+                <div class="card h-100 border-0 bg-light">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="badge" style="background-color:#52B788">
+                                {{ meal_type|title }}
+                            </span>
+                            <small class="text-muted">⏱ {{ meal.prep_time }} min</small>
+                        </div>
+                        <h6 class="fw-bold">{{ meal.title }}</h6>
+                        <p class="text-muted small mb-2">{{ meal.description|truncatechars:80 }}</p>
+                        <small class="text-muted">🔥 {{ meal.calories }} kcal</small>
+                        <div class="mt-2 d-flex gap-2">
+                            <a href="{% url 'meals:meal_detail' meal.pk %}"
+                               class="btn btn-sm btn-outline-success">View</a>
+                            <form method="post" action="{% url 'meals:regenerate_meal' meal.pk %}"
+                                  style="display:inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-warning">↺ Swap</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                {% endwith %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- Shopping List -->
+{% if shopping_list %}
+<div class="card shadow-sm mt-4">
+    <div class="card-header fw-bold text-white" style="background-color:#1B4332">
+        🛒 Shopping List
+    </div>
+    <div class="card-body">
+        <div class="row">
+            {% for category, items in grouped_items.items %}
+            <div class="col-md-4 mb-3">
+                <h6 class="fw-bold text-capitalize" style="color:#2D6A4F">
+                    {% if category == 'proteins' %}🥩
+                    {% elif category == 'vegetables' %}🥦
+                    {% elif category == 'fruits' %}🍎
+                    {% elif category == 'grains' %}🌾
+                    {% elif category == 'dairy' %}🥛
+                    {% else %}🫙
+                    {% endif %}
+                    {{ category|title }}
+                </h6>
+                <ul class="list-unstyled">
+                    {% for item in items %}
+                    <li class="small mb-1">
+                        • {{ item.ingredient_name }} — {{ item.quantity }}{{ item.unit }}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

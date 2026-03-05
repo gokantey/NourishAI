@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block title %}Register — NourishAI{% endblock %}
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-body p-5">
+                <h2 class="text-center fw-bold mb-1" style="color:#1B4332">Join NourishAI</h2>
+                <p class="text-center text-muted mb-4">Your personalized meal planner</p>
+                <form method="post">
+                    {% csrf_token %}
+                    {% for field in form %}
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">{{ field.label }}</label>
+                            <input type="{{ field.field.widget.input_type }}"
+                                   name="{{ field.html_name }}"
+                                   class="form-control {% if field.errors %}is-invalid{% endif %}"
+                                   {% if field.value %}value="{{ field.value }}"{% endif %}>
+                            {% for error in field.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-primary w-100 py-2 mt-2">Create Account</button>
+                </form>
+                <p class="text-center mt-3 text-muted">
+                    Already have an account? <a href="{% url 'users:login' %}">Login</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

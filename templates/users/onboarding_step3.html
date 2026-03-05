@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}Setup Your Profile — Step 3{% endblock %}
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-body p-5">
+                <div class="text-center mb-4">
+                    <span class="badge bg-secondary">Step 3 of 3</span>
+                    <h3 class="fw-bold mt-2" style="color:#1B4332">Goals & Budget</h3>
+                    <p class="text-muted">Almost done — let's personalise your plan</p>
+                </div>
+                <form method="post">
+                    {% csrf_token %}
+                    {% for field in form %}
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">{{ field.label }}</label>
+                            {{ field }}
+                            {% for error in field.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-primary w-100 py-2 mt-3">
+                        🥗 Generate My First Meal Plan
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

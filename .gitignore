@@ -1,0 +1,28 @@
+# Virtual Environment
+venv/
+
+# Environment Variables
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pdb
+
+# Django
+*.log
+db.sqlite
+media/
+staticfiles/
+
+# VS Code
+.vscode/
+
+# PyCharm
+.idea/
+
+# Windows
+Thumbs.db
+desktop.ini

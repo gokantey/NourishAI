@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}Setup Your Profile — Step 2{% endblock %}
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-body p-5">
+                <div class="text-center mb-4">
+                    <span class="badge bg-secondary">Step 2 of 3</span>
+                    <h3 class="fw-bold mt-2" style="color:#1B4332">Dietary Preferences</h3>
+                    <p class="text-muted">Tell us what you can and can't eat</p>
+                </div>
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Dietary Preference</label>
+                        {{ form.dietary_preference }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Allergies (select all that apply)</label>
+                        {{ form.allergies }}
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 py-2 mt-2">Next →</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

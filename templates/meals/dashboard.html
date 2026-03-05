@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard — NourishAI{% endblock %}
+{% block content %}
+
+<!-- Greeting -->
+<div class="row">
+    <div class="col-12">
+        <h2 class="fw-bold" style="color:#1B4332">
+            Good day, {{ user.first_name }}! 👋
+        </h2>
+        <p class="text-muted">Your personalized meal dashboard</p>
+    </div>
+</div>
+
+<!-- Stats Row -->
+<div class="row mt-3">
+    <div class="col-md-3">
+        <div class="card text-center shadow-sm">
+            <div class="card-body">
+                <h6 class="text-muted">BMI</h6>
+                <h3 class="fw-bold" style="color:#2D6A4F">
+                    {{ user.profile.bmi|default:"—" }}
+                </h3>
+                <small class="text-muted">{{ user.profile.bmi_category|default:"Complete profile" }}</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center shadow-sm">
+            <div class="card-body">
+                <h6 class="text-muted">Daily Calories</h6>
+                <h3 class="fw-bold" style="color:#2D6A4F">
+                    {{ user.profile.daily_calorie_target|default:"—" }}
+                </h3>
+                <small class="text-muted">kcal target</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center shadow-sm">
+            <div class="card-body">
+                <h6 class="text-muted">Water Intake</h6>
+                <h3 class="fw-bold" style="color:#2D6A4F">
+                    {{ user.profile.daily_water_intake|default:"—" }}L
+                </h3>
+                <small class="text-muted">per day</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center shadow-sm">
+            <div class="card-body">
+                <h6 class="text-muted">Plan</h6>
+                <h3 class="fw-bold" style="color:#2D6A4F">
+                    {{ user.profile.subscription_tier|title }}
+                </h3>
+                <small class="text-muted">subscription</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Goal Estimate -->
+{% if goal_estimate %}
+<div class="row mt-3">
+    <div class="col-12">
+        <div class="card shadow-sm border-0"
+             style="background-color: {% if goal_estimate.safe %}#D8F3DC{% else %}#FFE8E8{% endif %}">
+            <div class="card-body">
+                <div class="d-flex align-items-start gap-3">
+                    <div style="font-size:2rem">
+                        {% if user.profile.fitness_goal == 'lose_weight' %}⚖️
+                        {% elif user.profile.fitness_goal == 'build_muscle' %}💪
+                        {% else %}🎯
+                        {% endif %}
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-1" style="color:#1B4332">
+                            Goal: {{ user.profile.fitness_goal|title|cut:"_" }}
+                        </h6>
+                        <p class="mb-0" style="color:#2D6A4F">{{ goal_estimate.message }}</p>
+                        {% if goal_estimate.weeks %}
+                        <div class="mt-2 d-flex gap-3 flex-wrap">
+                            {% if goal_estimate.kg_to_lose %}
+                            <small class="text-muted">📉 To lose: <strong>{{ goal_estimate.kg_to_lose }}kg</strong></small>
+                            {% endif %}
+                            {% if goal_estimate.kg_to_gain %}
+                            <small class="text-muted">📈 To gain: <strong>{{ goal_estimate.kg_to_gain }}kg</strong></small>
+                            {% endif %}
+                            <small class="text-muted">🎯 Target weight: <strong>{{ goal_estimate.target_weight }}kg</strong></small>
+                            <small class="text-muted">⏱ Est. time: <strong>{{ goal_estimate.months }} months</strong></small>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Latest Plan or Generate Prompt -->
+<div class="row mt-4">
+    <div class="col-12">
+        {% if latest_plan %}
+        <div class="card shadow-sm">
+            <div class="card-header fw-bold text-white" style="background-color:#2D6A4F">
+                🍽 Latest Meal Plan
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="fw-bold mb-1" style="color:#1B4332">
+                            {{ latest_plan.title|default:"7-Day Meal Plan" }}
+                        </h6>
+                        <small class="text-muted">
+                            📅 Week of {{ latest_plan.week_start_date }}
+                            &nbsp;•&nbsp;
+                            🍽 {{ latest_plan.meals.count }} meals
+                            &nbsp;•&nbsp;
+                            {% if latest_plan.is_saved %}
+                            ✅ Saved
+                            {% else %}
+                            🔖 Not saved
+                            {% endif %}
+                        </small>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'meals:meal_plan_detail' latest_plan.pk %}"
+                           class="btn btn-outline-success btn-sm">View Plan</a>
+                        <a href="{% url 'meals:generate_plan' %}"
+                           class="btn btn-primary btn-sm">🔄 New Plan</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="card shadow-sm">
+            <div class="card-body text-center py-5">
+                <h4 class="fw-bold" style="color:#1B4332">No meal plan yet</h4>
+                <p class="text-muted">Generate your first AI-powered 7-day meal plan</p>
+                <a href="{% url 'meals:generate_plan' %}" class="btn btn-primary btn-lg px-5">
+                    🥗 Generate Meal Plan
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Saved Plans -->
+{% if saved_plans %}
+<div class="row mt-4">
+    <div class="col-12">
+        <h5 class="fw-bold mb-3" style="color:#1B4332">🔖 Saved Meal Plans</h5>
+        <div class="row">
+            {% for plan in saved_plans %}
+            <div class="col-md-4 mb-3">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <h6 class="fw-bold" style="color:#2D6A4F">
+                            {{ plan.title|default:"Saved Plan" }}
+                        </h6>
+                        <small class="text-muted d-block mb-1">
+                            📅 Week of {{ plan.week_start_date }}
+                        </small>
+                        <small class="text-muted d-block mb-3">
+                            🍽 {{ plan.meals.count }} meals
+                        </small>
+                        <a href="{% url 'meals:meal_plan_detail' plan.pk %}"
+                           class="btn btn-sm btn-outline-success w-100">
+                            View Plan
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}Generate Meal Plan — NourishAI{% endblock %}
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6 text-center">
+        <div class="card shadow">
+            <div class="card-body p-5">
+                <div style="font-size:4rem">🥗</div>
+                <h3 class="fw-bold mt-3" style="color:#1B4332">Generate Your Meal Plan</h3>
+                <p class="text-muted">NourishAI will create a personalized 7-day meal plan based on your profile. This may take 15-30 seconds.</p>
+
+                <div class="bg-light rounded p-3 mb-4 text-start">
+                    <small class="text-muted">
+                        <strong>Your Profile:</strong><br>
+                        🎯 Goal: {{ user.profile.fitness_goal|title }}<br>
+                        🥦 Diet: {{ user.profile.dietary_preference|title }}<br>
+                        🔥 Daily Calories: {{ user.profile.daily_calorie_target }} kcal<br>
+                        💪 BMI: {{ user.profile.bmi }} ({{ user.profile.bmi_category }})<br>
+                        💧 Water: {{ user.profile.daily_water_intake }}L/day<br>
+                        ₵ Budget: ₵{{ user.profile.budget }}/week
+                    </small>
+                </div>
+
+                <form method="post" id="generateForm">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary btn-lg px-5" id="generateBtn">
+                         Generate My Plan
+                    </button>
+                </form>
+                <a href="{% url 'meals:dashboard' %}" class="btn btn-link mt-2">← Back to Dashboard</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('generateForm').addEventListener('submit', function() {
+    const btn = document.getElementById('generateBtn');
+    btn.innerHTML = '⏳ Generating... please wait';
+    btn.disabled = true;
+});
+</script>
+{% endblock %}

@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% block title %}{{ meal.title }} — NourishAI{% endblock %}
+{% block content %}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <a href="{% url 'meals:meal_plan_detail' meal.meal_plan.pk %}"
+           class="btn btn-link ps-0 mb-3">← Back to Meal Plan</a>
+
+        <div class="card shadow">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <span class="badge mb-2" style="background-color:#52B788">
+                            {{ meal.day|title }} — {{ meal.meal_type|title }}
+                        </span>
+                        <h2 class="fw-bold" style="color:#1B4332">{{ meal.title }}</h2>
+                        <p class="text-muted">{{ meal.description }}</p>
+                    </div>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="row text-center mb-4">
+                    <div class="col">
+                        <div class="bg-light rounded p-2">
+                            <div class="fw-bold" style="color:#2D6A4F">{{ meal.calories }}</div>
+                            <small class="text-muted">Calories</small>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="bg-light rounded p-2">
+                            <div class="fw-bold" style="color:#2D6A4F">{{ meal.prep_time }}m</div>
+                            <small class="text-muted">Prep Time</small>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="bg-light rounded p-2">
+                            <div class="fw-bold" style="color:#2D6A4F">{{ meal.difficulty|title }}</div>
+                            <small class="text-muted">Difficulty</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Nutrition -->
+                <h5 class="fw-bold mb-3" style="color:#1B4332">Nutritional Information</h5>
+                <div class="row mb-4">
+                    {% for label, value, unit in nutrition_data %}
+                    <div class="col-4 col-md-2 mb-2 text-center">
+                        <div class="border rounded p-2">
+                            <div class="fw-bold small">{{ value }}{{ unit }}</div>
+                            <div class="text-muted" style="font-size:0.7rem">{{ label }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Ingredients -->
+                <h5 class="fw-bold mb-3" style="color:#1B4332">🛒 Ingredients</h5>
+                <ul class="mb-4">
+                    {% for ingredient in meal.ingredients %}
+                    <li class="mb-1">{{ ingredient }}</li>
+                    {% endfor %}
+                </ul>
+
+                <!-- Instructions -->
+                <h5 class="fw-bold mb-3" style="color:#1B4332">👨‍🍳 Instructions</h5>
+                <p style="line-height:1.8">{{ meal.instructions }}</p>
+
+                <!-- Regenerate -->
+                <div class="mt-4 pt-3 border-top">
+                    <form method="post" action="{% url 'meals:regenerate_meal' meal.pk %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-warning">
+                            ↺ Don't like this meal? Swap it
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
