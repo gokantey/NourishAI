@@ -1,93 +1,123 @@
 {% extends 'base.html' %}
+{% block page_title %}Plan History{% endblock %}
+{% block nav_history %}active{% endblock %}
 {% block title %}Meal Plan History — NourishAI{% endblock %}
 {% block content %}
 
-<div class="row mb-4">
-    <div class="col-12 d-flex justify-content-between align-items-center">
-        <div>
-            <h2 class="fw-bold" style="color:#1B4332">Meal Plan History</h2>
-            <p class="text-muted mb-0">All your generated meal plans</p>
-        </div>
-        <a href="{% url 'meals:generate_plan' %}" class="btn btn-primary">
-            🥗 Generate New Plan
-        </a>
+<div class="d-flex justify-content-between align-items-start mb-4 fade-up">
+    <div>
+        <h2 class="section-title">Plan History</h2>
+        <p class="section-sub">All your generated meal plans</p>
     </div>
+   <a href="{% url 'meals:dashboard' %}" class="btn btn-ghost">
+    <i class="fas fa-arrow-left me-2"></i>Dashboard
+</a>
 </div>
 
 {% if all_plans %}
-<div class="row">
+<div class="row g-4">
     {% for plan in all_plans %}
-    <div class="col-md-4 mb-4">
-        <div class="card shadow-sm h-100">
-            <div class="card-header text-white fw-bold"
-                 style="background-color:#2D6A4F">
-                {{ plan.title|default:"7-Day Meal Plan" }}
-                {% if plan.is_saved %}
-                <span class="badge bg-warning text-dark float-end">🔖 Saved</span>
-                {% endif %}
-            </div>
-            <div class="card-body">
-                <small class="text-muted d-block mb-1">
-                    📅 Week of {{ plan.week_start_date }}
-                </small>
-                <small class="text-muted d-block mb-1">
-                    🍽 {{ plan.meals.count }} meals
-                </small>
-                <small class="text-muted d-block mb-1">
-                    🕒 Generated {{ plan.created_at|date:"d M Y, H:i" }}
-                </small>
-
-                <!-- Nutrition snapshot -->
-                <div class="row text-center mt-3 mb-3">
-                    <div class="col-4">
-                        <div class="bg-light rounded p-1">
-                            <div class="fw-bold small" style="color:#2D6A4F">
-                                {{ plan.meals.all|length }}
-                            </div>
-                            <div style="font-size:0.65rem" class="text-muted">Meals</div>
-                        </div>
-                    </div>
-                    <div class="col-4">
-                        <div class="bg-light rounded p-1">
-                            <div class="fw-bold small" style="color:#2D6A4F">
-                                {% with rated=plan.meals.all %}
-                                {{ rated|length }}
-                                {% endwith %}
-                            </div>
-                            <div style="font-size:0.65rem" class="text-muted">Days</div>
-                        </div>
-                    </div>
-                    <div class="col-4">
-                        <div class="bg-light rounded p-1">
-                            <div class="fw-bold small" style="color:#2D6A4F">
-                                {% if plan.is_saved %}✅{% else %}—{% endif %}
-                            </div>
-                            <div style="font-size:0.65rem" class="text-muted">Saved</div>
-                        </div>
-                    </div>
+    <div class="col-md-4 fade-up">
+        <div class="card h-100">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <h6 style="font-weight:600;color:var(--text-primary);margin:0;font-size:0.95rem">
+                        {{ plan.title|default:"7-Day Meal Plan" }}
+                    </h6>
+                    {% if plan.is_saved %}
+                    <span class="badge-gold">🔖</span>
+                    {% endif %}
+                </div>
+                <div class="d-flex flex-column gap-1 mb-4">
+                    <span style="color:var(--text-muted);font-size:0.82rem">
+                        <i class="fas fa-calendar me-2" style="color:var(--emerald);width:14px"></i>
+                        Week of {{ plan.week_start_date }}
+                    </span>
+                    <span style="color:var(--text-muted);font-size:0.82rem">
+                        <i class="fas fa-utensils me-2" style="color:var(--emerald);width:14px"></i>
+                        {{ plan.meals.count }} meals
+                    </span>
+                    <span style="color:var(--text-muted);font-size:0.82rem">
+                        <i class="fas fa-clock me-2" style="color:var(--emerald);width:14px"></i>
+                        {{ plan.created_at|date:"d M Y" }}
+                    </span>
                 </div>
 
-                <a href="{% url 'meals:meal_plan_detail' plan.pk %}"
-                   class="btn btn-outline-success btn-sm w-100">
-                    View Plan
-                </a>
+                <div class="d-flex gap-2">
+    <a href="{% url 'meals:meal_plan_detail' plan.pk %}"
+       class="btn btn-outline-success btn-sm flex-fill">
+        <i class="fas fa-eye me-1"></i>View
+    </a>
+    <button onclick="confirmDelete({{ plan.pk }}, '{{ plan.title|default:'This plan' }}')"
+            class="btn btn-sm flex-fill"
+            style="background:rgba(231,76,60,0.08);border:1px solid rgba(231,76,60,0.2);color:#e74c3c;border-radius:var(--radius-sm)">
+        <i class="fas fa-trash-alt me-1"></i>Delete
+    </button>
+</div>
             </div>
         </div>
     </div>
     {% endfor %}
 </div>
-
 {% else %}
-<div class="card shadow-sm">
+<div class="card fade-up">
     <div class="card-body text-center py-5">
-        <div style="font-size:3rem">🍽</div>
-        <h4 class="fw-bold mt-3" style="color:#1B4332">No meal plans yet</h4>
-        <p class="text-muted">Generate your first AI-powered 7-day meal plan</p>
-        <a href="{% url 'meals:generate_plan' %}" class="btn btn-primary btn-lg px-5">
-            🥗 Generate Meal Plan
+        <div style="font-size:4rem;opacity:0.15">🍽</div>
+        <h4 class="section-title mt-3 mb-2" style="font-size:1.4rem">No plans yet</h4>
+        <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:1.5rem">
+            Generate your first AI-powered meal plan
+        </p>
+        <a href="{% url 'meals:generate_plan' %}" class="btn btn-primary px-5">
+            <i class="fas fa-magic me-2"></i>Generate Meal Plan
         </a>
     </div>
 </div>
 {% endif %}
+
+<!-- Delete confirmation modal -->
+<div id="deleteModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(4px)">
+    <div class="fade-up" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:2rem;max-width:400px;width:90%;text-align:center">
+        <div style="font-size:2.5rem;margin-bottom:1rem">🗑️</div>
+        <h5 style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:600;margin-bottom:0.5rem">
+            Delete this plan?
+        </h5>
+        <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:1.5rem" id="deleteModalText">
+            This action cannot be undone.
+        </p>
+        <form method="post" id="deleteForm">
+            {% csrf_token %}
+            <div class="d-flex gap-2 justify-content-center">
+                <button type="submit"
+                        style="background:rgba(231,76,60,0.12);border:1px solid rgba(231,76,60,0.3);color:#e74c3c;border-radius:var(--radius-sm);padding:0.6rem 1.5rem;font-weight:600;cursor:pointer;transition:all 0.2s ease"
+                        onmouseover="this.style.background='rgba(231,76,60,0.2)'"
+                        onmouseout="this.style.background='rgba(231,76,60,0.12)'">
+                    Yes, delete it
+                </button>
+                <button type="button" onclick="closeDeleteModal()"
+                        class="btn btn-ghost">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function confirmDelete(pk, title) {
+    document.getElementById('deleteModalText').textContent = `"${title}" will be permanently deleted.`;
+    document.getElementById('deleteForm').action = `/meals/plan/${pk}/delete/`;
+    const modal = document.getElementById('deleteModal');
+    modal.style.display = 'flex';
+}
+
+function closeDeleteModal() {
+    document.getElementById('deleteModal').style.display = 'none';
+}
+
+// Close on backdrop click
+document.getElementById('deleteModal').addEventListener('click', function(e) {
+    if (e.target === this) closeDeleteModal();
+});
+</script>
 
 {% endblock %}

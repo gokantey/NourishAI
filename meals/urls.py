@@ -13,4 +13,5 @@ urlpatterns = [
     path('plan/<int:pk>/confirm-save/', views.confirm_save_plan, name='confirm_save_plan'),
     path('meal/<int:pk>/rate/', views.rate_meal, name='rate_meal'),
     path('history/', views.meal_plan_history, name='meal_plan_history'),
+    path('plan/<int:pk>/delete/', views.delete_plan, name='delete_plan'),
 ]

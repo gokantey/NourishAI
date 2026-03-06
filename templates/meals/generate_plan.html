@@ -1,34 +1,60 @@
 {% extends 'base.html' %}
-{% block title %}Generate Meal Plan — NourishAI{% endblock %}
+{% block page_title %}Generate Plan{% endblock %}
+{% block nav_generate %}active{% endblock %}
+{% block topbar_action %}{% endblock %}
+{% block title %}Generate Plan — NourishAI{% endblock %}
 {% block content %}
-<div class="row justify-content-center mt-5">
-    <div class="col-md-6 text-center">
-        <div class="card shadow">
-            <div class="card-body p-5">
-                <div style="font-size:4rem">🥗</div>
-                <h3 class="fw-bold mt-3" style="color:#1B4332">Generate Your Meal Plan</h3>
-                <p class="text-muted">NourishAI will create a personalized 7-day meal plan based on your profile. This may take 15-30 seconds.</p>
 
-                <div class="bg-light rounded p-3 mb-4 text-start">
-                    <small class="text-muted">
-                        <strong>Your Profile:</strong><br>
-                        🎯 Goal: {{ user.profile.fitness_goal|title }}<br>
-                        🥦 Diet: {{ user.profile.dietary_preference|title }}<br>
-                        🔥 Daily Calories: {{ user.profile.daily_calorie_target }} kcal<br>
-                        💪 BMI: {{ user.profile.bmi }} ({{ user.profile.bmi_category }})<br>
-                        💧 Water: {{ user.profile.daily_water_intake }}L/day<br>
-                        ₵ Budget: ₵{{ user.profile.budget }}/week
-                    </small>
+<div class="row justify-content-center">
+    <div class="col-lg-8 fade-up">
+
+        <!-- Hero -->
+        <div style="background:linear-gradient(135deg, var(--surface), var(--surface2));border:1px solid var(--border);border-radius:var(--radius);padding:3rem 2.5rem;text-align:center;margin-bottom:2rem;position:relative;overflow:hidden">
+            <div style="position:absolute;top:-60px;right:-60px;width:200px;height:200px;background:radial-gradient(circle, rgba(46,204,113,0.1), transparent 70%);pointer-events:none"></div>
+            <div style="position:absolute;bottom:-40px;left:-40px;width:150px;height:150px;background:radial-gradient(circle, rgba(212,175,55,0.08), transparent 70%);pointer-events:none"></div>
+            <div style="font-size:4rem;margin-bottom:1rem">🤖</div>
+            <h2 style="font-family:'Cormorant Garamond',serif;font-size:2.2rem;font-weight:600;margin-bottom:0.75rem">
+                Generate Your Meal Plan
+            </h2>
+            <p style="color:var(--text-muted);font-size:0.95rem;max-width:400px;margin:0 auto">
+                AI-powered. Ghanaian-inspired. Tailored to your body and goals.
+            </p>
+        </div>
+
+        <!-- Profile summary -->
+        <div class="card mb-3">
+            <div class="card-body p-4">
+                <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);margin-bottom:1rem">
+                    Generating based on your profile
                 </div>
-
-                <form method="post" id="generateForm">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-primary btn-lg px-5" id="generateBtn">
-                         Generate My Plan
-                    </button>
-                </form>
-                <a href="{% url 'meals:dashboard' %}" class="btn btn-link mt-2">← Back to Dashboard</a>
+                <div class="row g-3">
+                    {% for label, value in profile_data %}
+                    <div class="col-6 col-md-4">
+                        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:0.85rem;text-align:center">
+                            <div style="font-weight:600;color:var(--text-primary);font-size:0.9rem">{{ value }}</div>
+                            <div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.8px;margin-top:0.2rem">{{ label }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
             </div>
+        </div>
+
+        <div style="text-align:center;color:var(--text-muted);font-size:0.85rem;margin-bottom:1.5rem">
+            <i class="fas fa-clock me-1"></i> Generation takes 15–30 seconds
+        </div>
+
+        <form method="post" id="generateForm">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary w-100 py-3" id="generateBtn" style="font-size:1.05rem">
+                <i class="fas fa-magic me-2"></i>Generate My 7-Day Ghanaian Meal Plan
+            </button>
+        </form>
+
+        <div style="text-align:center;margin-top:1rem">
+            <a href="{% url 'meals:dashboard' %}" style="color:var(--text-muted);font-size:0.85rem;text-decoration:none">
+                <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+            </a>
         </div>
     </div>
 </div>
@@ -36,8 +62,9 @@
 <script>
 document.getElementById('generateForm').addEventListener('submit', function() {
     const btn = document.getElementById('generateBtn');
-    btn.innerHTML = '⏳ Generating... please wait';
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Crafting your personalised plan...';
     btn.disabled = true;
+    btn.style.opacity = '0.8';
 });
 </script>
 {% endblock %}

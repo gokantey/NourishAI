@@ -3,6 +3,7 @@ venv/
 
 # Environment Variables
 .env
+*.env
 
 # Python
 __pycache__/
@@ -26,3 +27,6 @@ staticfiles/
 # Windows
 Thumbs.db
 desktop.ini
+
+
+

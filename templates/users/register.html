@@ -1,33 +1,53 @@
 {% extends 'base.html' %}
 {% block title %}Register — NourishAI{% endblock %}
-{% block content %}
-<div class="row justify-content-center mt-5">
-    <div class="col-md-6">
-        <div class="card shadow">
-            <div class="card-body p-5">
-                <h2 class="text-center fw-bold mb-1" style="color:#1B4332">Join NourishAI</h2>
-                <p class="text-center text-muted mb-4">Your personalized meal planner</p>
+{% block unauth_content %}
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem;background:var(--obsidian)">
+    <div style="width:100%;max-width:520px" class="fade-up">
+
+        <div style="text-align:center;margin-bottom:2.5rem">
+            <div style="font-family:'Cormorant Garamond',serif;font-size:2.5rem;font-weight:700;color:white">
+                Nourish<span style="color:var(--gold)">AI</span>
+            </div>
+            <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:600;margin-top:1rem;margin-bottom:0.5rem">
+                Create your account
+            </h3>
+            <p style="color:var(--text-muted);font-size:0.9rem">
+                Your personalized Ghanaian meal planner awaits
+            </p>
+        </div>
+
+        <div class="card">
+            <div class="card-body p-4">
                 <form method="post">
                     {% csrf_token %}
-                    {% for field in form %}
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">{{ field.label }}</label>
+                    <div class="row g-3">
+                        {% for field in form %}
+                        <div class="col-{% if forloop.counter <= 2 %}6{% else %}12{% endif %}">
+                            <label class="form-label">{{ field.label }}</label>
                             <input type="{{ field.field.widget.input_type }}"
                                    name="{{ field.html_name }}"
                                    class="form-control {% if field.errors %}is-invalid{% endif %}"
-                                   {% if field.value %}value="{{ field.value }}"{% endif %}>
+                                   {% if field.value %}value="{{ field.value }}"{% endif %}
+                                   placeholder="{{ field.label }}">
                             {% for error in field.errors %}
-                                <div class="invalid-feedback">{{ error }}</div>
+                            <div class="invalid-feedback">{{ error }}</div>
                             {% endfor %}
                         </div>
-                    {% endfor %}
-                    <button type="submit" class="btn btn-primary w-100 py-2 mt-2">Create Account</button>
+                        {% endfor %}
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 py-3 mt-4" style="font-size:1rem">
+                        <i class="fas fa-user-plus me-2"></i>Create Account
+                    </button>
                 </form>
-                <p class="text-center mt-3 text-muted">
-                    Already have an account? <a href="{% url 'users:login' %}">Login</a>
-                </p>
             </div>
         </div>
+
+        <p style="text-align:center;color:var(--text-muted);font-size:0.88rem;margin-top:1.5rem">
+            Already have an account?
+            <a href="{% url 'users:login' %}" style="color:var(--emerald);font-weight:600;text-decoration:none">
+                Login here
+            </a>
+        </p>
     </div>
 </div>
 {% endblock %}

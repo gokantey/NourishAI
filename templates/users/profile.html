@@ -1,141 +1,145 @@
 {% extends 'base.html' %}
+{% block page_title %}My Profile{% endblock %}
+{% block nav_profile %}active{% endblock %}
 {% block title %}My Profile — NourishAI{% endblock %}
 {% block content %}
 
-<div class="row">
-    <div class="col-12 mb-4">
-        <h2 class="fw-bold" style="color:#1B4332">My Profile</h2>
-        <p class="text-muted">Update your details to keep your meal plans accurate</p>
+<div class="d-flex justify-content-between align-items-start mb-4 fade-up">
+    <div>
+        <h2 class="section-title">My Profile</h2>
+        <p class="section-sub">Keep your details updated for accurate meal plans</p>
     </div>
 </div>
 
-<div class="row">
+<div class="row g-4">
 
-    <!-- Left: Profile Form -->
-    <div class="col-md-7">
-        <div class="card shadow-sm">
+    <!-- Form -->
+    <div class="col-lg-7 fade-up d1">
+        <div class="card">
+            <div class="card-header">
+                <span style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted)">
+                    Personal Details
+                </span>
+            </div>
             <div class="card-body p-4">
-                <h5 class="fw-bold mb-4" style="color:#1B4332">Personal Details</h5>
                 <form method="post">
                     {% csrf_token %}
 
-                    <!-- Body Details -->
-                    <div class="row mb-3">
+                    <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--emerald);margin-bottom:1rem">
+                        Body Measurements
+                    </div>
+                    <div class="row g-3 mb-4">
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Height (cm)</label>
+                            <label class="form-label">Height (cm)</label>
                             <input type="number" name="height" step="0.1"
                                    value="{{ profile.height|default:'' }}"
                                    class="form-control" placeholder="e.g. 175">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Weight (kg)</label>
+                            <label class="form-label">Weight (kg)</label>
                             <input type="number" name="weight" step="0.1"
                                    value="{{ profile.weight|default:'' }}"
                                    class="form-control" placeholder="e.g. 70">
                         </div>
                     </div>
 
-                    <!-- Dietary Preference -->
+                    <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--emerald);margin-bottom:1rem">
+                        Diet & Allergies
+                    </div>
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Dietary Preference</label>
+                        <label class="form-label">Dietary Preference</label>
                         <select name="dietary_preference" class="form-select">
                             {% for value, label in form.dietary_preference.field.choices %}
-                            <option value="{{ value }}"
-                                {% if profile.dietary_preference == value %}selected{% endif %}>
+                            <option value="{{ value }}" {% if profile.dietary_preference == value %}selected{% endif %}>
                                 {{ label }}
                             </option>
                             {% endfor %}
                         </select>
                     </div>
-
-                    <!-- Allergies -->
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Allergies</label>
-                        <div class="row">
+                    <div class="mb-4">
+                        <label class="form-label">Allergies</label>
+                        <div class="row g-2 mt-1">
                             {% for value, label in form.allergies.field.choices %}
-                            <div class="col-6 col-md-4">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox"
-                                           name="allergies" value="{{ value }}"
-                                           {% if value in profile.allergies %}checked{% endif %}>
-                                    <label class="form-check-label">{{ label }}</label>
-                                </div>
+                            <div class="col-6">
+                                <label style="display:flex;align-items:center;gap:0.6rem;padding:0.65rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:0.88rem;color:var(--text-secondary)">
+                                    <input type="checkbox" name="allergies" value="{{ value }}"
+                                           {% if value in profile.allergies %}checked{% endif %}
+                                           style="accent-color:var(--emerald)">
+                                    {{ label }}
+                                </label>
                             </div>
                             {% endfor %}
                         </div>
                     </div>
 
-                    <!-- Fitness Goal -->
+                    <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--emerald);margin-bottom:1rem">
+                        Goals & Budget
+                    </div>
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Fitness Goal</label>
+                        <label class="form-label">Fitness Goal</label>
                         <select name="fitness_goal" class="form-select">
                             {% for value, label in form.fitness_goal.field.choices %}
-                            <option value="{{ value }}"
-                                {% if profile.fitness_goal == value %}selected{% endif %}>
+                            <option value="{{ value }}" {% if profile.fitness_goal == value %}selected{% endif %}>
                                 {{ label }}
                             </option>
                             {% endfor %}
                         </select>
                     </div>
-
-                    <!-- Budget -->
                     <div class="mb-4">
-                        <label class="form-label fw-semibold">Weekly Food Budget (₵)</label>
+                        <label class="form-label">Weekly Food Budget (₵)</label>
                         <input type="number" name="budget" step="0.01"
                                value="{{ profile.budget|default:'' }}"
                                class="form-control" placeholder="e.g. 50">
                     </div>
 
-                    <button type="submit" class="btn btn-primary px-4 py-2">
-                         Save Changes
-                    </button>
-                    <a href="{% url 'meals:dashboard' %}" class="btn btn-link">Cancel</a>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="fas fa-save me-2"></i>Save Changes
+                        </button>
+                        <a href="{% url 'meals:dashboard' %}" class="btn btn-ghost">Cancel</a>
+                    </div>
                 </form>
             </div>
         </div>
     </div>
 
-    <!-- Right: Stats & Goal Estimate -->
-    <div class="col-md-5">
+    <!-- Right column -->
+    <div class="col-lg-5 fade-up d2">
 
-        <!-- Current Stats -->
-        <div class="card shadow-sm mb-3">
-            <div class="card-body">
-                <h6 class="fw-bold mb-3" style="color:#1B4332">Current Stats</h6>
-                <div class="row text-center">
-                    <div class="col-6 mb-3">
-                        <div class="bg-light rounded p-3">
-                            <h4 class="fw-bold mb-0" style="color:#2D6A4F">
-                                {{ profile.bmi|default:"—" }}
-                            </h4>
-                            <small class="text-muted">BMI</small><br>
-                            <small class="fw-semibold" style="color:#52B788">
-                                {{ profile.bmi_category|default:"—" }}
-                            </small>
+        <!-- Stats -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <span style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted)">
+                    Current Stats
+                </span>
+            </div>
+            <div class="card-body p-4">
+                <div class="row g-3 text-center">
+                    <div class="col-6">
+                        <div class="nutrition-chip">
+                            <div class="value" style="font-size:1.6rem">{{ profile.bmi|default:"—" }}</div>
+                            <div class="label">BMI</div>
                         </div>
-                    </div>
-                    <div class="col-6 mb-3">
-                        <div class="bg-light rounded p-3">
-                            <h4 class="fw-bold mb-0" style="color:#2D6A4F">
-                                {{ profile.daily_calorie_target|default:"—" }}
-                            </h4>
-                            <small class="text-muted">kcal/day</small>
+                        <div style="font-size:0.78rem;color:var(--emerald);margin-top:0.4rem;font-weight:500">
+                            {{ profile.bmi_category|default:"—" }}
                         </div>
                     </div>
                     <div class="col-6">
-                        <div class="bg-light rounded p-3">
-                            <h4 class="fw-bold mb-0" style="color:#2D6A4F">
-                                {{ profile.daily_water_intake|default:"—" }}L
-                            </h4>
-                            <small class="text-muted">Water/day</small>
+                        <div class="nutrition-chip">
+                            <div class="value" style="font-size:1.4rem">{{ profile.daily_calorie_target|default:"—" }}</div>
+                            <div class="label">kcal/day</div>
                         </div>
                     </div>
                     <div class="col-6">
-                        <div class="bg-light rounded p-3">
-                            <h4 class="fw-bold mb-0" style="color:#2D6A4F">
-                                {{ profile.subscription_tier|title }}
-                            </h4>
-                            <small class="text-muted">Plan</small>
+                        <div class="nutrition-chip">
+                            <div class="value">{{ profile.daily_water_intake|default:"—" }}L</div>
+                            <div class="label">Water/day</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="nutrition-chip">
+                            <div class="value" style="font-size:1.1rem;padding-top:0.3rem">{{ profile.subscription_tier|title }}</div>
+                            <div class="label">Plan</div>
                         </div>
                     </div>
                 </div>
@@ -144,49 +148,49 @@
 
         <!-- Goal Estimate -->
         {% if goal_estimate %}
-        <div class="card shadow-sm border-0"
-             style="background-color: {% if goal_estimate.safe %}#D8F3DC{% else %}#FFE8E8{% endif %}">
-            <div class="card-body">
-                <h6 class="fw-bold mb-2" style="color:#1B4332">
-                    {% if profile.fitness_goal == 'lose_weight' %}⚖️
-                    {% elif profile.fitness_goal == 'build_muscle' %}💪
-                    {% else %}🎯
-                    {% endif %}
-                    Goal Estimate
-                </h6>
-                <p class="mb-2 small" style="color:#2D6A4F">{{ goal_estimate.message }}</p>
-                {% if goal_estimate.weeks %}
-                <div class="d-flex flex-column gap-1">
-                    {% if goal_estimate.kg_to_lose %}
-                    <small class="text-muted">📉 To lose: <strong>{{ goal_estimate.kg_to_lose }}kg</strong></small>
-                    {% endif %}
-                    {% if goal_estimate.kg_to_gain %}
-                    <small class="text-muted">📈 To gain: <strong>{{ goal_estimate.kg_to_gain }}kg</strong></small>
-                    {% endif %}
-                    <small class="text-muted">🎯 Target: <strong>{{ goal_estimate.target_weight }}kg</strong></small>
-                    <small class="text-muted">⏱ Est. time: <strong>{{ goal_estimate.months }} months</strong></small>
-                </div>
-                {% endif %}
+        <div class="goal-card mb-3">
+            <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);margin-bottom:0.75rem">
+                Goal Estimate
             </div>
+            <p style="color:var(--text-secondary);font-size:0.88rem;line-height:1.6;margin-bottom:0.75rem">
+                {{ goal_estimate.message }}
+            </p>
+            {% if goal_estimate.weeks %}
+            <div class="d-flex flex-wrap gap-2">
+                {% if goal_estimate.kg_to_lose %}
+                <span class="badge-emerald">📉 {{ goal_estimate.kg_to_lose }}kg to lose</span>
+                {% endif %}
+                {% if goal_estimate.kg_to_gain %}
+                <span class="badge-emerald">📈 {{ goal_estimate.kg_to_gain }}kg to gain</span>
+                {% endif %}
+                <span class="badge-gold">⏱ {{ goal_estimate.months }} months</span>
+            </div>
+            {% endif %}
         </div>
         {% endif %}
 
         <!-- Account Info -->
-        <div class="card shadow-sm mt-3">
-            <div class="card-body">
-                <h6 class="fw-bold mb-3" style="color:#1B4332">Account Info</h6>
-                <small class="text-muted d-block mb-1">
-                    👤 <strong>{{ user.get_full_name }}</strong>
-                </small>
-                <small class="text-muted d-block mb-1">
-                    📧 {{ user.email }}
-                </small>
-                <small class="text-muted d-block">
-                    📅 Member since {{ user.date_joined|date:"F Y" }}
-                </small>
+        <div class="card">
+            <div class="card-body p-4">
+                <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);margin-bottom:1rem">
+                    Account Info
+                </div>
+                <div class="profile-row">
+                    <span class="key">Full Name</span>
+                    <span class="val">{{ user.get_full_name }}</span>
+                </div>
+                <div class="profile-row">
+                    <span class="key">Email</span>
+                    <span class="val" style="font-size:0.82rem">{{ user.email }}</span>
+                </div>
+                <div class="profile-row">
+                    <span class="key">Member Since</span>
+                    <span class="val">{{ user.date_joined|date:"F Y" }}</span>
+                </div>
             </div>
         </div>
 
     </div>
 </div>
+
 {% endblock %}

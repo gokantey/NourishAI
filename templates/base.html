@@ -6,61 +6,832 @@
     <title>{% block title %}NourishAI{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { background-color: #F8FAF9; }
-        .navbar { background-color: #1B4332 !important; }
-        .btn-primary { background-color: #2D6A4F; border-color: #2D6A4F; }
-        .btn-primary:hover { background-color: #1B4332; border-color: #1B4332; }
-        .text-primary { color: #2D6A4F !important; }
-        .bg-brand { background-color: #2D6A4F; }
+        :root {
+            --obsidian: #0A0F0D;
+            --deep: #111916;
+            --surface: #161E1A;
+            --surface2: #1C2820;
+            --border: rgba(255,255,255,0.06);
+            --border-hover: rgba(255,255,255,0.12);
+            --emerald: #2ECC71;
+            --emerald-dim: #1A7A43;
+            --emerald-glow: rgba(46,204,113,0.15);
+            --gold: #D4AF37;
+            --gold-dim: rgba(212,175,55,0.15);
+            --gold-glow: rgba(212,175,55,0.25);
+            --text-primary: #F0F4F1;
+            --text-secondary: rgba(240,244,241,0.6);
+            --text-muted: rgba(240,244,241,0.35);
+            --sidebar-width: 260px;
+            --radius: 16px;
+            --radius-sm: 10px;
+            --glass: rgba(255,255,255,0.03);
+            --glass-border: rgba(255,255,255,0.08);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: var(--obsidian);
+            color: var(--text-primary);
+            font-family: 'Outfit', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ── Background texture ── */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 80% 50% at 20% 0%, rgba(46,204,113,0.06) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 40% at 80% 100%, rgba(212,175,55,0.04) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ── Sidebar ── */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--deep);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-logo {
+            padding: 2rem 1.5rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-logo .logo-text {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.5px;
+            line-height: 1;
+        }
+
+        .sidebar-logo .logo-text span {
+            color: var(--gold);
+        }
+
+        .sidebar-logo .logo-sub {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-top: 0.3rem;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 1.5rem 1rem;
+            overflow-y: auto;
+        }
+
+        .nav-section-label {
+            font-size: 0.65rem;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            padding: 0 0.75rem;
+            margin-bottom: 0.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .nav-section-label:first-child { margin-top: 0; }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            padding: 0.75rem 0.85rem;
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            margin-bottom: 0.2rem;
+            border: 1px solid transparent;
+        }
+
+        .sidebar-link:hover {
+            background: var(--glass);
+            border-color: var(--glass-border);
+            color: var(--text-primary);
+        }
+
+        .sidebar-link.active {
+            background: var(--emerald-glow);
+            border-color: rgba(46,204,113,0.2);
+            color: var(--emerald);
+        }
+
+        .sidebar-link .nav-icon {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            background: var(--glass);
+            font-size: 0.85rem;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar-link:hover .nav-icon,
+        .sidebar-link.active .nav-icon {
+            background: var(--emerald-glow);
+            color: var(--emerald);
+        }
+
+        .sidebar-footer {
+            padding: 1.25rem 1rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .user-pill {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border-radius: var(--radius-sm);
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--emerald-dim), var(--gold));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .user-name {
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .user-plan {
+            font-size: 0.72rem;
+            color: var(--gold);
+            font-weight: 500;
+        }
+
+        /* ── Main content ── */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ── Top bar ── */
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.25rem 2.5rem;
+            border-bottom: 1px solid var(--border);
+            background: rgba(10,15,13,0.8);
+            backdrop-filter: blur(20px);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .topbar-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .topbar-actions { display: flex; align-items: center; gap: 0.75rem; }
+
+        /* ── Page body ── */
+        .page-body {
+            padding: 2.5rem;
+        }
+
+        /* ── Cards ── */
+        .glass-card {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            backdrop-filter: blur(10px);
+            transition: all 0.25s ease;
+        }
+
+        .glass-card:hover {
+            border-color: var(--border-hover);
+            background: rgba(255,255,255,0.05);
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text-primary);
+            transition: all 0.25s ease;
+        }
+
+        .card:hover {
+            border-color: var(--border-hover);
+            transform: translateY(-2px);
+        }
+
+        .card-header {
+            background: transparent;
+            border-bottom: 1px solid var(--border);
+            padding: 1.25rem 1.5rem;
+            border-radius: var(--radius) var(--radius) 0 0 !important;
+        }
+
+        .card-body { padding: 1.5rem; }
+
+        /* ── Stat cards ── */
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.25s ease;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--emerald), transparent);
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+
+        .stat-card:hover { border-color: rgba(46,204,113,0.2); transform: translateY(-3px); }
+        .stat-card:hover::before { opacity: 1; }
+
+        .stat-value {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-top: 0.5rem;
+        }
+
+        .stat-sub {
+            font-size: 0.82rem;
+            color: var(--emerald);
+            font-weight: 500;
+            margin-top: 0.25rem;
+        }
+
+        /* ── Buttons ── */
+        .btn {
+            border-radius: var(--radius-sm);
+            font-weight: 500;
+            font-size: 0.88rem;
+            padding: 0.6rem 1.25rem;
+            transition: all 0.2s ease;
+            letter-spacing: 0.2px;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #2ECC71, #1a7a43);
+            color: white;
+            box-shadow: 0 4px 15px rgba(46,204,113,0.25);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #3dd880, #229954);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(46,204,113,0.35);
+            color: white;
+        }
+
+        .btn-gold {
+            background: linear-gradient(135deg, var(--gold), #a8861f);
+            color: white;
+            box-shadow: 0 4px 15px var(--gold-glow);
+        }
+
+        .btn-gold:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px var(--gold-glow);
+            color: white;
+        }
+
+        .btn-ghost {
+            background: var(--glass);
+            border: 1px solid var(--glass-border) !important;
+            color: var(--text-secondary);
+        }
+
+        .btn-ghost:hover {
+            background: rgba(255,255,255,0.07);
+            border-color: var(--border-hover) !important;
+            color: var(--text-primary);
+        }
+
+        .btn-outline-success {
+            background: transparent;
+            border: 1px solid rgba(46,204,113,0.3) !important;
+            color: var(--emerald);
+        }
+
+        .btn-outline-success:hover {
+            background: var(--emerald-glow);
+            border-color: var(--emerald) !important;
+            color: var(--emerald);
+        }
+
+        .btn-outline-warning {
+            background: transparent;
+            border: 1px solid rgba(212,175,55,0.3) !important;
+            color: var(--gold);
+        }
+
+        .btn-outline-warning:hover {
+            background: var(--gold-dim);
+            color: var(--gold);
+        }
+
+        /* ── Badges ── */
+        .badge-emerald {
+            background: var(--emerald-glow);
+            color: var(--emerald);
+            border: 1px solid rgba(46,204,113,0.2);
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 0.3em 0.8em;
+            border-radius: 20px;
+            letter-spacing: 0.3px;
+        }
+
+        .badge-gold {
+            background: var(--gold-dim);
+            color: var(--gold);
+            border: 1px solid rgba(212,175,55,0.2);
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 0.3em 0.8em;
+            border-radius: 20px;
+        }
+
+        /* ── Alerts ── */
+        .alert {
+            border-radius: var(--radius-sm);
+            border: 1px solid;
+            font-size: 0.9rem;
+            background: var(--surface);
+        }
+
+        .alert-success {
+            border-color: rgba(46,204,113,0.25);
+            color: var(--emerald);
+            background: rgba(46,204,113,0.08);
+        }
+
+        .alert-info {
+            border-color: rgba(212,175,55,0.25);
+            color: var(--gold);
+            background: rgba(212,175,55,0.08);
+        }
+
+        .alert-danger {
+            border-color: rgba(231,76,60,0.25);
+            color: #e74c3c;
+            background: rgba(231,76,60,0.08);
+        }
+
+        /* ── Forms ── */
+        .form-control, .form-select {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            padding: 0.7rem 1rem;
+            font-size: 0.92rem;
+            transition: all 0.2s ease;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .form-control::placeholder { color: var(--text-muted); }
+
+        .form-control:focus, .form-select:focus {
+            background: var(--surface2);
+            border-color: rgba(46,204,113,0.4);
+            box-shadow: 0 0 0 3px rgba(46,204,113,0.1);
+            color: var(--text-primary);
+            outline: none;
+        }
+
+        .form-select option { background: var(--surface2); }
+
+        .form-label {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-check-input {
+            background-color: var(--surface2);
+            border-color: var(--border);
+        }
+
+        .form-check-input:checked {
+            background-color: var(--emerald);
+            border-color: var(--emerald);
+        }
+
+        /* ── Section headers ── */
+        .section-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            letter-spacing: -0.3px;
+        }
+
+        .section-sub {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            margin-top: 0.2rem;
+        }
+
+        /* ── Dividers ── */
+        .gold-line {
+            height: 1px;
+            background: linear-gradient(90deg, var(--gold), transparent);
+            border: none;
+            margin: 1.5rem 0;
+            opacity: 0.4;
+        }
+
+        .emerald-line {
+            height: 1px;
+            background: linear-gradient(90deg, var(--emerald), transparent);
+            border: none;
+            margin: 1.5rem 0;
+            opacity: 0.3;
+        }
+
+        /* ── Animations ── */
+        .fade-up {
+            animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .d1 { animation-delay: 0.05s; }
+        .d2 { animation-delay: 0.1s; }
+        .d3 { animation-delay: 0.15s; }
+        .d4 { animation-delay: 0.2s; }
+        .d5 { animation-delay: 0.25s; }
+
+        /* ── Progress bar ── */
+        .progress {
+            background: var(--surface2);
+            border-radius: 4px;
+        }
+
+        .progress-bar {
+            background: linear-gradient(90deg, var(--emerald), #1abc9c);
+            border-radius: 4px;
+        }
+
+        /* ── Scrollbar ── */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(46,204,113,0.3); }
+
+        /* ── Mobile sidebar ── */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 99;
+        }
+
+        @media (max-width: 991px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .sidebar-overlay.open { display: block; }
+            .main-content { margin-left: 0; }
+            .page-body { padding: 1.5rem; }
+            .topbar { padding: 1rem 1.5rem; }
+        }
+
+        /* ── Meal type pills ── */
+        .meal-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.25em 0.75em;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+
+        .meal-pill.breakfast { background: rgba(212,175,55,0.12); color: var(--gold); border: 1px solid rgba(212,175,55,0.2); }
+        .meal-pill.lunch { background: var(--emerald-glow); color: var(--emerald); border: 1px solid rgba(46,204,113,0.2); }
+        .meal-pill.dinner { background: rgba(155,89,182,0.12); color: #c39bd3; border: 1px solid rgba(155,89,182,0.2); }
+
+        /* ── Day header ── */
+        .day-header {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            letter-spacing: 0.5px;
+        }
+
+        /* ── Nutrition chip ── */
+        .nutrition-chip {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.6rem 0.5rem;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+
+        .nutrition-chip:hover {
+            border-color: rgba(46,204,113,0.2);
+        }
+
+        .nutrition-chip .value {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--emerald);
+            line-height: 1;
+        }
+
+        .nutrition-chip .label {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-top: 0.2rem;
+        }
+
+        /* ── Star rating ── */
+        .star-btn {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            border-radius: 8px;
+            padding: 0.5rem 0.9rem;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .star-btn:hover, .star-btn.active {
+            background: var(--gold-dim);
+            border-color: rgba(212,175,55,0.3);
+            color: var(--gold);
+            transform: scale(1.05);
+        }
+
+        /* ── Shopping list ── */
+        .shop-category {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 1.25rem;
+            height: 100%;
+        }
+
+        .shop-category-title {
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--emerald);
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .shop-item {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            padding: 0.3rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .shop-item::before {
+            content: '';
+            width: 4px;
+            height: 4px;
+            background: var(--emerald);
+            border-radius: 50%;
+            flex-shrink: 0;
+            opacity: 0.6;
+        }
+
+        /* ── Goal card ── */
+        .goal-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .goal-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 120px;
+            height: 120px;
+            background: radial-gradient(circle, var(--emerald-glow), transparent 70%);
+            pointer-events: none;
+        }
+
+        /* ── Profile card dark ── */
+        .profile-dark {
+            background: linear-gradient(135deg, var(--surface), var(--surface2));
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+        }
+
+        .profile-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.6rem 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.88rem;
+        }
+
+        .profile-row:last-child { border-bottom: none; }
+        .profile-row .key { color: var(--text-muted); }
+        .profile-row .val { color: var(--text-primary); font-weight: 500; }
     </style>
 </head>
 <body>
-    {% if user.is_authenticated %}
-    <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="{% url 'meals:dashboard' %}">
-                🥗 NourishAI
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                    data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <div class="navbar-nav ms-auto">
-                    <a class="nav-link text-white" href="{% url 'meals:dashboard' %}">
-                        <i class="fas fa-home"></i> Dashboard
-                    </a>
-                    <a class="nav-link text-white" href="{% url 'meals:generate_plan' %}">
-                        <i class="fas fa-utensils"></i> Generate Plan
-                    </a>
-                    <a class="nav-link text-white" href="{% url 'meals:meal_plan_history' %}">
-    <i class="fas fa-history"></i> History
-</a>
-                    <a class="nav-link text-white" href="{% url 'users:profile' %}">
-                        <i class="fas fa-user"></i> {{ user.first_name }}
-                    </a>
-                    <a class="nav-link text-white" href="{% url 'users:logout' %}">
-                        <i class="fas fa-sign-out-alt"></i> Logout
-                    </a>
-                </div>
-            </div>
-        </div>
-    </nav>
-    {% endif %}
 
-    <div class="container mt-4">
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            {% endfor %}
-        {% endif %}
-        {% block content %}{% endblock %}
+{% if user.is_authenticated %}
+<!-- Sidebar overlay for mobile -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+        <div class="logo-text">Nourish<span>AI</span></div>
+        <div class="logo-sub">AI Meal Planner</div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <nav class="sidebar-nav">
+        <div class="nav-section-label">Main</div>
+        <a href="{% url 'meals:dashboard' %}" class="sidebar-link {% block nav_dashboard %}{% endblock %}">
+            <div class="nav-icon"><i class="fas fa-th-large"></i></div>
+            Dashboard
+        </a>
+        <a href="{% url 'meals:generate_plan' %}" class="sidebar-link {% block nav_generate %}{% endblock %}">
+            <div class="nav-icon"><i class="fas fa-magic"></i></div>
+            Generate Plan
+        </a>
+        <a href="{% url 'meals:meal_plan_history' %}" class="sidebar-link {% block nav_history %}{% endblock %}">
+            <div class="nav-icon"><i class="fas fa-history"></i></div>
+            Plan History
+        </a>
+
+        <div class="nav-section-label">Account</div>
+        <a href="{% url 'users:profile' %}" class="sidebar-link {% block nav_profile %}{% endblock %}">
+            <div class="nav-icon"><i class="fas fa-user"></i></div>
+            My Profile
+        </a>
+        <a href="{% url 'users:logout' %}" class="sidebar-link">
+            <div class="nav-icon"><i class="fas fa-sign-out-alt"></i></div>
+            Logout
+        </a>
+    </nav>
+
+    <div class="sidebar-footer">
+        <div class="user-pill">
+            <div class="user-avatar">
+                {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+            </div>
+            <div>
+                <div class="user-name">{{ user.get_full_name }}</div>
+                <div class="user-plan">{{ user.profile.subscription_tier|title }} Plan</div>
+            </div>
+        </div>
+    </div>
+</aside>
+
+<!-- Main content -->
+<div class="main-content">
+    <div class="topbar">
+        <button class="btn btn-ghost d-lg-none border-0 p-2" onclick="openSidebar()">
+            <i class="fas fa-bars"></i>
+        </button>
+        <div class="topbar-title d-none d-lg-block">{% block page_title %}{% endblock %}</div>
+        <div class="topbar-actions">
+            {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} py-2 px-3 mb-0 small d-flex align-items-center gap-2 alert-dismissible fade show">
+                {% if message.tags == 'success' %}<i class="fas fa-check-circle"></i>
+                {% elif message.tags == 'error' or message.tags == 'danger' %}<i class="fas fa-exclamation-circle"></i>
+                {% else %}<i class="fas fa-info-circle"></i>{% endif %}
+                {{ message }}
+                <button type="button" class="btn-close btn-close-white ms-2" data-bs-dismiss="alert" style="font-size:0.6rem"></button>
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% block topbar_action %}
+<a href="{% url 'meals:generate_plan' %}" class="btn btn-primary btn-sm d-none d-md-inline-flex align-items-center gap-2">
+    <i class="fas fa-magic"></i> Generate Plan
+</a>
+{% endblock %}
+        </div>
+    </div>
+
+    <div class="page-body">
+        {% block content %}{% endblock %}
+    </div>
+</div>
+
+{% else %}
+<div style="min-height:100vh;display:flex;flex-direction:column">
+    <div style="flex:1">
+        {% if messages %}
+        <div class="p-3">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% block unauth_content %}{% endblock %}
+    </div>
+</div>
+{% endif %}
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function openSidebar() {
+        document.getElementById('sidebar').classList.add('open');
+        document.getElementById('sidebarOverlay').classList.add('open');
+    }
+    function closeSidebar() {
+        document.getElementById('sidebar').classList.remove('open');
+        document.getElementById('sidebarOverlay').classList.remove('open');
+    }
+</script>
 </body>
 </html>

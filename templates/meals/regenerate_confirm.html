@@ -1,22 +1,32 @@
 {% extends 'base.html' %}
 {% block title %}Swap Meal — NourishAI{% endblock %}
 {% block content %}
-<div class="row justify-content-center mt-5">
-    <div class="col-md-5">
-        <div class="card shadow">
+<div style="min-height:80vh;display:flex;align-items:center;justify-content:center">
+    <div style="width:100%;max-width:420px" class="fade-up">
+        <div class="card">
             <div class="card-body p-5 text-center">
-                <div style="font-size:3rem">↺</div>
-                <h4 class="fw-bold mt-3" style="color:#1B4332">Swap this meal?</h4>
-                <p class="text-muted">
-                    <strong>{{ meal.title }}</strong><br>
+                <div style="font-size:3.5rem;margin-bottom:1rem">↺</div>
+                <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:600;margin-bottom:0.5rem">
+                    Swap This Meal?
+                </h3>
+                <p style="color:var(--text-primary);font-weight:600;margin-bottom:0.25rem">
+                    {{ meal.title }}
+                </p>
+                <p style="color:var(--text-muted);font-size:0.88rem;margin-bottom:0.5rem">
                     {{ meal.day|title }} — {{ meal.meal_type|title }}
                 </p>
-                <p class="text-muted small">The AI will generate a completely different meal for this slot.</p>
+                <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:2rem">
+                    NourishAI will generate a completely different meal for this slot.
+                </p>
                 <form method="post">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-warning px-4">Yes, swap it</button>
-                    <a href="{% url 'meals:meal_plan_detail' meal.meal_plan.pk %}"
-                       class="btn btn-outline-secondary ms-2">Cancel</a>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-outline-warning flex-fill py-2">
+                            Yes, swap it
+                        </button>
+                        <a href="{% url 'meals:meal_plan_detail' meal.meal_plan.pk %}"
+                           class="btn btn-ghost flex-fill py-2">Cancel</a>
+                    </div>
                 </form>
             </div>
         </div>

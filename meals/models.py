@@ -8,6 +8,7 @@ class MealPlan(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     is_saved = models.BooleanField(default=False)
     title = models.CharField(max_length=100, blank=True, default='')
+    
 
     def __str__(self):
         return f"{self.user_profile.user.username} - Week of {self.week_start_date}"
@@ -52,6 +53,7 @@ class Meal(models.Model):
     sugar = models.FloatField(default=0, help_text="Grams")
     sodium = models.FloatField(default=0, help_text="Milligrams")
     rating = models.IntegerField(null=True, blank=True)
+    
 
     def __str__(self):
         return f"{self.day} {self.meal_type} - {self.title}"

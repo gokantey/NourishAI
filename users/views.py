@@ -84,7 +84,7 @@ def onboarding_step3(request):
             profile = form.save(commit=False)
             profile.onboarding_complete = True
             profile.save()
-            messages.success(request, 'Profile complete! Generating your first meal plan...')
+            messages.success(request, 'Profile complete! Let\'s generate your first meal plan.')
             return redirect('meals:dashboard')
     else:
         form = OnboardingStep3Form(instance=profile)

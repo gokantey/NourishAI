@@ -1,29 +1,81 @@
 {% extends 'base.html' %}
-{% block title %}Setup Your Profile — Step 2{% endblock %}
+{% block title %}Setup — Step 2{% endblock %}
 {% block content %}
-<div class="row justify-content-center mt-5">
-    <div class="col-md-6">
-        <div class="card shadow">
-            <div class="card-body p-5">
-                <div class="text-center mb-4">
-                    <span class="badge bg-secondary">Step 2 of 3</span>
-                    <h3 class="fw-bold mt-2" style="color:#1B4332">Dietary Preferences</h3>
-                    <p class="text-muted">Tell us what you can and can't eat</p>
-                </div>
-                <form method="post">
-                    {% csrf_token %}
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Dietary Preference</label>
-                        {{ form.dietary_preference }}
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Allergies (select all that apply)</label>
-                        {{ form.allergies }}
-                    </div>
-                    <button type="submit" class="btn btn-primary w-100 py-2 mt-2">Next →</button>
-                </form>
+<div style="min-height:80vh;display:flex;align-items:center;justify-content:center;padding:2rem">
+    <div style="width:100%;max-width:520px" class="fade-up">
+
+        <!-- Progress -->
+        <div style="margin-bottom:2.5rem">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
+                <span style="font-size:0.72rem;text-transform:uppercase;letter-spacing:2px;color:var(--emerald);font-weight:600">Step 2 of 3</span>
+                <span style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">Dietary Preferences</span>
+            </div>
+            <div style="height:3px;background:var(--surface2);border-radius:2px;overflow:hidden">
+                <div style="width:66%;height:100%;background:linear-gradient(90deg,var(--emerald),#1abc9c);border-radius:2px"></div>
+            </div>
+            <div style="display:flex;gap:0.5rem;margin-top:0.75rem">
+                <div style="flex:1;height:2px;background:var(--emerald);border-radius:1px"></div>
+                <div style="flex:1;height:2px;background:var(--emerald);border-radius:1px"></div>
+                <div style="flex:1;height:2px;background:var(--surface2);border-radius:1px"></div>
             </div>
         </div>
+
+        <!-- Header -->
+        <div style="margin-bottom:2rem">
+            <div style="font-size:3rem;margin-bottom:1rem">🥗</div>
+            <h2 style="font-family:'Cormorant Garamond',serif;font-size:2.2rem;font-weight:600;margin-bottom:0.5rem;line-height:1.2">
+                What do you<br>eat?
+            </h2>
+            <p style="color:var(--text-muted);font-size:0.9rem;line-height:1.6">
+                Help us understand your dietary needs so we can tailor every meal to you.
+            </p>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+
+            <!-- Dietary preference -->
+            <div style="margin-bottom:1.5rem">
+                <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);font-weight:600;margin-bottom:0.75rem">
+                    Dietary Preference
+                </label>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem">
+                    {% for value, label in form.dietary_preference.field.choices %}
+                    <label style="display:flex;align-items:center;gap:0.75rem;padding:0.85rem 1rem;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:all 0.2s ease;font-size:0.88rem;color:var(--text-secondary)"
+                           onmouseover="this.style.borderColor='rgba(46,204,113,0.3)';this.style.color='var(--text-primary)'"
+                           onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-secondary)'"
+                           onclick="this.style.borderColor='var(--emerald)';this.style.background='var(--emerald-glow)';this.style.color='var(--emerald)'">
+                        <input type="radio" name="dietary_preference" value="{{ value }}"
+                               style="accent-color:var(--emerald);width:16px;height:16px;flex-shrink:0"
+                               {% if forloop.first %}checked{% endif %}>
+                        {{ label }}
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Allergies -->
+            <div style="margin-bottom:2rem">
+                <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);font-weight:600;margin-bottom:0.75rem">
+                    Allergies <span style="color:var(--text-muted);font-weight:400;text-transform:none;letter-spacing:0">(select all that apply)</span>
+                </label>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem">
+                    {% for value, label in form.allergies.field.choices %}
+                    <label style="display:flex;align-items:center;gap:0.75rem;padding:0.85rem 1rem;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:all 0.2s ease;font-size:0.88rem;color:var(--text-secondary)"
+                           onmouseover="this.style.borderColor='rgba(212,175,55,0.3)'"
+                           onmouseout="this.style.borderColor='var(--border)'">
+                        <input type="checkbox" name="allergies" value="{{ value }}"
+                               style="accent-color:var(--gold);width:16px;height:16px;flex-shrink:0">
+                        {{ label }}
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 py-3" style="font-size:1rem">
+                Continue <i class="fas fa-arrow-right ms-2"></i>
+            </button>
+        </form>
     </div>
 </div>
 {% endblock %}

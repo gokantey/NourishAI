@@ -1,30 +1,118 @@
 {% extends 'base.html' %}
-{% block title %}Setup Your Profile — Step 1{% endblock %}
+{% block title %}Setup — Step 1{% endblock %}
 {% block content %}
-<div class="row justify-content-center mt-5">
-    <div class="col-md-6">
-        <div class="card shadow">
-            <div class="card-body p-5">
-                <div class="text-center mb-4">
-                    <span class="badge bg-secondary">Step 1 of 3</span>
-                    <h3 class="fw-bold mt-2" style="color:#1B4332">Your Body Details</h3>
-                    <p class="text-muted">This helps us calculate your BMI and daily calorie target</p>
-                </div>
-                <form method="post">
-                    {% csrf_token %}
-                    {% for field in form %}
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">{{ field.label }}</label>
-                            {{ field }}
-                            {% for error in field.errors %}
-                                <div class="text-danger small">{{ error }}</div>
-                            {% endfor %}
-                        </div>
-                    {% endfor %}
-                    <button type="submit" class="btn btn-primary w-100 py-2 mt-2">Next →</button>
-                </form>
+<div style="min-height:80vh;display:flex;align-items:center;justify-content:center;padding:2rem">
+    <div style="width:100%;max-width:520px" class="fade-up">
+
+        <!-- Progress -->
+        <div style="margin-bottom:2.5rem">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
+                <span style="font-size:0.72rem;text-transform:uppercase;letter-spacing:2px;color:var(--emerald);font-weight:600">
+                    Step 1 of 3
+                </span>
+                <span style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">
+                    Body Details
+                </span>
+            </div>
+            <div style="height:3px;background:var(--surface2);border-radius:2px;overflow:hidden">
+                <div style="width:33%;height:100%;background:linear-gradient(90deg,var(--emerald),#1abc9c);border-radius:2px;transition:width 0.4s ease"></div>
+            </div>
+            <div style="display:flex;gap:0.5rem;margin-top:0.75rem">
+                <div style="flex:1;height:2px;background:var(--emerald);border-radius:1px;opacity:1"></div>
+                <div style="flex:1;height:2px;background:var(--surface2);border-radius:1px"></div>
+                <div style="flex:1;height:2px;background:var(--surface2);border-radius:1px"></div>
             </div>
         </div>
+
+        <!-- Header -->
+        <div style="margin-bottom:2rem">
+            <div style="font-size:3rem;margin-bottom:1rem;line-height:1">📏</div>
+            <h2 style="font-family:'Cormorant Garamond',serif;font-size:2.2rem;font-weight:600;margin-bottom:0.5rem;line-height:1.2">
+                Tell us about<br>your body
+            </h2>
+            <p style="color:var(--text-muted);font-size:0.9rem;line-height:1.6">
+                We use this to calculate your BMI, daily calorie target, and water intake — all personalised for you.
+            </p>
+        </div>
+
+        <!-- Form Card -->
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
+
+            <!-- Height input -->
+           <div style="padding:1.5rem;border-bottom:1px solid var(--border)">
+    <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);font-weight:600;margin-bottom:0.75rem">
+        Height
+    </label>
+    <div style="position:relative">
+        <input type="number" name="height" step="0.1"
+               style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);padding:1rem 3.5rem 1rem 1rem;font-size:1.1rem;font-family:'Outfit',sans-serif;outline:none;transition:all 0.2s ease"
+               placeholder="175"
+               onfocus="this.style.borderColor='rgba(46,204,113,0.4)';this.style.boxShadow='0 0 0 3px rgba(46,204,113,0.1)'"
+               onblur="this.style.borderColor='var(--border)';this.style.boxShadow='none'">
+        <span style="position:absolute;right:1rem;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:0.85rem;font-weight:600">cm</span>
     </div>
 </div>
+
+            <!-- Weight input -->
+            <div style="padding:1.5rem">
+    <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);font-weight:600;margin-bottom:0.75rem">
+        Weight
+    </label>
+    <div style="position:relative">
+        <input type="number" name="weight" step="0.1"
+               style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);padding:1rem 3.5rem 1rem 1rem;font-size:1.1rem;font-family:'Outfit',sans-serif;outline:none;transition:all 0.2s ease"
+               placeholder="70"
+               onfocus="this.style.borderColor='rgba(46,204,113,0.4)';this.style.boxShadow='0 0 0 3px rgba(46,204,113,0.1)'"
+               onblur="this.style.borderColor='var(--border)';this.style.boxShadow='none'">
+        <span style="position:absolute;right:1rem;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:0.85rem;font-weight:600">kg</span>
+    </div>
+</div>
+
+        <!-- BMI preview -->
+        <div style="margin-top:1rem;padding:1rem 1.25rem;background:var(--emerald-glow);border:1px solid rgba(46,204,113,0.15);border-radius:var(--radius-sm);display:flex;align-items:center;gap:0.75rem" id="bmiPreview" style="display:none">
+            <span style="font-size:1.2rem"></span>
+            <span style="font-size:0.85rem;color:var(--emerald)" id="bmiText">
+                Enter your height and weight to see your BMI preview
+            </span>
+        </div>
+
+        <form method="post" id="step1Form" style="margin-top:1.5rem">
+            {% csrf_token %}
+            <input type="hidden" name="height" id="hiddenHeight">
+            <input type="hidden" name="weight" id="hiddenWeight">
+            <button type="submit" class="btn btn-primary w-100 py-3" style="font-size:1rem">
+                Continue <i class="fas fa-arrow-right ms-2"></i>
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    const heightInput = document.querySelector('input[name="height"]');
+    const weightInput = document.querySelector('input[name="weight"]');
+    const bmiPreview = document.getElementById('bmiPreview');
+    const bmiText = document.getElementById('bmiText');
+
+    function updateBMI() {
+        const h = parseFloat(heightInput.value);
+        const w = parseFloat(weightInput.value);
+        if (h > 0 && w > 0) {
+            const bmi = (w / ((h/100) ** 2)).toFixed(1);
+            let cat = bmi < 18.5 ? 'Underweight' : bmi < 25 ? 'Normal weight' : bmi < 30 ? 'Overweight' : 'Obese';
+            bmiText.textContent = `Your estimated BMI: ${bmi} — ${cat}`;
+            bmiPreview.style.display = 'flex';
+        } else {
+            bmiPreview.style.display = 'none';
+        }
+    }
+
+    // Sync inline inputs to hidden form fields on submit
+    document.getElementById('step1Form').addEventListener('submit', function() {
+        document.getElementById('hiddenHeight').value = heightInput.value;
+        document.getElementById('hiddenWeight').value = weightInput.value;
+    });
+
+    heightInput.addEventListener('input', updateBMI);
+    weightInput.addEventListener('input', updateBMI);
+</script>
 {% endblock %}

@@ -1,31 +1,82 @@
 {% extends 'base.html' %}
 {% block title %}Login — NourishAI{% endblock %}
-{% block content %}
-<div class="row justify-content-center mt-5">
-    <div class="col-md-5">
-        <div class="card shadow">
-            <div class="card-body p-5">
-                <h2 class="text-center fw-bold mb-1" style="color:#1B4332">Welcome Back</h2>
-                <p class="text-center text-muted mb-4">Login to your NourishAI account</p>
-                <form method="post">
-                    {% csrf_token %}
-                    {% for field in form %}
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">{{ field.label }}</label>
-                            <input type="{{ field.field.widget.input_type }}"
-                                   name="{{ field.html_name }}"
-                                   class="form-control {% if field.errors %}is-invalid{% endif %}">
-                            {% for error in field.errors %}
-                                <div class="invalid-feedback">{{ error }}</div>
-                            {% endfor %}
-                        </div>
-                    {% endfor %}
-                    <button type="submit" class="btn btn-primary w-100 py-2 mt-2">Login</button>
-                </form>
-                <p class="text-center mt-3 text-muted">
-                    Don't have an account? <a href="{% url 'users:register' %}">Register</a>
-                </p>
+{% block unauth_content %}
+<div style="min-height:100vh;display:grid;grid-template-columns:1fr 1fr">
+
+    <!-- Left panel -->
+    <div style="background:linear-gradient(135deg, var(--deep), var(--surface));display:flex;flex-direction:column;justify-content:center;padding:4rem;position:relative;overflow:hidden">
+        <div style="position:absolute;top:-100px;right:-100px;width:400px;height:400px;background:radial-gradient(circle, rgba(46,204,113,0.08), transparent 70%);pointer-events:none"></div>
+        <div style="position:absolute;bottom:-50px;left:-50px;width:250px;height:250px;background:radial-gradient(circle, rgba(212,175,55,0.06), transparent 70%);pointer-events:none"></div>
+
+        <div style="font-family:'Cormorant Garamond',serif;font-size:3rem;font-weight:700;color:white;line-height:1;margin-bottom:0.5rem">
+            Nourish<span style="color:var(--gold)">AI</span>
+        </div>
+        <div style="font-size:0.72rem;letter-spacing:3px;text-transform:uppercase;color:var(--text-muted);margin-bottom:3rem">
+            AI Meal Planner
+        </div>
+
+        <h2 style="font-family:'Cormorant Garamond',serif;font-size:2.5rem;font-weight:600;color:var(--text-primary);line-height:1.2;margin-bottom:1rem">
+            Eat well.<br>Live better.<br><span style="color:var(--emerald)">Stay Ghanaian.</span>
+        </h2>
+        <p style="color:var(--text-muted);font-size:0.95rem;max-width:320px;line-height:1.7">
+            Personalized AI-powered meal plans built around your body, your goals, and your culture.
+        </p>
+
+        <div class="d-flex gap-3 mt-4">
+            <div style="text-align:center">
+                <div style="font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:700;color:var(--emerald)">7</div>
+                <div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">Days</div>
             </div>
+            <div style="width:1px;background:var(--border)"></div>
+            <div style="text-align:center">
+                <div style="font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:700;color:var(--emerald)">21</div>
+                <div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">Meals</div>
+            </div>
+            <div style="width:1px;background:var(--border)"></div>
+            <div style="text-align:center">
+                <div style="font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:700;color:var(--emerald)">100%</div>
+                <div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">Yours</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right panel -->
+    <div style="display:flex;align-items:center;justify-content:center;padding:3rem;background:var(--obsidian)">
+        <div style="width:100%;max-width:400px" class="fade-up">
+            <h3 style="font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:600;margin-bottom:0.5rem">
+                Welcome back
+            </h3>
+            <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:2rem">
+                Login to your NourishAI account
+            </p>
+
+            <form method="post">
+                {% csrf_token %}
+                {% for field in form %}
+                <div class="mb-4">
+                    <label class="form-label">{{ field.label }}</label>
+                    <input type="{{ field.field.widget.input_type }}"
+                           name="{{ field.html_name }}"
+                           class="form-control form-control-lg {% if field.errors %}is-invalid{% endif %}"
+                           {% if field.value %}value="{{ field.value }}"{% endif %}
+                           placeholder="{{ field.label }}">
+                    {% for error in field.errors %}
+                    <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+                <button type="submit" class="btn btn-primary w-100 py-3 mt-1" style="font-size:1rem">
+                    <i class="fas fa-sign-in-alt me-2"></i>Login
+                </button>
+            </form>
+
+            <hr class="gold-line mt-4">
+            <p style="text-align:center;color:var(--text-muted);font-size:0.88rem;margin:0">
+                Don't have an account?
+                <a href="{% url 'users:register' %}" style="color:var(--emerald);font-weight:600;text-decoration:none">
+                    Register here
+                </a>
+            </p>
         </div>
     </div>
 </div>

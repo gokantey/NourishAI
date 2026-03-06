@@ -1,3 +1,5 @@
+import profile
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -5,6 +7,7 @@ from django.utils import timezone
 from .models import MealPlan, Meal, ShoppingList, ShoppingListItem
 from .groq_service import generate_meal_plan, regenerate_single_meal
 import json
+
 
 
 @login_required
@@ -34,18 +37,36 @@ def dashboard(request):
 def generate_plan(request):
     profile = request.user.profile
 
+    profile_data = [
+        ('Goal', profile.get_fitness_goal_display()),
+        ('Daily Calories', f'{profile.daily_calorie_target} kcal'),
+        ('Budget', f'₵{profile.budget}'),
+        ('BMI', f'{profile.bmi} ({profile.bmi_category})'),
+        ('Diet', profile.get_dietary_preference_display()),
+        ('Water', f'{profile.daily_water_intake}L/day'),
+    ]
+
+    liked_meals = list(
+        Meal.objects.filter(
+            meal_plan__user_profile=profile,
+            rating__gte=4
+        ).values_list('title', flat=True).distinct()[:10]
+    )
+
+    disliked_meals = list(
+        Meal.objects.filter(
+            meal_plan__user_profile=profile,
+            rating__lte=2
+        ).values_list('title', flat=True).distinct()[:10]
+    )
+
     if request.method == 'POST':
         try:
-            messages.info(request, 'Generating your meal plan, please wait...')
-            data = generate_meal_plan(profile)
-
-            # Create MealPlan
+            data = generate_meal_plan(profile, liked_meals=liked_meals, disliked_meals=disliked_meals)
             meal_plan = MealPlan.objects.create(
                 user_profile=profile,
                 week_start_date=timezone.now().date()
             )
-
-            # Create Meals
             for day_data in data['meal_plan']:
                 for meal_data in day_data['meals']:
                     Meal.objects.create(
@@ -67,7 +88,6 @@ def generate_plan(request):
                         sodium=meal_data.get('sodium', 0),
                     )
 
-            # Create ShoppingList and Items
             shopping_list = ShoppingList.objects.create(meal_plan=meal_plan)
             for item in data['shopping_list']:
                 ShoppingListItem.objects.create(
@@ -77,16 +97,17 @@ def generate_plan(request):
                     unit=item.get('unit', ''),
                     category=item.get('category', 'pantry'),
                 )
-
             messages.success(request, 'Your meal plan is ready!')
             return redirect('meals:meal_plan_detail', pk=meal_plan.pk)
-
         except Exception as e:
             messages.error(request, f'Error generating meal plan: {str(e)}')
             return redirect('meals:dashboard')
 
-    return render(request, 'meals/generate_plan.html')
-
+    return render(request, 'meals/generate_plan.html', {
+        'profile_data': profile_data,
+        'liked_meals': liked_meals,
+        'disliked_meals': disliked_meals,
+    })
 
 @login_required
 def meal_plan_detail(request, pk):
@@ -152,42 +173,31 @@ def meal_detail(request, pk):
 @login_required
 def regenerate_meal(request, pk):
     meal = get_object_or_404(Meal, pk=pk, meal_plan__user_profile=request.user.profile)
-    profile = request.user.profile
-
     if request.method == 'POST':
         try:
-            existing_meals = list(
-                Meal.objects.filter(
-                    meal_plan=meal.meal_plan
-                ).exclude(pk=pk).values_list('title', flat=True)
-            )
-
-            new_meal_data = regenerate_single_meal(
-                profile, meal.day, meal.meal_type, existing_meals
-            )
-
-            meal.title = new_meal_data['title']
-            meal.description = new_meal_data['description']
-            meal.ingredients = new_meal_data['ingredients']
-            meal.instructions = new_meal_data['instructions']
-            meal.prep_time = new_meal_data.get('prep_time', 0)
-            meal.difficulty = new_meal_data.get('difficulty', 'easy')
-            meal.calories = new_meal_data.get('calories', 0)
-            meal.protein = new_meal_data.get('protein', 0)
-            meal.carbohydrates = new_meal_data.get('carbohydrates', 0)
-            meal.fats = new_meal_data.get('fats', 0)
-            meal.fibre = new_meal_data.get('fibre', 0)
-            meal.sugar = new_meal_data.get('sugar', 0)
-            meal.sodium = new_meal_data.get('sodium', 0)
+            profile = request.user.profile
+            existing_meals = list(meal.meal_plan.meals.exclude(pk=meal.pk).values_list('title', flat=True))
+            data = regenerate_single_meal(profile, meal.day, meal.meal_type, existing_meals)
+            meal_data = data.get('meal') or data.get('meals', [None])[0] or data
+            meal.title = meal_data['title']
+            meal.description = meal_data['description']
+            meal.ingredients = meal_data['ingredients']
+            meal.instructions = meal_data['instructions']
+            meal.prep_time = meal_data.get('prep_time', 0)
+            meal.difficulty = meal_data.get('difficulty', 'easy')
+            meal.calories = meal_data.get('calories', 0)
+            meal.protein = meal_data.get('protein', 0)
+            meal.carbohydrates = meal_data.get('carbohydrates', 0)
+            meal.fats = meal_data.get('fats', 0)
+            meal.fibre = meal_data.get('fibre', 0)
+            meal.sugar = meal_data.get('sugar', 0)
+            meal.sodium = meal_data.get('sodium', 0)
+            meal.rating = None
             meal.save()
-
-            messages.success(request, f'{meal.meal_type.title()} regenerated successfully!')
-            return redirect('meals:meal_plan_detail', pk=meal.meal_plan.pk)
-
+            messages.success(request, f'Meal swapped successfully!')
         except Exception as e:
-            messages.error(request, f'Error regenerating meal: {str(e)}')
-            return redirect('meals:meal_plan_detail', pk=meal.meal_plan.pk)
-
+            messages.error(request, f'Error swapping meal: {str(e)}')
+        return redirect('meals:meal_plan_detail', pk=meal.meal_plan.pk)
     return render(request, 'meals/regenerate_confirm.html', {'meal': meal})
 
 @login_required
@@ -242,3 +252,11 @@ def meal_plan_history(request):
         'all_plans': all_plans,
     }
     return render(request, 'meals/meal_plan_history.html', context)
+
+@login_required
+def delete_plan(request, pk):
+    meal_plan = get_object_or_404(MealPlan, pk=pk, user_profile=request.user.profile)
+    if request.method == 'POST':
+        meal_plan.delete()
+        messages.success(request, 'Meal plan deleted.')
+    return redirect('meals:meal_plan_history')
