@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils import timezone
 
 
 class UserProfile(models.Model):
@@ -50,6 +51,10 @@ class UserProfile(models.Model):
     onboarding_complete = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    paystack_customer_id = models.CharField(max_length=100, blank=True, null=True)
+    paystack_subscription_code = models.CharField(max_length=100, blank=True, null=True)
+    plan_generations_this_month = models.IntegerField(default=0)
+    last_generation_reset = models.DateField(null=True, blank=True)
 
     def calculate_bmi(self):
         if self.height and self.weight:
@@ -159,6 +164,29 @@ class UserProfile(models.Model):
                 }
 
         return None
+
+    def can_generate_plan(self):
+        today = timezone.now().date()
+
+        if self.user.is_staff or self.user.is_superuser:
+            return True, None
+
+        if self.last_generation_reset is None or self.last_generation_reset.month != today.month:
+            self.plan_generations_this_month = 0
+            self.last_generation_reset = today
+            self.save()
+
+        if self.subscription_tier == 'premium':
+            return True, None
+
+        if self.plan_generations_this_month >= 3:
+            return False, "You've used your 3 free plans this month. Upgrade to Premium for unlimited plans."
+
+        return True, None
+
+    def increment_generation_count(self):
+        self.plan_generations_this_month += 1
+        self.save()
 
     def save(self, *args, **kwargs):
         self.calculate_bmi()

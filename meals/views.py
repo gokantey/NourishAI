@@ -1,34 +1,29 @@
-import profile
-
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
 from .models import MealPlan, Meal, ShoppingList, ShoppingListItem
 from .groq_service import generate_meal_plan, regenerate_single_meal
-import json
-
+import requests as http_requests
+import os
 
 
 @login_required
 def dashboard(request):
     profile = request.user.profile
-    latest_plan = MealPlan.objects.filter(
-        user_profile=profile
-    ).order_by('-created_at').first()
-
-    saved_plans = MealPlan.objects.filter(
-        user_profile=profile,
-        is_saved=True
-    ).order_by('-created_at')
-
+    latest_plan = MealPlan.objects.filter(user_profile=profile).order_by('-created_at').first()
+    saved_plans = MealPlan.objects.filter(user_profile=profile, is_saved=True).order_by('-created_at')
     goal_estimate = profile.calculate_goal_estimate()
+    show_premium_modal = request.session.pop('show_premium_modal', False)
+    show_cancel_modal = request.session.pop('show_cancel_modal', False)
 
     context = {
         'profile': profile,
         'latest_plan': latest_plan,
         'saved_plans': saved_plans,
         'goal_estimate': goal_estimate,
+        'show_premium_modal': show_premium_modal,
+        'show_cancel_modal': show_cancel_modal,
     }
     return render(request, 'meals/dashboard.html', context)
 
@@ -61,6 +56,14 @@ def generate_plan(request):
     )
 
     if request.method == 'POST':
+        can_generate, reason = profile.can_generate_plan()
+        if not can_generate:
+            return render(request, 'meals/generate_plan.html', {
+                'profile_data': profile_data,
+                'liked_meals': liked_meals,
+                'disliked_meals': disliked_meals,
+                'show_limit_modal': True,
+            })
         try:
             data = generate_meal_plan(profile, liked_meals=liked_meals, disliked_meals=disliked_meals)
             meal_plan = MealPlan.objects.create(
@@ -87,7 +90,6 @@ def generate_plan(request):
                         sugar=meal_data.get('sugar', 0),
                         sodium=meal_data.get('sodium', 0),
                     )
-
             shopping_list = ShoppingList.objects.create(meal_plan=meal_plan)
             for item in data['shopping_list']:
                 ShoppingListItem.objects.create(
@@ -97,6 +99,7 @@ def generate_plan(request):
                     unit=item.get('unit', ''),
                     category=item.get('category', 'pantry'),
                 )
+            profile.increment_generation_count()
             messages.success(request, 'Your meal plan is ready!')
             return redirect('meals:meal_plan_detail', pk=meal_plan.pk)
         except Exception as e:
@@ -108,6 +111,7 @@ def generate_plan(request):
         'liked_meals': liked_meals,
         'disliked_meals': disliked_meals,
     })
+
 
 @login_required
 def meal_plan_detail(request, pk):
@@ -134,7 +138,6 @@ def meal_plan_detail(request, pk):
         shopping_list = None
         grouped_items = {}
 
-    # Weekly nutrition totals
     all_meals = meal_plan.meals.all()
     nutrition_totals = {
         'calories': sum(m.calories for m in all_meals),
@@ -194,24 +197,23 @@ def regenerate_meal(request, pk):
             meal.sodium = meal_data.get('sodium', 0)
             meal.rating = None
             meal.save()
-            messages.success(request, f'Meal swapped successfully!')
+            messages.success(request, 'Meal swapped successfully!')
         except Exception as e:
             messages.error(request, f'Error swapping meal: {str(e)}')
         return redirect('meals:meal_plan_detail', pk=meal.meal_plan.pk)
     return render(request, 'meals/regenerate_confirm.html', {'meal': meal})
+
 
 @login_required
 def toggle_save_plan(request, pk):
     meal_plan = get_object_or_404(MealPlan, pk=pk, user_profile=request.user.profile)
     if request.method == 'POST':
         if meal_plan.is_saved:
-            # Unsave
             meal_plan.is_saved = False
             meal_plan.save()
             messages.success(request, 'Meal plan unsaved.')
             return redirect('meals:meal_plan_detail', pk=pk)
         else:
-            # Show naming prompt before saving
             return render(request, 'meals/save_plan.html', {'meal_plan': meal_plan})
     return redirect('meals:meal_plan_detail', pk=pk)
 
@@ -228,6 +230,7 @@ def confirm_save_plan(request, pk):
         return redirect('meals:dashboard')
     return redirect('meals:meal_plan_detail', pk=pk)
 
+
 @login_required
 def rate_meal(request, pk):
     meal = get_object_or_404(Meal, pk=pk, meal_plan__user_profile=request.user.profile)
@@ -241,17 +244,15 @@ def rate_meal(request, pk):
             messages.error(request, 'Invalid rating. Please select 1-5 stars.')
     return redirect('meals:meal_detail', pk=pk)
 
+
 @login_required
 def meal_plan_history(request):
     profile = request.user.profile
     all_plans = MealPlan.objects.filter(
         user_profile=profile
     ).order_by('-created_at')
+    return render(request, 'meals/meal_plan_history.html', {'all_plans': all_plans})
 
-    context = {
-        'all_plans': all_plans,
-    }
-    return render(request, 'meals/meal_plan_history.html', context)
 
 @login_required
 def delete_plan(request, pk):
@@ -260,3 +261,96 @@ def delete_plan(request, pk):
         meal_plan.delete()
         messages.success(request, 'Meal plan deleted.')
     return redirect('meals:meal_plan_history')
+
+
+@login_required
+def upgrade(request):
+    profile = request.user.profile
+    return render(request, 'meals/upgrade.html', {
+        'is_premium': profile.subscription_tier == 'premium',
+        'generations_used': profile.plan_generations_this_month,
+    })
+
+
+@login_required
+def create_checkout_session(request):
+    if request.method == 'POST':
+        profile = request.user.profile
+        try:
+            response = http_requests.post(
+                'https://api.paystack.co/transaction/initialize',
+                headers={
+                    'Authorization': f'Bearer {os.getenv("PAYSTACK_SECRET_KEY")}',
+                    'Content-Type': 'application/json',
+                },
+                json={
+                    'email': request.user.email,
+                    'amount': 2000,
+                    'currency': 'GHS',
+                    'callback_url': request.build_absolute_uri('/meals/upgrade/success/'),
+                    'metadata': {
+                        'user_id': request.user.id,
+                        'plan': 'premium',
+                    }
+                }
+            )
+            data = response.json()
+            if data.get('status'):
+                return redirect(data['data']['authorization_url'])
+            else:
+                messages.error(request, 'Payment initialization failed. Please try again.')
+        except Exception as e:
+            messages.error(request, f'Payment error: {str(e)}')
+    return redirect('meals:upgrade')
+
+
+@login_required
+def upgrade_success(request):
+    reference = request.GET.get('reference')
+    if reference:
+        try:
+            response = http_requests.get(
+                f'https://api.paystack.co/transaction/verify/{reference}',
+                headers={
+                    'Authorization': f'Bearer {os.getenv("PAYSTACK_SECRET_KEY")}',
+                }
+            )
+            data = response.json()
+            if data.get('status') and data['data']['status'] == 'success':
+                profile = request.user.profile
+                profile.subscription_tier = 'premium'
+                profile.paystack_customer_id = data['data']['customer']['id']
+                profile.save()
+                request.session['show_premium_modal'] = True
+                return redirect('meals:dashboard')
+            else:
+                messages.error(request, 'Payment verification failed. Please contact support.')
+        except Exception as e:
+            messages.error(request, f'Verification error: {str(e)}')
+    return redirect('meals:upgrade')
+
+
+@login_required
+def cancel_subscription(request):
+    if request.method == 'POST':
+        profile = request.user.profile
+        try:
+            if profile.paystack_subscription_code:
+                http_requests.post(
+                    'https://api.paystack.co/subscription/disable',
+                    headers={
+                        'Authorization': f'Bearer {os.getenv("PAYSTACK_SECRET_KEY")}',
+                        'Content-Type': 'application/json',
+                    },
+                    json={
+                        'code': profile.paystack_subscription_code,
+                        'token': profile.paystack_customer_id,
+                    }
+                )
+            profile.subscription_tier = 'free'
+            profile.paystack_subscription_code = None
+            profile.save()
+            request.session['show_cancel_modal'] = True
+        except Exception as e:
+            messages.error(request, f'Error cancelling subscription: {str(e)}')
+    return redirect('meals:dashboard')

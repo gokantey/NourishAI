@@ -753,6 +753,10 @@
             <div class="nav-icon"><i class="fas fa-user"></i></div>
             My Profile
         </a>
+        <a href="{% url 'meals:upgrade' %}" class="sidebar-link {% block nav_upgrade %}{% endblock %}">
+    <div class="nav-icon"><i class="fas fa-crown"></i></div>
+    {% if user.profile.subscription_tier == 'premium' %}Premium ✨{% else %}Upgrade{% endif %}
+</a>
         <a href="{% url 'users:logout' %}" class="sidebar-link">
             <div class="nav-icon"><i class="fas fa-sign-out-alt"></i></div>
             Logout

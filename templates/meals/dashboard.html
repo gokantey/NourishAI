@@ -209,4 +209,57 @@
 </div>
 {% endif %}
 
+{% if show_premium_modal %}
+<div class="modal fade show" style="display:block;background:rgba(0,0,0,0.7)" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background:var(--surface);border:1px solid rgba(212,175,55,0.3);border-radius:var(--radius);position:relative;overflow:hidden">
+            <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--gold),#a8861f)"></div>
+            <div class="modal-body p-4 text-center">
+                <div style="font-size:2.5rem;margin-bottom:1rem">👑</div>
+                <h5 style="font-family:'Cormorant Garamond',serif;font-size:1.75rem;font-weight:600;color:var(--gold);margin-bottom:0.75rem">
+                    Welcome to Premium
+                </h5>
+                <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:1.5rem">
+                    You now have unlimited meal plan generations and full access to AI taste learning. Let's build your next plan.
+                </p>
+                <div class="d-flex gap-3 justify-content-center">
+                    <a href="{% url 'meals:generate_plan' %}" class="btn btn-gold px-4">
+                        <i class="fas fa-utensils me-2"></i>Generate a Plan
+                    </a>
+                    <button onclick="this.closest('.modal').style.display='none'" class="btn btn-ghost px-4">
+                        Maybe Later
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if show_cancel_modal %}
+<div class="modal fade show" style="display:block;background:rgba(0,0,0,0.7)" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius)">
+            <div class="modal-body p-4 text-center">
+                <div style="font-size:2.5rem;margin-bottom:1rem"></div>
+                <h5 style="font-family:'Cormorant Garamond',serif;font-size:1.75rem;font-weight:600;color:var(--text-primary);margin-bottom:0.75rem">
+                    Subscription Cancelled
+                </h5>
+                <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:1.5rem">
+                    You've been moved back to the free tier. You can still generate 3 plans per month. We hope to see you back on Premium soon.
+                </p>
+                <div class="d-flex gap-3 justify-content-center">
+                    <a href="{% url 'meals:upgrade' %}" class="btn btn-gold px-4">
+                        <i class="fas fa-crown me-2"></i>Resubscribe
+                    </a>
+                    <button onclick="this.closest('.modal').style.display='none'" class="btn btn-ghost px-4">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 {% endblock %}

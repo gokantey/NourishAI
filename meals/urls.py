@@ -14,4 +14,8 @@ urlpatterns = [
     path('meal/<int:pk>/rate/', views.rate_meal, name='rate_meal'),
     path('history/', views.meal_plan_history, name='meal_plan_history'),
     path('plan/<int:pk>/delete/', views.delete_plan, name='delete_plan'),
+    path('upgrade/', views.upgrade, name='upgrade'),
+    path('upgrade/checkout/', views.create_checkout_session, name='create_checkout_session'),
+    path('upgrade/success/', views.upgrade_success, name='upgrade_success'),
+    path('upgrade/cancel/', views.cancel_subscription, name='cancel_subscription'),
 ]
