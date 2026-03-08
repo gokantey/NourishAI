@@ -51,7 +51,8 @@ and fitness goals.
    DB_HOST=localhost
    DB_PORT=5432
    GROQ_API_KEY=your-groq-api-key
-   STRIPE_SECRET_KEY=your-stripe-secret-key
+   PAYSTACK_PUBLIC_KEY=pk_test_
+   PAYSTACK_SECRET_KEY=sk_test_
 
 5. Set up the database
    python manage.py migrate
