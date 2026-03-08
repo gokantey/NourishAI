@@ -12,15 +12,15 @@ and fitness goals.
 - Grouped shopping lists by food category
 - Detailed nutritional breakdown per meal
 - Meal regeneration for meals you don't like
-- Free and Premium subscription tiers via Stripe
+- Free and Premium subscription tiers via Paystack
 
 ## Tech Stack
 
 - **Backend:** Django
 - **Database:** PostgreSQL
-- **AI Engine:** Groq API (LLaMA 3)
+- **AI Engine:** Groq API (LLaMA 3.3)
 - **Frontend:** Bootstrap 5
-- **Payments:** Stripe
+- **Payments:** Paystack
 
 ## Getting Started
 

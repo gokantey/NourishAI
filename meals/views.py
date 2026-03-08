@@ -41,19 +41,22 @@ def generate_plan(request):
         ('Water', f'{profile.daily_water_intake}L/day'),
     ]
 
-    liked_meals = list(
-        Meal.objects.filter(
-            meal_plan__user_profile=profile,
-            rating__gte=4
-        ).values_list('title', flat=True).distinct()[:10]
-    )
-
-    disliked_meals = list(
-        Meal.objects.filter(
-            meal_plan__user_profile=profile,
-            rating__lte=2
-        ).values_list('title', flat=True).distinct()[:10]
-    )
+    if profile.subscription_tier == 'premium' or profile.user.is_superuser or profile.user.is_staff:
+        liked_meals = list(
+            Meal.objects.filter(
+                meal_plan__user_profile=profile,
+                rating__gte=4
+            ).values_list('title', flat=True).distinct()[:10]
+        )
+        disliked_meals = list(
+            Meal.objects.filter(
+                meal_plan__user_profile=profile,
+                rating__lte=2
+            ).values_list('title', flat=True).distinct()[:10]
+        )
+    else:
+        liked_meals = []
+        disliked_meals = []
 
     if request.method == 'POST':
         can_generate, reason = profile.can_generate_plan()
@@ -89,6 +92,7 @@ def generate_plan(request):
                         fibre=meal_data.get('fibre', 0),
                         sugar=meal_data.get('sugar', 0),
                         sodium=meal_data.get('sodium', 0),
+                        portion_guide=meal_data.get('portion_guide', ''),
                     )
             shopping_list = ShoppingList.objects.create(meal_plan=meal_plan)
             for item in data['shopping_list']:
@@ -195,6 +199,7 @@ def regenerate_meal(request, pk):
             meal.fibre = meal_data.get('fibre', 0)
             meal.sugar = meal_data.get('sugar', 0)
             meal.sodium = meal_data.get('sodium', 0)
+            meal.portion_guide = meal_data.get('portion_guide', '')
             meal.rating = None
             meal.save()
             messages.success(request, 'Meal swapped successfully!')

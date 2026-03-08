@@ -53,7 +53,7 @@ class Meal(models.Model):
     sugar = models.FloatField(default=0, help_text="Grams")
     sodium = models.FloatField(default=0, help_text="Milligrams")
     rating = models.IntegerField(null=True, blank=True)
-    
+    portion_guide = models.TextField(blank=True, default='')
 
     def __str__(self):
         return f"{self.day} {self.meal_type} - {self.title}"

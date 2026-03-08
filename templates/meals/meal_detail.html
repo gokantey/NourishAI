@@ -47,6 +47,19 @@
 
                 <hr class="emerald-line">
 
+                {% if meal.portion_guide %}
+<div class="card mb-4" style="border-color:rgba(212,175,55,0.2)">
+    <div class="card-body p-3" style="background:rgba(212,175,55,0.05)">
+        <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--gold);margin-bottom:0.5rem">
+             Portion Guide
+        </div>
+        <div style="font-size:0.95rem;color:var(--text-secondary)">
+            {{ meal.portion_guide }}
+        </div>
+    </div>
+</div>
+{% endif %}
+
                 <!-- Ingredients -->
                 <div class="mb-4">
                     <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);margin-bottom:1rem">
