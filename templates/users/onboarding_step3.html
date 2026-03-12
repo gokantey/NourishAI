@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% block title %}Setup — Step 3{% endblock %}
-{% block content %}
+{% block onboarding_content %}
 <div style="min-height:80vh;display:flex;align-items:center;justify-content:center;padding:2rem">
     <div style="width:100%;max-width:520px" class="fade-up">
 
@@ -31,22 +31,69 @@
             </p>
         </div>
 
+        <!-- Error alert -->
+        {% if form.errors %}
+        <div style="background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.3);border-radius:var(--radius-sm);padding:1rem 1.25rem;margin-bottom:1.5rem;display:flex;align-items:flex-start;gap:0.75rem">
+            <i class="fas fa-exclamation-circle" style="color:#E74C3C;margin-top:0.15rem;flex-shrink:0"></i>
+            <div>
+                <div style="font-size:0.88rem;font-weight:600;color:#E74C3C;margin-bottom:0.35rem">Please fix the following:</div>
+                <ul style="margin:0;padding-left:1.1rem;font-size:0.84rem;color:rgba(231,76,60,0.85)">
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                        <li>{{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                    {% for error in form.non_field_errors %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+
         <form method="post">
             {% csrf_token %}
 
-            <!-- Fitness Goal -->
+            <!-- Region — optional -->
             <div style="margin-bottom:1.5rem">
                 <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);font-weight:600;margin-bottom:0.75rem">
-                    Fitness Goal
+                    Your Region in Ghana
+                    <span style="color:var(--text-muted);font-weight:400;text-transform:none;letter-spacing:0;font-size:0.78rem"> — optional</span>
+                </label>
+                <div style="position:relative">
+                    <select name="region"
+                            style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);padding:1rem 3rem 1rem 1rem;font-size:0.95rem;font-family:'Outfit',sans-serif;outline:none;transition:all 0.2s ease;appearance:none;cursor:pointer"
+                            onfocus="this.style.borderColor='rgba(46,204,113,0.4)';this.style.boxShadow='0 0 0 3px rgba(46,204,113,0.1)'"
+                            onblur="this.style.borderColor='var(--border)';this.style.boxShadow='none'">
+                        <option value="" style="background:var(--surface2)">— Select your region —</option>
+                        {% for value, label in form.region.field.choices %}
+                            {% if value %}
+                            <option value="{{ value }}" style="background:var(--surface2)" {% if form.region.value == value %}selected{% endif %}>{{ label }}</option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                    <span style="position:absolute;right:1rem;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none">
+                        <i class="fas fa-chevron-down" style="font-size:0.8rem"></i>
+                    </span>
+                </div>
+                <div style="font-size:0.78rem;color:var(--text-muted);margin-top:0.5rem">
+                    We use this to suggest authentic dishes from your region
+                </div>
+            </div>
+
+            <!-- Fitness Goal — required -->
+            <div style="margin-bottom:1.5rem">
+                <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);font-weight:600;margin-bottom:0.75rem">
+                    Fitness Goal <span style="color:#E74C3C">*</span>
                 </label>
                 <div style="display:flex;flex-direction:column;gap:0.5rem">
                     {% for value, label in form.fitness_goal.field.choices %}
-                    <label style="display:flex;align-items:center;gap:1rem;padding:1rem 1.25rem;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:all 0.2s ease"
+                    <label style="display:flex;align-items:center;gap:1rem;padding:1rem 1.25rem;background:var(--surface2);border:1px solid {% if form.fitness_goal.errors %}rgba(231,76,60,0.4){% else %}var(--border){% endif %};border-radius:var(--radius-sm);cursor:pointer;transition:all 0.2s ease"
                            onmouseover="this.style.borderColor='rgba(46,204,113,0.3)'"
-                           onmouseout="this.style.borderColor='var(--border)'">
+                           onmouseout="this.style.borderColor='{% if form.fitness_goal.errors %}rgba(231,76,60,0.4){% else %}var(--border){% endif %}'">
                         <input type="radio" name="fitness_goal" value="{{ value }}"
                                style="accent-color:var(--emerald);width:18px;height:18px;flex-shrink:0"
-                               {% if forloop.first %}checked{% endif %}>
+                               {% if form.fitness_goal.value == value %}checked{% elif forloop.first and not form.fitness_goal.value %}checked{% endif %}>
                         <div>
                             <div style="font-size:0.92rem;font-weight:600;color:var(--text-primary)">{{ label }}</div>
                             <div style="font-size:0.78rem;color:var(--text-muted);margin-top:0.1rem">
@@ -61,15 +108,17 @@
                 </div>
             </div>
 
-            <!-- Budget -->
+            <!-- Budget — required -->
             <div style="margin-bottom:2rem">
                 <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);font-weight:600;margin-bottom:0.75rem">
-                    Weekly Food Budget
+                    Weekly Food Budget <span style="color:#E74C3C">*</span>
                 </label>
                 <div style="position:relative">
                     <span style="position:absolute;left:1rem;top:50%;transform:translateY(-50%);color:var(--gold);font-weight:700;font-size:1rem">₵</span>
-                    <input type="number" name="budget" step="0.01" placeholder="50"
-                           style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);padding:1rem 1rem 1rem 2.5rem;font-size:1.1rem;font-family:'Outfit',sans-serif;outline:none;transition:all 0.2s ease"
+                    <input type="number" name="budget" step="0.01" min="1"
+                           value="{{ form.budget.value|default:'' }}"
+                           placeholder="50"
+                           style="width:100%;background:var(--surface2);border:1px solid {% if form.budget.errors %}rgba(231,76,60,0.5){% else %}var(--border){% endif %};border-radius:var(--radius-sm);color:var(--text-primary);padding:1rem 1rem 1rem 2.5rem;font-size:1.1rem;font-family:'Outfit',sans-serif;outline:none;transition:all 0.2s ease;box-sizing:border-box"
                            onfocus="this.style.borderColor='rgba(46,204,113,0.4)';this.style.boxShadow='0 0 0 3px rgba(46,204,113,0.1)'"
                            onblur="this.style.borderColor='var(--border)';this.style.boxShadow='none'">
                 </div>
@@ -78,8 +127,12 @@
                 </div>
             </div>
 
+            <p style="text-align:center;font-size:0.75rem;color:var(--text-muted);margin-bottom:1rem">
+                <span style="color:#E74C3C">*</span> Required fields
+            </p>
+
             <button type="submit" class="btn btn-primary w-100 py-3" style="font-size:1rem">
-                🥗 Generate My First Meal Plan
+                🥗 Complete Setup
             </button>
         </form>
     </div>

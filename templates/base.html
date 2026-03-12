@@ -41,7 +41,6 @@
             overflow-x: hidden;
         }
 
-        /* ── Background texture ── */
         body::before {
             content: '';
             position: fixed;
@@ -82,9 +81,7 @@
             line-height: 1;
         }
 
-        .sidebar-logo .logo-text span {
-            color: var(--gold);
-        }
+        .sidebar-logo .logo-text span { color: var(--gold); }
 
         .sidebar-logo .logo-sub {
             font-size: 0.72rem;
@@ -230,10 +227,22 @@
 
         .topbar-actions { display: flex; align-items: center; gap: 0.75rem; }
 
-        /* ── Page body ── */
-        .page-body {
-            padding: 2.5rem;
+        /* ── Onboarding minimal topbar ── */
+        .onboarding-topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.25rem 2.5rem;
+            border-bottom: 1px solid var(--border);
+            background: rgba(10,15,13,0.8);
+            backdrop-filter: blur(20px);
+            position: sticky;
+            top: 0;
+            z-index: 50;
         }
+
+        /* ── Page body ── */
+        .page-body { padding: 2.5rem; }
 
         /* ── Cards ── */
         .glass-card {
@@ -285,9 +294,7 @@
         .stat-card::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
+            top: 0; left: 0; right: 0;
             height: 2px;
             background: linear-gradient(90deg, var(--emerald), transparent);
             opacity: 0;
@@ -563,6 +570,7 @@
             .main-content { margin-left: 0; }
             .page-body { padding: 1.5rem; }
             .topbar { padding: 1rem 1.5rem; }
+            .onboarding-topbar { padding: 1rem 1.5rem; }
         }
 
         /* ── Meal type pills ── */
@@ -600,9 +608,7 @@
             transition: all 0.2s ease;
         }
 
-        .nutrition-chip:hover {
-            border-color: rgba(46,204,113,0.2);
-        }
+        .nutrition-chip:hover { border-color: rgba(46,204,113,0.2); }
 
         .nutrition-chip .value {
             font-family: 'Cormorant Garamond', serif;
@@ -691,15 +697,14 @@
         .goal-card::after {
             content: '';
             position: absolute;
-            top: 0;
-            right: 0;
+            top: 0; right: 0;
             width: 120px;
             height: 120px;
             background: radial-gradient(circle, var(--emerald-glow), transparent 70%);
             pointer-events: none;
         }
 
-        /* ── Profile card dark ── */
+        /* ── Profile rows ── */
         .profile-dark {
             background: linear-gradient(135deg, var(--surface), var(--surface2));
             border: 1px solid var(--border);
@@ -723,92 +728,135 @@
 <body>
 
 {% if user.is_authenticated %}
-<!-- Sidebar overlay for mobile -->
-<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
-<!-- Sidebar -->
-<aside class="sidebar" id="sidebar">
-    <div class="sidebar-logo">
-        <div class="logo-text">Nourish<span>AI</span></div>
-        <div class="logo-sub">AI Meal Planner</div>
-    </div>
+    {% if user.profile.onboarding_complete %}
+    <!-- ═══════════════════════════════════════════════════════
+         FULL APP LAYOUT — onboarding complete, show sidebar
+         ═══════════════════════════════════════════════════════ -->
 
-    <nav class="sidebar-nav">
-        <div class="nav-section-label">Main</div>
-        <a href="{% url 'meals:dashboard' %}" class="sidebar-link {% block nav_dashboard %}{% endblock %}">
-            <div class="nav-icon"><i class="fas fa-th-large"></i></div>
-            Dashboard
-        </a>
-        <a href="{% url 'meals:generate_plan' %}" class="sidebar-link {% block nav_generate %}{% endblock %}">
-            <div class="nav-icon"><i class="fas fa-magic"></i></div>
-            Generate Plan
-        </a>
-        <a href="{% url 'meals:meal_plan_history' %}" class="sidebar-link {% block nav_history %}{% endblock %}">
-            <div class="nav-icon"><i class="fas fa-history"></i></div>
-            Plan History
-        </a>
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
-        <div class="nav-section-label">Account</div>
-        <a href="{% url 'users:profile' %}" class="sidebar-link {% block nav_profile %}{% endblock %}">
-            <div class="nav-icon"><i class="fas fa-user"></i></div>
-            My Profile
-        </a>
-        <a href="{% url 'meals:upgrade' %}" class="sidebar-link {% block nav_upgrade %}{% endblock %}">
-    <div class="nav-icon"><i class="fas fa-crown"></i></div>
-    {% if user.profile.subscription_tier == 'premium' %}Premium ✨{% else %}Upgrade{% endif %}
-</a>
-        <a href="{% url 'users:logout' %}" class="sidebar-link">
-            <div class="nav-icon"><i class="fas fa-sign-out-alt"></i></div>
-            Logout
-        </a>
-    </nav>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <div class="logo-text">Nourish<span>AI</span></div>
+            <div class="logo-sub">AI Meal Planner</div>
+        </div>
 
-    <div class="sidebar-footer">
-        <div class="user-pill">
-            <div class="user-avatar">
-                {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
-            </div>
-            <div>
-                <div class="user-name">{{ user.get_full_name }}</div>
-                <div class="user-plan">{{ user.profile.subscription_tier|title }} Plan</div>
+        <nav class="sidebar-nav">
+            <div class="nav-section-label">Main</div>
+            <a href="{% url 'meals:dashboard' %}" class="sidebar-link {% block nav_dashboard %}{% endblock %}">
+                <div class="nav-icon"><i class="fas fa-th-large"></i></div>
+                Dashboard
+            </a>
+            <a href="{% url 'meals:generate_plan' %}" class="sidebar-link {% block nav_generate %}{% endblock %}">
+                <div class="nav-icon"><i class="fas fa-magic"></i></div>
+                Generate Plan
+            </a>
+            <a href="{% url 'meals:meal_plan_history' %}" class="sidebar-link {% block nav_history %}{% endblock %}">
+                <div class="nav-icon"><i class="fas fa-history"></i></div>
+                Plan History
+            </a>
+
+            <div class="nav-section-label">Account</div>
+            <a href="{% url 'users:profile' %}" class="sidebar-link {% block nav_profile %}{% endblock %}">
+                <div class="nav-icon"><i class="fas fa-user"></i></div>
+                My Profile
+            </a>
+            <a href="{% url 'meals:upgrade' %}" class="sidebar-link {% block nav_upgrade %}{% endblock %}">
+                <div class="nav-icon"><i class="fas fa-crown"></i></div>
+                {% if user.profile.subscription_tier == 'premium' %}Premium ✨{% else %}Upgrade{% endif %}
+            </a>
+            <a href="{% url 'users:logout' %}" class="sidebar-link">
+                <div class="nav-icon"><i class="fas fa-sign-out-alt"></i></div>
+                Logout
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="user-pill">
+                <div class="user-avatar">
+                    {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+                </div>
+                <div>
+                    <div class="user-name">{{ user.get_full_name }}</div>
+                    <div class="user-plan">{{ user.profile.subscription_tier|title }} Plan</div>
+                </div>
             </div>
         </div>
-    </div>
-</aside>
+    </aside>
 
-<!-- Main content -->
-<div class="main-content">
-    <div class="topbar">
-        <button class="btn btn-ghost d-lg-none border-0 p-2" onclick="openSidebar()">
-            <i class="fas fa-bars"></i>
-        </button>
-        <div class="topbar-title d-none d-lg-block">{% block page_title %}{% endblock %}</div>
-        <div class="topbar-actions">
-            {% if messages %}
-            {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} py-2 px-3 mb-0 small d-flex align-items-center gap-2 alert-dismissible fade show">
-                {% if message.tags == 'success' %}<i class="fas fa-check-circle"></i>
-                {% elif message.tags == 'error' or message.tags == 'danger' %}<i class="fas fa-exclamation-circle"></i>
-                {% else %}<i class="fas fa-info-circle"></i>{% endif %}
-                {{ message }}
-                <button type="button" class="btn-close btn-close-white ms-2" data-bs-dismiss="alert" style="font-size:0.6rem"></button>
+    <div class="main-content">
+        <div class="topbar">
+            <button class="btn btn-ghost d-lg-none border-0 p-2" onclick="openSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="topbar-title d-none d-lg-block">{% block page_title %}{% endblock %}</div>
+            <div class="topbar-actions">
+                {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} py-2 px-3 mb-0 small d-flex align-items-center gap-2 alert-dismissible fade show">
+                    {% if message.tags == 'success' %}<i class="fas fa-check-circle"></i>
+                    {% elif message.tags == 'error' or message.tags == 'danger' %}<i class="fas fa-exclamation-circle"></i>
+                    {% else %}<i class="fas fa-info-circle"></i>{% endif %}
+                    {{ message }}
+                    <button type="button" class="btn-close btn-close-white ms-2" data-bs-dismiss="alert" style="font-size:0.6rem"></button>
+                </div>
+                {% endfor %}
+                {% endif %}
+                {% block topbar_action %}
+                <a href="{% url 'meals:generate_plan' %}" class="btn btn-primary btn-sm d-none d-md-inline-flex align-items-center gap-2">
+                    <i class="fas fa-magic"></i> Generate Plan
+                </a>
+                {% endblock %}
             </div>
-            {% endfor %}
-            {% endif %}
-            {% block topbar_action %}
-<a href="{% url 'meals:generate_plan' %}" class="btn btn-primary btn-sm d-none d-md-inline-flex align-items-center gap-2">
-    <i class="fas fa-magic"></i> Generate Plan
-</a>
-{% endblock %}
+        </div>
+
+        <div class="page-body">
+            {% block content %}{% endblock %}
         </div>
     </div>
 
-    <div class="page-body">
-        {% block content %}{% endblock %}
-    </div>
+    {% else %}
+    <!-- ═══════════════════════════════════════════════════════
+         ONBOARDING LAYOUT — no sidebar, minimal topbar only
+         ═══════════════════════════════════════════════════════ -->
+
+    <div style="min-height:100vh;position:relative;z-index:1">
+        <!-- Minimal topbar — logo + logout only -->
+        <div class="onboarding-topbar">
+            <div style="font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:700;color:var(--text-primary)">
+                Nourish<span style="color:var(--gold)">AI</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:1rem">
+                {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} py-2 px-3 mb-0 small d-flex align-items-center gap-2 alert-dismissible fade show">
+                    {{ message }}
+                    <button type="button" class="btn-close btn-close-white ms-2" data-bs-dismiss="alert" style="font-size:0.6rem"></button>
+                </div>
+                {% endfor %}
+                {% endif %}
+                <a href="{% url 'users:logout' %}"
+                   style="font-size:0.82rem;color:var(--text-muted);text-decoration:none;transition:color 0.2s"
+                   onmouseover="this.style.color='var(--text-primary)'"
+                   onmouseout="this.style.color='var(--text-muted)'">
+                    Logout
+                </a>
+            </div>
+        </div>
+
+        <!-- Onboarding content -->
+        <div>
+    {% block onboarding_content %}{% endblock %}
 </div>
+    </div>
+
+    {% endif %}
 
 {% else %}
+<!-- ═══════════════════════════════════════════════════════
+     UNAUTHENTICATED LAYOUT — login, register, password reset
+     ═══════════════════════════════════════════════════════ -->
 <div style="min-height:100vh;display:flex;flex-direction:column">
     <div style="flex:1">
         {% if messages %}

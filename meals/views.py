@@ -4,14 +4,25 @@ from django.contrib import messages
 from django.utils import timezone
 from .models import MealPlan, Meal, ShoppingList, ShoppingListItem
 from .groq_service import generate_meal_plan, regenerate_single_meal
+from datetime import timedelta
+from django.db import models
 import requests as http_requests
 import os
+
+# Days shown in a partial (half) plan — Mon, Tue, Wed only
+PARTIAL_DAYS = ['monday', 'tuesday', 'wednesday']
+ALL_DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
 
 
 @login_required
 def dashboard(request):
     profile = request.user.profile
-    latest_plan = MealPlan.objects.filter(user_profile=profile).order_by('-created_at').first()
+    cutoff = timezone.now() - timedelta(days=7)
+    latest_plan = MealPlan.objects.filter(
+        user_profile=profile
+    ).filter(
+        models.Q(is_saved=True) | models.Q(created_at__gte=cutoff)
+    ).order_by('-created_at').first()
     saved_plans = MealPlan.objects.filter(user_profile=profile, is_saved=True).order_by('-created_at')
     goal_estimate = profile.calculate_goal_estimate()
     show_premium_modal = request.session.pop('show_premium_modal', False)
@@ -31,6 +42,7 @@ def dashboard(request):
 @login_required
 def generate_plan(request):
     profile = request.user.profile
+    gen_status = profile.get_generation_status()
 
     profile_data = [
         ('Goal', profile.get_fitness_goal_display()),
@@ -41,6 +53,7 @@ def generate_plan(request):
         ('Water', f'{profile.daily_water_intake}L/day'),
     ]
 
+    # AI taste learning — Premium only
     if profile.subscription_tier == 'premium' or profile.user.is_superuser or profile.user.is_staff:
         liked_meals = list(
             Meal.objects.filter(
@@ -59,21 +72,30 @@ def generate_plan(request):
         disliked_meals = []
 
     if request.method == 'POST':
-        can_generate, reason = profile.can_generate_plan()
-        if not can_generate:
+        # Blocked — must upgrade
+        if not gen_status['allowed']:
             return render(request, 'meals/generate_plan.html', {
                 'profile_data': profile_data,
                 'liked_meals': liked_meals,
                 'disliked_meals': disliked_meals,
-                'show_limit_modal': True,
+                'show_upgrade_modal': True,
+                'gen_status': gen_status,
             })
+
         try:
+            is_partial = gen_status['type'] == 'partial'
             data = generate_meal_plan(profile, liked_meals=liked_meals, disliked_meals=disliked_meals)
+
             meal_plan = MealPlan.objects.create(
                 user_profile=profile,
-                week_start_date=timezone.now().date()
+                week_start_date=timezone.now().date(),
+                is_partial=is_partial,
             )
+
             for day_data in data['meal_plan']:
+                # For partial plans only save the first 3 days to DB
+                if is_partial and day_data['day'] not in PARTIAL_DAYS:
+                    continue
                 for meal_data in day_data['meals']:
                     Meal.objects.create(
                         meal_plan=meal_plan,
@@ -93,7 +115,9 @@ def generate_plan(request):
                         sugar=meal_data.get('sugar', 0),
                         sodium=meal_data.get('sodium', 0),
                         portion_guide=meal_data.get('portion_guide', ''),
+                        suggested_time=meal_data.get('suggested_time', ''),
                     )
+
             shopping_list = ShoppingList.objects.create(meal_plan=meal_plan)
             for item in data['shopping_list']:
                 ShoppingListItem.objects.create(
@@ -103,9 +127,16 @@ def generate_plan(request):
                     unit=item.get('unit', ''),
                     category=item.get('category', 'pantry'),
                 )
+
             profile.increment_generation_count()
-            messages.success(request, 'Your meal plan is ready!')
+
+            if is_partial:
+                messages.success(request, 'Your 3-day preview plan is ready! Upgrade to Premium for the full 7-day experience.')
+            else:
+                messages.success(request, 'Your meal plan is ready!')
+
             return redirect('meals:meal_plan_detail', pk=meal_plan.pk)
+
         except Exception as e:
             messages.error(request, f'Error generating meal plan: {str(e)}')
             return redirect('meals:dashboard')
@@ -114,6 +145,7 @@ def generate_plan(request):
         'profile_data': profile_data,
         'liked_meals': liked_meals,
         'disliked_meals': disliked_meals,
+        'gen_status': gen_status,
     })
 
 
@@ -122,7 +154,7 @@ def meal_plan_detail(request, pk):
     meal_plan = get_object_or_404(MealPlan, pk=pk, user_profile=request.user.profile)
     meals = meal_plan.meals.all().order_by('day', 'meal_type')
 
-    days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+    days = ALL_DAYS
     meal_types = ['breakfast', 'lunch', 'dinner']
 
     plan_grid = {}
@@ -138,7 +170,7 @@ def meal_plan_detail(request, pk):
             if item.category not in grouped_items:
                 grouped_items[item.category] = []
             grouped_items[item.category].append(item)
-    except:
+    except Exception:
         shopping_list = None
         grouped_items = {}
 
@@ -151,14 +183,19 @@ def meal_plan_detail(request, pk):
         'fibre': round(sum(m.fibre for m in all_meals), 1),
     }
 
+    can_save, _ = request.user.profile.can_save_plan()
+
     context = {
         'meal_plan': meal_plan,
         'plan_grid': plan_grid,
         'days': days,
+        'locked_days': ['thursday', 'friday', 'saturday', 'sunday'],
+        'partial_days': PARTIAL_DAYS,
         'meal_types': meal_types,
         'shopping_list': shopping_list,
         'grouped_items': grouped_items,
         'nutrition_totals': nutrition_totals,
+        'can_save': can_save,
     }
     return render(request, 'meals/meal_plan_detail.html', context)
 
@@ -200,6 +237,7 @@ def regenerate_meal(request, pk):
             meal.sugar = meal_data.get('sugar', 0)
             meal.sodium = meal_data.get('sodium', 0)
             meal.portion_guide = meal_data.get('portion_guide', '')
+            meal.suggested_time = meal_data.get('suggested_time', '')
             meal.rating = None
             meal.save()
             messages.success(request, 'Meal swapped successfully!')
@@ -219,6 +257,10 @@ def toggle_save_plan(request, pk):
             messages.success(request, 'Meal plan unsaved.')
             return redirect('meals:meal_plan_detail', pk=pk)
         else:
+            can_save, reason = request.user.profile.can_save_plan()
+            if not can_save:
+                messages.error(request, reason)
+                return redirect('meals:meal_plan_detail', pk=pk)
             return render(request, 'meals/save_plan.html', {'meal_plan': meal_plan})
     return redirect('meals:meal_plan_detail', pk=pk)
 
@@ -227,6 +269,11 @@ def toggle_save_plan(request, pk):
 def confirm_save_plan(request, pk):
     meal_plan = get_object_or_404(MealPlan, pk=pk, user_profile=request.user.profile)
     if request.method == 'POST':
+        profile = request.user.profile
+        can_save, reason = profile.can_save_plan()
+        if not can_save:
+            messages.error(request, reason)
+            return redirect('meals:meal_plan_detail', pk=pk)
         title = request.POST.get('title', '').strip()
         meal_plan.title = title if title else f"Plan — {meal_plan.week_start_date.strftime('%d %b %Y')}"
         meal_plan.is_saved = True
@@ -253,8 +300,11 @@ def rate_meal(request, pk):
 @login_required
 def meal_plan_history(request):
     profile = request.user.profile
+    cutoff = timezone.now() - timedelta(days=7)
     all_plans = MealPlan.objects.filter(
         user_profile=profile
+    ).filter(
+        models.Q(is_saved=True) | models.Q(created_at__gte=cutoff)
     ).order_by('-created_at')
     return render(request, 'meals/meal_plan_history.html', {'all_plans': all_plans})
 
@@ -271,16 +321,17 @@ def delete_plan(request, pk):
 @login_required
 def upgrade(request):
     profile = request.user.profile
+    saved_count = profile.meal_plans.filter(is_saved=True).count()
     return render(request, 'meals/upgrade.html', {
         'is_premium': profile.subscription_tier == 'premium',
-        'generations_used': profile.plan_generations_this_month,
+        'saved_count': saved_count,
+        'gen_status': profile.get_generation_status(),
     })
 
 
 @login_required
 def create_checkout_session(request):
     if request.method == 'POST':
-        profile = request.user.profile
         try:
             response = http_requests.post(
                 'https://api.paystack.co/transaction/initialize',
@@ -293,10 +344,7 @@ def create_checkout_session(request):
                     'amount': 2000,
                     'currency': 'GHS',
                     'callback_url': request.build_absolute_uri('/meals/upgrade/success/'),
-                    'metadata': {
-                        'user_id': request.user.id,
-                        'plan': 'premium',
-                    }
+                    'metadata': {'user_id': request.user.id, 'plan': 'premium'}
                 }
             )
             data = response.json()
@@ -316,9 +364,7 @@ def upgrade_success(request):
         try:
             response = http_requests.get(
                 f'https://api.paystack.co/transaction/verify/{reference}',
-                headers={
-                    'Authorization': f'Bearer {os.getenv("PAYSTACK_SECRET_KEY")}',
-                }
+                headers={'Authorization': f'Bearer {os.getenv("PAYSTACK_SECRET_KEY")}'}
             )
             data = response.json()
             if data.get('status') and data['data']['status'] == 'success':

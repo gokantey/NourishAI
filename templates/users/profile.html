@@ -17,46 +17,55 @@
     <div class="col-lg-7 fade-up d1">
         <div class="card">
             <div class="card-header">
-                <span style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted)">
-                    Personal Details
-                </span>
+                <span style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted)">Personal Details</span>
             </div>
             <div class="card-body p-4">
                 <form method="post">
                     {% csrf_token %}
 
-                    <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--emerald);margin-bottom:1rem">
-                        Body Measurements
-                    </div>
+                    <!-- Body Measurements -->
+                    <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--emerald);margin-bottom:1rem">Body Measurements</div>
                     <div class="row g-3 mb-4">
-                        <div class="col-md-6">
-                            <label class="form-label">Height (cm)</label>
-                            <input type="number" name="height" step="0.1"
-                                   value="{{ profile.height|default:'' }}"
-                                   class="form-control" placeholder="e.g. 175">
+                        <div class="col-md-4">
+                            <label class="form-label">Age (years)</label>
+                            <input type="number" name="age" min="10" max="100" value="{{ profile.age|default:'' }}" class="form-control" placeholder="e.g. 25">
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
+                            <label class="form-label">Height (cm)</label>
+                            <input type="number" name="height" step="0.1" value="{{ profile.height|default:'' }}" class="form-control" placeholder="e.g. 175">
+                        </div>
+                        <div class="col-md-4">
                             <label class="form-label">Weight (kg)</label>
-                            <input type="number" name="weight" step="0.1"
-                                   value="{{ profile.weight|default:'' }}"
-                                   class="form-control" placeholder="e.g. 70">
+                            <input type="number" name="weight" step="0.1" value="{{ profile.weight|default:'' }}" class="form-control" placeholder="e.g. 70">
                         </div>
                     </div>
 
-                    <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--emerald);margin-bottom:1rem">
-                        Diet & Allergies
+                    <!-- Location -->
+                    <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--emerald);margin-bottom:1rem">Location</div>
+                    <div class="mb-4">
+                        <label class="form-label">Region in Ghana</label>
+                        <select name="region" class="form-select">
+                            <option value="">— Select your region —</option>
+                            {% for value, label in form.region.field.choices %}
+                                {% if value %}
+                                <option value="{{ value }}" {% if profile.region == value %}selected{% endif %}>{{ label }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
                     </div>
+
+                    <!-- Diet & Allergies -->
+                    <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--emerald);margin-bottom:1rem">Diet & Allergies</div>
                     <div class="mb-3">
                         <label class="form-label">Dietary Preference</label>
                         <select name="dietary_preference" class="form-select">
                             {% for value, label in form.dietary_preference.field.choices %}
-                            <option value="{{ value }}" {% if profile.dietary_preference == value %}selected{% endif %}>
-                                {{ label }}
-                            </option>
+                            <option value="{{ value }}" {% if profile.dietary_preference == value %}selected{% endif %}>{{ label }}</option>
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="mb-4">
+
+                    <div class="mb-3">
                         <label class="form-label">Allergies</label>
                         <div class="row g-2 mt-1">
                             {% for value, label in form.allergies.field.choices %}
@@ -72,24 +81,129 @@
                         </div>
                     </div>
 
-                    <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--emerald);margin-bottom:1rem">
-                        Goals & Budget
+                    <!-- Other allergy free text -->
+                    <div class="mb-4">
+                        <label class="form-label" style="font-size:0.78rem;color:var(--text-muted)">Other Allergy Not Listed?</label>
+                        <textarea name="other_allergy" rows="2" class="form-control"
+                                  placeholder="e.g. Mango, Avocado, Sesame, Peanuts...">{{ profile.other_allergy|default:'' }}</textarea>
+                        <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.4rem">
+                            We will make sure none of your meals contain these ingredients.
+                        </div>
                     </div>
+
+                    <!-- Health Conditions -->
+                    <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--emerald);margin-bottom:0.4rem">Health Conditions</div>
+                    <p style="font-size:0.78rem;color:var(--text-muted);margin-bottom:1rem;line-height:1.5">
+                        Select any conditions that apply — we tailor your meals to your medical needs.
+                    </p>
+
+                    <!-- Metabolic & Endocrine -->
+                    <div style="margin-bottom:1rem">
+                        <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:1px;color:#A78BFA;font-weight:600;margin-bottom:0.5rem">Metabolic & Endocrine</div>
+                        <div class="row g-2">
+                            {% for value, label in form.health_conditions.field.choices %}
+                                {% if value == 'type1_diabetes' or value == 'type2_diabetes' or value == 'hypertension' or value == 'high_cholesterol' or value == 'hypothyroidism' or value == 'hyperthyroidism' or value == 'fatty_liver' or value == 'gout' %}
+                                <div class="col-6">
+                                    <label style="display:flex;align-items:center;gap:0.6rem;padding:0.65rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:0.82rem;color:var(--text-secondary);transition:border-color 0.2s"
+                                           onmouseover="this.style.borderColor='rgba(168,139,250,0.3)'"
+                                           onmouseout="this.style.borderColor='var(--border)'">
+                                        <input type="checkbox" name="health_conditions" value="{{ value }}"
+                                               {% if value in profile.health_conditions %}checked{% endif %}
+                                               style="accent-color:#A78BFA;width:15px;height:15px;flex-shrink:0">
+                                        {{ label }}
+                                    </label>
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Blood & Immune -->
+                    <div style="margin-bottom:1rem">
+                        <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:1px;color:#A78BFA;font-weight:600;margin-bottom:0.5rem">Blood & Immune</div>
+                        <div class="row g-2">
+                            {% for value, label in form.health_conditions.field.choices %}
+                                {% if value == 'anaemia' or value == 'sickle_cell' or value == 'hiv_aids' %}
+                                <div class="col-6">
+                                    <label style="display:flex;align-items:center;gap:0.6rem;padding:0.65rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:0.82rem;color:var(--text-secondary);transition:border-color 0.2s"
+                                           onmouseover="this.style.borderColor='rgba(168,139,250,0.3)'"
+                                           onmouseout="this.style.borderColor='var(--border)'">
+                                        <input type="checkbox" name="health_conditions" value="{{ value }}"
+                                               {% if value in profile.health_conditions %}checked{% endif %}
+                                               style="accent-color:#A78BFA;width:15px;height:15px;flex-shrink:0">
+                                        {{ label }}
+                                    </label>
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Digestive -->
+                    <div style="margin-bottom:1rem">
+                        <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:1px;color:#A78BFA;font-weight:600;margin-bottom:0.5rem">Digestive</div>
+                        <div class="row g-2">
+                            {% for value, label in form.health_conditions.field.choices %}
+                                {% if value == 'celiac_disease' or value == 'lactose_intolerance' or value == 'gastritis' or value == 'ibs' or value == 'kidney_disease' %}
+                                <div class="col-6">
+                                    <label style="display:flex;align-items:center;gap:0.6rem;padding:0.65rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:0.82rem;color:var(--text-secondary);transition:border-color 0.2s"
+                                           onmouseover="this.style.borderColor='rgba(168,139,250,0.3)'"
+                                           onmouseout="this.style.borderColor='var(--border)'">
+                                        <input type="checkbox" name="health_conditions" value="{{ value }}"
+                                               {% if value in profile.health_conditions %}checked{% endif %}
+                                               style="accent-color:#A78BFA;width:15px;height:15px;flex-shrink:0">
+                                        {{ label }}
+                                    </label>
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Hormonal, Respiratory & Other -->
+                    <div style="margin-bottom:1rem">
+                        <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:1px;color:#A78BFA;font-weight:600;margin-bottom:0.5rem">Hormonal, Respiratory & Other</div>
+                        <div class="row g-2">
+                            {% for value, label in form.health_conditions.field.choices %}
+                                {% if value == 'pcos' or value == 'asthma' or value == 'heart_disease' or value == 'stroke_history' or value == 'cancer' or value == 'osteoporosis' or value == 'arthritis' %}
+                                <div class="col-6">
+                                    <label style="display:flex;align-items:center;gap:0.6rem;padding:0.65rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:0.82rem;color:var(--text-secondary);transition:border-color 0.2s"
+                                           onmouseover="this.style.borderColor='rgba(168,139,250,0.3)'"
+                                           onmouseout="this.style.borderColor='var(--border)'">
+                                        <input type="checkbox" name="health_conditions" value="{{ value }}"
+                                               {% if value in profile.health_conditions %}checked{% endif %}
+                                               style="accent-color:#A78BFA;width:15px;height:15px;flex-shrink:0">
+                                        {{ label }}
+                                    </label>
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Other health condition free text -->
+                    <div class="mb-4">
+                        <label class="form-label" style="font-size:0.78rem;color:var(--text-muted)">Other Condition Not Listed?</label>
+                        <textarea name="other_health_condition" rows="2" class="form-control"
+                                  placeholder="e.g. Lupus, Crohn's disease, Epilepsy, Scoliosis...">{{ profile.other_health_condition|default:'' }}</textarea>
+                        <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.4rem">
+                            Our AI will apply appropriate dietary guidance for any condition you describe here.
+                        </div>
+                    </div>
+
+                    <!-- Goals & Budget -->
+                    <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--emerald);margin-bottom:1rem">Goals & Budget</div>
                     <div class="mb-3">
                         <label class="form-label">Fitness Goal</label>
                         <select name="fitness_goal" class="form-select">
                             {% for value, label in form.fitness_goal.field.choices %}
-                            <option value="{{ value }}" {% if profile.fitness_goal == value %}selected{% endif %}>
-                                {{ label }}
-                            </option>
+                            <option value="{{ value }}" {% if profile.fitness_goal == value %}selected{% endif %}>{{ label }}</option>
                             {% endfor %}
                         </select>
                     </div>
                     <div class="mb-4">
                         <label class="form-label">Weekly Food Budget (₵)</label>
-                        <input type="number" name="budget" step="0.01"
-                               value="{{ profile.budget|default:'' }}"
-                               class="form-control" placeholder="e.g. 50">
+                        <input type="number" name="budget" step="0.01" value="{{ profile.budget|default:'' }}" class="form-control" placeholder="e.g. 50">
                     </div>
 
                     <div class="d-flex gap-2">
@@ -109,9 +223,7 @@
         <!-- Stats -->
         <div class="card mb-3">
             <div class="card-header">
-                <span style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted)">
-                    Current Stats
-                </span>
+                <span style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted)">Current Stats</span>
             </div>
             <div class="card-body p-4">
                 <div class="row g-3 text-center">
@@ -120,9 +232,7 @@
                             <div class="value" style="font-size:1.6rem">{{ profile.bmi|default:"—" }}</div>
                             <div class="label">BMI</div>
                         </div>
-                        <div style="font-size:0.78rem;color:var(--emerald);margin-top:0.4rem;font-weight:500">
-                            {{ profile.bmi_category|default:"—" }}
-                        </div>
+                        <div style="font-size:0.78rem;color:var(--emerald);margin-top:0.4rem;font-weight:500">{{ profile.bmi_category|default:"—" }}</div>
                     </div>
                     <div class="col-6">
                         <div class="nutrition-chip">
@@ -143,26 +253,56 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Allergies summary -->
+                {% if profile.allergies or profile.other_allergy %}
+                <div style="margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--border)">
+                    <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);margin-bottom:0.6rem">Allergies</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:0.4rem">
+                        {% for allergy in profile.allergies %}
+                        <span style="font-size:0.75rem;padding:0.2rem 0.65rem;background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.2);border-radius:20px;color:var(--gold)">
+                            {{ allergy|title }}
+                        </span>
+                        {% endfor %}
+                        {% if profile.other_allergy %}
+                        <span style="font-size:0.75rem;padding:0.2rem 0.65rem;background:rgba(212,175,55,0.07);border:1px dashed rgba(212,175,55,0.3);border-radius:20px;color:var(--gold)">
+                            {{ profile.other_allergy|truncatechars:25 }}
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Health conditions summary -->
+                {% if profile.health_conditions or profile.other_health_condition %}
+                <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border)">
+                    <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);margin-bottom:0.6rem">Health Conditions</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:0.4rem">
+                        {% for condition in profile.health_conditions %}
+                        <span style="font-size:0.75rem;padding:0.2rem 0.65rem;background:rgba(168,139,250,0.1);border:1px solid rgba(168,139,250,0.2);border-radius:20px;color:#A78BFA">
+                            {{ condition|title|cut:"_" }}
+                        </span>
+                        {% endfor %}
+                        {% if profile.other_health_condition %}
+                        <span style="font-size:0.75rem;padding:0.2rem 0.65rem;background:rgba(168,139,250,0.08);border:1px dashed rgba(168,139,250,0.3);border-radius:20px;color:#A78BFA">
+                            {{ profile.other_health_condition|truncatechars:30 }}
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
             </div>
         </div>
 
         <!-- Goal Estimate -->
         {% if goal_estimate %}
         <div class="goal-card mb-3">
-            <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);margin-bottom:0.75rem">
-                Goal Estimate
-            </div>
-            <p style="color:var(--text-secondary);font-size:0.88rem;line-height:1.6;margin-bottom:0.75rem">
-                {{ goal_estimate.message }}
-            </p>
+            <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);margin-bottom:0.75rem">Goal Estimate</div>
+            <p style="color:var(--text-secondary);font-size:0.88rem;line-height:1.6;margin-bottom:0.75rem">{{ goal_estimate.message }}</p>
             {% if goal_estimate.weeks %}
             <div class="d-flex flex-wrap gap-2">
-                {% if goal_estimate.kg_to_lose %}
-                <span class="badge-emerald">📉 {{ goal_estimate.kg_to_lose }}kg to lose</span>
-                {% endif %}
-                {% if goal_estimate.kg_to_gain %}
-                <span class="badge-emerald">📈 {{ goal_estimate.kg_to_gain }}kg to gain</span>
-                {% endif %}
+                {% if goal_estimate.kg_to_lose %}<span class="badge-emerald">📉 {{ goal_estimate.kg_to_lose }}kg to lose</span>{% endif %}
+                {% if goal_estimate.kg_to_gain %}<span class="badge-emerald">📈 {{ goal_estimate.kg_to_gain }}kg to gain</span>{% endif %}
                 <span class="badge-gold">⏱ {{ goal_estimate.months }} months</span>
             </div>
             {% endif %}
@@ -172,9 +312,7 @@
         <!-- Account Info -->
         <div class="card">
             <div class="card-body p-4">
-                <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);margin-bottom:1rem">
-                    Account Info
-                </div>
+                <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);margin-bottom:1rem">Account Info</div>
                 <div class="profile-row">
                     <span class="key">Full Name</span>
                     <span class="val">{{ user.get_full_name }}</span>
@@ -187,6 +325,18 @@
                     <span class="key">Member Since</span>
                     <span class="val">{{ user.date_joined|date:"F Y" }}</span>
                 </div>
+                {% if profile.region %}
+                <div class="profile-row">
+                    <span class="key">Region</span>
+                    <span class="val">{{ profile.get_region_display }}</span>
+                </div>
+                {% endif %}
+                {% if profile.age %}
+                <div class="profile-row">
+                    <span class="key">Age</span>
+                    <span class="val">{{ profile.age }} years</span>
+                </div>
+                {% endif %}
             </div>
         </div>
 

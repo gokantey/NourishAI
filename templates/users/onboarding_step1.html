@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% block title %}Setup — Step 1{% endblock %}
-{% block content %}
+{% block onboarding_content %}
 <div style="min-height:80vh;display:flex;align-items:center;justify-content:center;padding:2rem">
     <div style="width:100%;max-width:520px" class="fade-up">
 
@@ -35,61 +35,104 @@
             </p>
         </div>
 
-        <!-- Form Card -->
+        <!-- Error alert -->
+        {% if form.errors %}
+        <div style="background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.3);border-radius:var(--radius-sm);padding:1rem 1.25rem;margin-bottom:1.5rem;display:flex;align-items:flex-start;gap:0.75rem">
+            <i class="fas fa-exclamation-circle" style="color:#E74C3C;margin-top:0.15rem;flex-shrink:0"></i>
+            <div>
+                <div style="font-size:0.88rem;font-weight:600;color:#E74C3C;margin-bottom:0.35rem">Please fix the following:</div>
+                <ul style="margin:0;padding-left:1.1rem;font-size:0.84rem;color:rgba(231,76,60,0.85)">
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                        <li>{{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                    {% for error in form.non_field_errors %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Input Card -->
         <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
 
+            <!-- Age input -->
+            <div style="padding:1.5rem;border-bottom:1px solid var(--border)">
+                <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);font-weight:600;margin-bottom:0.75rem">
+                    Age <span style="color:#E74C3C">*</span>
+                </label>
+                <div style="position:relative">
+                    <input type="number" id="ageInput" min="10" max="100" step="1"
+                           value="{{ form.age.value|default:'' }}"
+                           style="width:100%;background:var(--surface2);border:1px solid {% if form.age.errors %}rgba(231,76,60,0.5){% else %}var(--border){% endif %};border-radius:var(--radius-sm);color:var(--text-primary);padding:1rem 4rem 1rem 1rem;font-size:1.1rem;font-family:'Outfit',sans-serif;outline:none;transition:all 0.2s ease;box-sizing:border-box"
+                           placeholder="25"
+                           onfocus="this.style.borderColor='rgba(46,204,113,0.4)';this.style.boxShadow='0 0 0 3px rgba(46,204,113,0.1)'"
+                           onblur="this.style.borderColor='var(--border)';this.style.boxShadow='none'">
+                    <span style="position:absolute;right:1rem;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:0.85rem;font-weight:600">years</span>
+                </div>
+            </div>
+
             <!-- Height input -->
-           <div style="padding:1.5rem;border-bottom:1px solid var(--border)">
-    <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);font-weight:600;margin-bottom:0.75rem">
-        Height
-    </label>
-    <div style="position:relative">
-        <input type="number" name="height" step="0.1"
-               style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);padding:1rem 3.5rem 1rem 1rem;font-size:1.1rem;font-family:'Outfit',sans-serif;outline:none;transition:all 0.2s ease"
-               placeholder="175"
-               onfocus="this.style.borderColor='rgba(46,204,113,0.4)';this.style.boxShadow='0 0 0 3px rgba(46,204,113,0.1)'"
-               onblur="this.style.borderColor='var(--border)';this.style.boxShadow='none'">
-        <span style="position:absolute;right:1rem;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:0.85rem;font-weight:600">cm</span>
-    </div>
-</div>
+            <div style="padding:1.5rem;border-bottom:1px solid var(--border)">
+                <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);font-weight:600;margin-bottom:0.75rem">
+                    Height <span style="color:#E74C3C">*</span>
+                </label>
+                <div style="position:relative">
+                    <input type="number" id="heightInput" step="0.1"
+                           value="{{ form.height.value|default:'' }}"
+                           style="width:100%;background:var(--surface2);border:1px solid {% if form.height.errors %}rgba(231,76,60,0.5){% else %}var(--border){% endif %};border-radius:var(--radius-sm);color:var(--text-primary);padding:1rem 3.5rem 1rem 1rem;font-size:1.1rem;font-family:'Outfit',sans-serif;outline:none;transition:all 0.2s ease;box-sizing:border-box"
+                           placeholder="175"
+                           onfocus="this.style.borderColor='rgba(46,204,113,0.4)';this.style.boxShadow='0 0 0 3px rgba(46,204,113,0.1)'"
+                           onblur="this.style.borderColor='var(--border)';this.style.boxShadow='none'">
+                    <span style="position:absolute;right:1rem;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:0.85rem;font-weight:600">cm</span>
+                </div>
+            </div>
 
             <!-- Weight input -->
-            <div style="padding:1.5rem">
-    <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);font-weight:600;margin-bottom:0.75rem">
-        Weight
-    </label>
-    <div style="position:relative">
-        <input type="number" name="weight" step="0.1"
-               style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);padding:1rem 3.5rem 1rem 1rem;font-size:1.1rem;font-family:'Outfit',sans-serif;outline:none;transition:all 0.2s ease"
-               placeholder="70"
-               onfocus="this.style.borderColor='rgba(46,204,113,0.4)';this.style.boxShadow='0 0 0 3px rgba(46,204,113,0.1)'"
-               onblur="this.style.borderColor='var(--border)';this.style.boxShadow='none'">
-        <span style="position:absolute;right:1rem;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:0.85rem;font-weight:600">kg</span>
-    </div>
-</div>
+            <div style="padding:1.5rem;border-bottom:1px solid var(--border)">
+                <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);font-weight:600;margin-bottom:0.75rem">
+                    Weight <span style="color:#E74C3C">*</span>
+                </label>
+                <div style="position:relative">
+                    <input type="number" id="weightInput" step="0.1"
+                           value="{{ form.weight.value|default:'' }}"
+                           style="width:100%;background:var(--surface2);border:1px solid {% if form.weight.errors %}rgba(231,76,60,0.5){% else %}var(--border){% endif %};border-radius:var(--radius-sm);color:var(--text-primary);padding:1rem 3.5rem 1rem 1rem;font-size:1.1rem;font-family:'Outfit',sans-serif;outline:none;transition:all 0.2s ease;box-sizing:border-box"
+                           placeholder="70"
+                           onfocus="this.style.borderColor='rgba(46,204,113,0.4)';this.style.boxShadow='0 0 0 3px rgba(46,204,113,0.1)'"
+                           onblur="this.style.borderColor='var(--border)';this.style.boxShadow='none'">
+                    <span style="position:absolute;right:1rem;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:0.85rem;font-weight:600">kg</span>
+                </div>
+            </div>
 
-        <!-- BMI preview -->
-        <div style="margin-top:1rem;padding:1rem 1.25rem;background:var(--emerald-glow);border:1px solid rgba(46,204,113,0.15);border-radius:var(--radius-sm);display:flex;align-items:center;gap:0.75rem" id="bmiPreview" style="display:none">
-            <span style="font-size:1.2rem"></span>
-            <span style="font-size:0.85rem;color:var(--emerald)" id="bmiText">
-                Enter your height and weight to see your BMI preview
-            </span>
+            <!-- BMI preview -->
+            <div id="bmiPreview" style="display:none;margin:0 1.5rem;padding:1rem 1.25rem;background:var(--emerald-glow);border:1px solid rgba(46,204,113,0.15);border-radius:var(--radius-sm)">
+                <span style="font-size:0.85rem;color:var(--emerald)" id="bmiText"></span>
+            </div>
+
+            <!-- Form with hidden fields -->
+            <form method="post" id="step1Form" style="padding:1.5rem">
+                {% csrf_token %}
+                <input type="hidden" name="age" id="hiddenAge">
+                <input type="hidden" name="height" id="hiddenHeight">
+                <input type="hidden" name="weight" id="hiddenWeight">
+                <button type="submit" class="btn btn-primary w-100 py-3" style="font-size:1rem">
+                    Continue <i class="fas fa-arrow-right ms-2"></i>
+                </button>
+            </form>
         </div>
 
-        <form method="post" id="step1Form" style="margin-top:1.5rem">
-            {% csrf_token %}
-            <input type="hidden" name="height" id="hiddenHeight">
-            <input type="hidden" name="weight" id="hiddenWeight">
-            <button type="submit" class="btn btn-primary w-100 py-3" style="font-size:1rem">
-                Continue <i class="fas fa-arrow-right ms-2"></i>
-            </button>
-        </form>
+        <p style="text-align:center;font-size:0.75rem;color:var(--text-muted);margin-top:1rem">
+            <span style="color:#E74C3C">*</span> All fields are required
+        </p>
     </div>
 </div>
 
 <script>
-    const heightInput = document.querySelector('input[name="height"]');
-    const weightInput = document.querySelector('input[name="weight"]');
+    const ageInput = document.getElementById('ageInput');
+    const heightInput = document.getElementById('heightInput');
+    const weightInput = document.getElementById('weightInput');
     const bmiPreview = document.getElementById('bmiPreview');
     const bmiText = document.getElementById('bmiText');
 
@@ -97,19 +140,52 @@
         const h = parseFloat(heightInput.value);
         const w = parseFloat(weightInput.value);
         if (h > 0 && w > 0) {
-            const bmi = (w / ((h/100) ** 2)).toFixed(1);
+            const bmi = (w / ((h / 100) ** 2)).toFixed(1);
             let cat = bmi < 18.5 ? 'Underweight' : bmi < 25 ? 'Normal weight' : bmi < 30 ? 'Overweight' : 'Obese';
             bmiText.textContent = `Your estimated BMI: ${bmi} — ${cat}`;
-            bmiPreview.style.display = 'flex';
+            bmiPreview.style.display = 'block';
         } else {
             bmiPreview.style.display = 'none';
         }
     }
 
-    // Sync inline inputs to hidden form fields on submit
-    document.getElementById('step1Form').addEventListener('submit', function() {
-        document.getElementById('hiddenHeight').value = heightInput.value;
-        document.getElementById('hiddenWeight').value = weightInput.value;
+    document.getElementById('step1Form').addEventListener('submit', function (e) {
+        const age = ageInput.value.trim();
+        const height = heightInput.value.trim();
+        const weight = weightInput.value.trim();
+        const missing = [];
+
+        if (!age) missing.push('Age');
+        if (!height) missing.push('Height');
+        if (!weight) missing.push('Weight');
+
+        if (missing.length > 0) {
+            e.preventDefault();
+            // Highlight missing fields red
+            if (!age) ageInput.style.borderColor = 'rgba(231,76,60,0.5)';
+            if (!height) heightInput.style.borderColor = 'rgba(231,76,60,0.5)';
+            if (!weight) weightInput.style.borderColor = 'rgba(231,76,60,0.5)';
+
+            // Show inline alert
+            let alertEl = document.getElementById('clientAlert');
+            if (!alertEl) {
+                alertEl = document.createElement('div');
+                alertEl.id = 'clientAlert';
+                alertEl.style.cssText = 'background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.3);border-radius:10px;padding:1rem 1.25rem;margin-bottom:1rem;display:flex;align-items:center;gap:0.75rem;font-size:0.88rem;color:#E74C3C';
+                alertEl.innerHTML = '<i class="fas fa-exclamation-circle" style="flex-shrink:0"></i><span></span>';
+                document.getElementById('step1Form').parentNode.insertBefore(alertEl, document.getElementById('step1Form'));
+            }
+            alertEl.querySelector('span').textContent = `Please fill in: ${missing.join(', ')}`;
+            return;
+        }
+
+        // Remove any client alert on valid submit
+        const alertEl = document.getElementById('clientAlert');
+        if (alertEl) alertEl.remove();
+
+        document.getElementById('hiddenAge').value = age;
+        document.getElementById('hiddenHeight').value = height;
+        document.getElementById('hiddenWeight').value = weight;
     });
 
     heightInput.addEventListener('input', updateBMI);

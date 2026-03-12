@@ -11,4 +11,9 @@ urlpatterns = [
     path('onboarding/step2/', views.onboarding_step2, name='onboarding_step2'),
     path('onboarding/step3/', views.onboarding_step3, name='onboarding_step3'),
     path('profile/', views.profile_view, name='profile'),
+    # Forgot password flow
+    path('forgot-password/', views.forgot_password_view, name='forgot_password'),
+    path('forgot-password/done/', views.forgot_password_done_view, name='forgot_password_done'),
+    path('reset-password/<uidb64>/<token>/', views.reset_password_view, name='reset_password'),
+    path('reset-password/complete/', views.reset_password_complete_view, name='reset_password_complete'),
 ]

@@ -8,10 +8,11 @@ class MealPlan(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     is_saved = models.BooleanField(default=False)
     title = models.CharField(max_length=100, blank=True, default='')
-    
+    is_partial = models.BooleanField(default=False, help_text="True if this is a 3-day half plan for free tier")
 
     def __str__(self):
         return f"{self.user_profile.user.username} - Week of {self.week_start_date}"
+
 
 class Meal(models.Model):
     DAY_CHOICES = [
@@ -54,6 +55,7 @@ class Meal(models.Model):
     sodium = models.FloatField(default=0, help_text="Milligrams")
     rating = models.IntegerField(null=True, blank=True)
     portion_guide = models.TextField(blank=True, default='')
+    suggested_time = models.CharField(max_length=50, blank=True, default='')
 
     def __str__(self):
         return f"{self.day} {self.meal_type} - {self.title}"

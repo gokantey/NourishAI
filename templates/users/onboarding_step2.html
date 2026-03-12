@@ -1,8 +1,8 @@
 {% extends 'base.html' %}
 {% block title %}Setup — Step 2{% endblock %}
-{% block content %}
+{% block onboarding_content %}
 <div style="min-height:80vh;display:flex;align-items:center;justify-content:center;padding:2rem">
-    <div style="width:100%;max-width:520px" class="fade-up">
+    <div style="width:100%;max-width:560px" class="fade-up">
 
         <!-- Progress -->
         <div style="margin-bottom:2.5rem">
@@ -27,8 +27,14 @@
                 What do you<br>eat?
             </h2>
             <p style="color:var(--text-muted);font-size:0.9rem;line-height:1.6">
-                Help us understand your dietary needs so we can tailor every meal to you.
+                Help us understand your dietary needs and health so we can tailor every meal to you.
             </p>
+        </div>
+
+        <!-- Optional notice -->
+        <div style="background:rgba(46,204,113,0.07);border:1px solid rgba(46,204,113,0.15);border-radius:var(--radius-sm);padding:0.85rem 1.1rem;margin-bottom:1.75rem;display:flex;align-items:center;gap:0.6rem;font-size:0.84rem;color:var(--emerald)">
+            <i class="fas fa-info-circle" style="flex-shrink:0"></i>
+            All fields on this step are optional — skip anything that doesn't apply to you.
         </div>
 
         <form method="post">
@@ -43,8 +49,7 @@
                     {% for value, label in form.dietary_preference.field.choices %}
                     <label style="display:flex;align-items:center;gap:0.75rem;padding:0.85rem 1rem;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:all 0.2s ease;font-size:0.88rem;color:var(--text-secondary)"
                            onmouseover="this.style.borderColor='rgba(46,204,113,0.3)';this.style.color='var(--text-primary)'"
-                           onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-secondary)'"
-                           onclick="this.style.borderColor='var(--emerald)';this.style.background='var(--emerald-glow)';this.style.color='var(--emerald)'">
+                           onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-secondary)'">
                         <input type="radio" name="dietary_preference" value="{{ value }}"
                                style="accent-color:var(--emerald);width:16px;height:16px;flex-shrink:0"
                                {% if forloop.first %}checked{% endif %}>
@@ -55,11 +60,12 @@
             </div>
 
             <!-- Allergies -->
-            <div style="margin-bottom:2rem">
+            <div style="margin-bottom:0.75rem">
                 <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);font-weight:600;margin-bottom:0.75rem">
-                    Allergies <span style="color:var(--text-muted);font-weight:400;text-transform:none;letter-spacing:0">(select all that apply)</span>
+                    Allergies
+                    <span style="color:var(--text-muted);font-weight:400;text-transform:none;letter-spacing:0;font-size:0.78rem"> — optional</span>
                 </label>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.75rem">
                     {% for value, label in form.allergies.field.choices %}
                     <label style="display:flex;align-items:center;gap:0.75rem;padding:0.85rem 1rem;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:all 0.2s ease;font-size:0.88rem;color:var(--text-secondary)"
                            onmouseover="this.style.borderColor='rgba(212,175,55,0.3)'"
@@ -69,6 +75,119 @@
                         {{ label }}
                     </label>
                     {% endfor %}
+                </div>
+
+                <!-- Other allergy free text -->
+                <div style="margin-bottom:1.5rem">
+                    <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);font-weight:600;margin-bottom:0.4rem">
+                        Other Allergy Not Listed?
+                    </label>
+                    <textarea name="other_allergy" rows="2"
+                              style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);padding:0.85rem 1rem;font-size:0.9rem;font-family:'Outfit',sans-serif;outline:none;transition:all 0.2s ease;resize:vertical;box-sizing:border-box"
+                              placeholder="e.g. Mango, Avocado, Sesame, Peanuts, Shellfish..."
+                              onfocus="this.style.borderColor='rgba(212,175,55,0.4)';this.style.boxShadow='0 0 0 3px rgba(212,175,55,0.08)'"
+                              onblur="this.style.borderColor='var(--border)';this.style.boxShadow='none'"></textarea>
+                    <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.35rem">
+                        We will make sure none of your meals contain these ingredients.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Health Conditions — Grouped -->
+            <div style="margin-bottom:1.5rem">
+                <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);font-weight:600;margin-bottom:0.4rem">
+                    Health Conditions
+                    <span style="color:var(--text-muted);font-weight:400;text-transform:none;letter-spacing:0;font-size:0.78rem"> — optional</span>
+                </label>
+                <p style="font-size:0.78rem;color:var(--text-muted);margin-bottom:1rem;line-height:1.5">
+                    We use this to tailor your meals to your medical needs. Leave blank if none apply.
+                </p>
+
+                <!-- Metabolic & Endocrine -->
+                <div style="margin-bottom:1rem">
+                    <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:1px;color:#A78BFA;font-weight:600;margin-bottom:0.5rem">Metabolic & Endocrine</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.4rem">
+                        {% for value, label in form.health_conditions.field.choices %}
+                            {% if value == 'type1_diabetes' or value == 'type2_diabetes' or value == 'hypertension' or value == 'high_cholesterol' or value == 'hypothyroidism' or value == 'hyperthyroidism' or value == 'fatty_liver' or value == 'gout' %}
+                            <label style="display:flex;align-items:center;gap:0.6rem;padding:0.7rem 0.85rem;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:border-color 0.2s;font-size:0.82rem;color:var(--text-secondary)"
+                                   onmouseover="this.style.borderColor='rgba(168,139,250,0.3)'"
+                                   onmouseout="this.style.borderColor='var(--border)'">
+                                <input type="checkbox" name="health_conditions" value="{{ value }}"
+                                       style="accent-color:#A78BFA;width:15px;height:15px;flex-shrink:0">
+                                {{ label }}
+                            </label>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Blood & Immune -->
+                <div style="margin-bottom:1rem">
+                    <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:1px;color:#A78BFA;font-weight:600;margin-bottom:0.5rem">Blood & Immune</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.4rem">
+                        {% for value, label in form.health_conditions.field.choices %}
+                            {% if value == 'anaemia' or value == 'sickle_cell' or value == 'hiv_aids' %}
+                            <label style="display:flex;align-items:center;gap:0.6rem;padding:0.7rem 0.85rem;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:border-color 0.2s;font-size:0.82rem;color:var(--text-secondary)"
+                                   onmouseover="this.style.borderColor='rgba(168,139,250,0.3)'"
+                                   onmouseout="this.style.borderColor='var(--border)'">
+                                <input type="checkbox" name="health_conditions" value="{{ value }}"
+                                       style="accent-color:#A78BFA;width:15px;height:15px;flex-shrink:0">
+                                {{ label }}
+                            </label>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Digestive -->
+                <div style="margin-bottom:1rem">
+                    <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:1px;color:#A78BFA;font-weight:600;margin-bottom:0.5rem">Digestive</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.4rem">
+                        {% for value, label in form.health_conditions.field.choices %}
+                            {% if value == 'celiac_disease' or value == 'lactose_intolerance' or value == 'gastritis' or value == 'ibs' or value == 'kidney_disease' %}
+                            <label style="display:flex;align-items:center;gap:0.6rem;padding:0.7rem 0.85rem;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:border-color 0.2s;font-size:0.82rem;color:var(--text-secondary)"
+                                   onmouseover="this.style.borderColor='rgba(168,139,250,0.3)'"
+                                   onmouseout="this.style.borderColor='var(--border)'">
+                                <input type="checkbox" name="health_conditions" value="{{ value }}"
+                                       style="accent-color:#A78BFA;width:15px;height:15px;flex-shrink:0">
+                                {{ label }}
+                            </label>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Hormonal, Respiratory & Other -->
+                <div style="margin-bottom:1rem">
+                    <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:1px;color:#A78BFA;font-weight:600;margin-bottom:0.5rem">Hormonal, Respiratory & Other</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.4rem">
+                        {% for value, label in form.health_conditions.field.choices %}
+                            {% if value == 'pcos' or value == 'asthma' or value == 'heart_disease' or value == 'stroke_history' or value == 'cancer' or value == 'osteoporosis' or value == 'arthritis' %}
+                            <label style="display:flex;align-items:center;gap:0.6rem;padding:0.7rem 0.85rem;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:border-color 0.2s;font-size:0.82rem;color:var(--text-secondary)"
+                                   onmouseover="this.style.borderColor='rgba(168,139,250,0.3)'"
+                                   onmouseout="this.style.borderColor='var(--border)'">
+                                <input type="checkbox" name="health_conditions" value="{{ value }}"
+                                       style="accent-color:#A78BFA;width:15px;height:15px;flex-shrink:0">
+                                {{ label }}
+                            </label>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Other health condition free text -->
+                <div style="margin-bottom:2rem">
+                    <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);font-weight:600;margin-bottom:0.4rem">
+                        Other Condition Not Listed?
+                    </label>
+                    <textarea name="other_health_condition" rows="2"
+                              style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);padding:0.85rem 1rem;font-size:0.9rem;font-family:'Outfit',sans-serif;outline:none;transition:all 0.2s ease;resize:vertical;box-sizing:border-box"
+                              placeholder="e.g. Lupus, Crohn's disease, Epilepsy, Scoliosis..."
+                              onfocus="this.style.borderColor='rgba(168,139,250,0.4)';this.style.boxShadow='0 0 0 3px rgba(168,139,250,0.1)'"
+                              onblur="this.style.borderColor='var(--border)';this.style.boxShadow='none'"></textarea>
+                    <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.35rem">
+                        NourishAI will apply appropriate dietary guidance for any condition you describe here.
+                    </div>
                 </div>
             </div>
 

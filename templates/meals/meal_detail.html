@@ -16,7 +16,29 @@
 
                 <!-- Header -->
                 <div class="mb-4">
-                    
+                    <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:600;color:var(--text-primary);margin-bottom:0.75rem;line-height:1.3">
+                        {{ meal.title }}
+                    </h3>
+
+                    <!-- Meta row: meal type, prep time, difficulty, suggested time -->
+                    <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:1rem">
+                        <span class="meal-pill {{ meal.meal_type }}">{{ meal.meal_type|title }}</span>
+
+                        <span style="display:inline-flex;align-items:center;gap:0.35rem;font-size:0.78rem;color:var(--text-muted);background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:0.2rem 0.7rem">
+                            ⏱ {{ meal.prep_time }} min prep
+                        </span>
+
+                        <span style="display:inline-flex;align-items:center;gap:0.35rem;font-size:0.78rem;color:var(--text-muted);background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:0.2rem 0.7rem">
+                            📊 {{ meal.difficulty|title }}
+                        </span>
+
+                        {% if meal.suggested_time %}
+                        <span style="display:inline-flex;align-items:center;gap:0.35rem;font-size:0.78rem;color:var(--gold);background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.2);border-radius:20px;padding:0.2rem 0.7rem">
+                            🕐 {{ meal.suggested_time }}
+                        </span>
+                        {% endif %}
+                    </div>
+
                     <p style="color:var(--text-muted);font-size:0.92rem;line-height:1.6">{{ meal.description }}</p>
                 </div>
 
@@ -47,18 +69,19 @@
 
                 <hr class="emerald-line">
 
+                <!-- Portion Guide -->
                 {% if meal.portion_guide %}
-<div class="card mb-4" style="border-color:rgba(212,175,55,0.2)">
-    <div class="card-body p-3" style="background:rgba(212,175,55,0.05)">
-        <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--gold);margin-bottom:0.5rem">
-             Portion Guide
-        </div>
-        <div style="font-size:0.95rem;color:var(--text-secondary)">
-            {{ meal.portion_guide }}
-        </div>
-    </div>
-</div>
-{% endif %}
+                <div class="card mb-4" style="border-color:rgba(212,175,55,0.2)">
+                    <div class="card-body p-3" style="background:rgba(212,175,55,0.05)">
+                        <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--gold);margin-bottom:0.5rem">
+                            🍽️ Portion Guide
+                        </div>
+                        <div style="font-size:0.95rem;color:var(--text-secondary)">
+                            {{ meal.portion_guide }}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
 
                 <!-- Ingredients -->
                 <div class="mb-4">
@@ -116,8 +139,8 @@
 
                 <!-- Swap -->
                 <a href="{% url 'meals:regenerate_meal' meal.pk %}" class="btn btn-outline-warning">
-    ↺ Don't like this meal? Swap it
-</a>
+                    ↺ Don't like this meal? Swap it
+                </a>
 
             </div>
         </div>
