@@ -18,4 +18,6 @@ urlpatterns = [
     path('upgrade/checkout/', views.create_checkout_session, name='create_checkout_session'),
     path('upgrade/success/', views.upgrade_success, name='upgrade_success'),
     path('upgrade/cancel/', views.cancel_subscription, name='cancel_subscription'),
+    # Paystack webhook — receives automatic event notifications from Paystack
+    path('webhook/paystack/', views.paystack_webhook, name='paystack_webhook'),
 ]

@@ -103,8 +103,8 @@ class UserProfile(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     paystack_customer_id = models.CharField(max_length=100, blank=True, null=True)
     paystack_subscription_code = models.CharField(max_length=100, blank=True, null=True)
-    # Tracks total lifetime generations for free tier gating (not monthly reset)
     plan_generations_count = models.IntegerField(default=0)
+    generation_reset_date = models.DateField(null=True, blank=True)
 
     def calculate_bmi(self):
         if self.height and self.weight:
@@ -169,20 +169,32 @@ class UserProfile(models.Model):
         return None
 
     def get_generation_status(self):
-        """
-        Returns a dict describing what the next generation will produce.
-        - 'full'    → Generation 1: full 7-day plan
-        - 'partial' → Generation 2: 3-day plan, days 4-7 blurred
-        - 'blocked' → Generation 3+: must upgrade
-        Staff/superusers and premium users always get full plans.
-        """
-        if self.user.is_staff or self.user.is_superuser or self.subscription_tier == 'premium':
+        """Returns generation status, resetting count monthly for free users."""
+        is_premium = (
+            self.subscription_tier == 'premium'
+            or self.user.is_staff
+            or self.user.is_superuser
+        )
+        if is_premium:
             return {'type': 'full', 'allowed': True}
+
+        # Monthly reset check
+        today = timezone.now().date()
+        if (
+            self.generation_reset_date is None
+            or today.month != self.generation_reset_date.month
+            or today.year != self.generation_reset_date.year
+        ):
+            self.plan_generations_count = 0
+            self.generation_reset_date = today
+            self.save(update_fields=['plan_generations_count', 'generation_reset_date'])
+
         if self.plan_generations_count == 0:
             return {'type': 'full', 'allowed': True}
-        if self.plan_generations_count == 1:
+        elif self.plan_generations_count == 1:
             return {'type': 'partial', 'allowed': True}
-        return {'type': 'blocked', 'allowed': False}
+        else:
+            return {'type': 'blocked', 'allowed': False}
 
     def can_save_plan(self):
         """
@@ -199,8 +211,10 @@ class UserProfile(models.Model):
         return True, None
 
     def increment_generation_count(self):
+        if self.generation_reset_date is None:
+            self.generation_reset_date = timezone.now().date()
         self.plan_generations_count += 1
-        self.save()
+        self.save(update_fields=['plan_generations_count', 'generation_reset_date'])
 
     def save(self, *args, **kwargs):
         self.calculate_bmi()

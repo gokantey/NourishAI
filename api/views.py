@@ -1,0 +1,757 @@
+import random
+import hashlib
+import hmac
+import json
+from datetime import datetime, timedelta
+
+from django.contrib.auth import get_user_model, authenticate
+from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import send_mail
+from django.conf import settings
+from django.utils import timezone
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.views.decorators.csrf import csrf_exempt
+from django.http import HttpResponse
+from django.db import models as db_models
+
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import RefreshToken
+
+from users.models import UserProfile
+from meals.models import MealPlan, Meal, ShoppingList, ShoppingListItem, Notification
+from meals.groq_service import generate_meal_plan, regenerate_single_meal
+from emails import (
+    send_welcome_email, send_premium_upgrade_email,
+    send_cancellation_email, send_payment_failed_email, send_save_limit_email,
+)
+from notifications import (
+    notify_plan_generated, notify_plan_saved, notify_upgrade,
+    notify_cancelled, notify_payment_failed, notify_save_limit,
+)
+from .serializers import (
+    UserProfileSerializer, UserProfileUpdateSerializer,
+    OnboardingStep1Serializer, OnboardingStep2Serializer, OnboardingStep3Serializer,
+    MealPlanSerializer, MealPlanListSerializer, MealSerializer,
+    RegisterSerializer, VerifyOTPSerializer, RateMealSerializer, SavePlanSerializer,
+    ForgotPasswordSerializer, ResetPasswordSerializer,
+)
+import requests as http_requests
+import os
+
+User = get_user_model()
+OTP_EXPIRY_MINUTES = 10
+PARTIAL_DAYS = ['monday', 'tuesday', 'wednesday']
+ALL_DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+
+
+def get_tokens_for_user(user):
+    refresh = RefreshToken.for_user(user)
+    return {
+        'refresh': str(refresh),
+        'access': str(refresh.access_token),
+    }
+
+
+def cleanup_old_plans(user):
+    cutoff = timezone.now() - timedelta(days=7)
+    MealPlan.objects.filter(
+        user_profile=user.profile,
+        is_saved=False,
+        created_at__lt=cutoff
+    ).delete()
+
+
+# ─── Auth ─────────────────────────────────────────────────────────────────────
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def register_view(request):
+    serializer = RegisterSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    otp = str(random.randint(100000, 999999))
+    request.session['pending_registration'] = {
+        'username': serializer.validated_data['username'],
+        'email': serializer.validated_data['email'],
+        'first_name': serializer.validated_data['first_name'],
+        'last_name': serializer.validated_data['last_name'],
+        'password': serializer.validated_data['password'],
+        'otp': otp,
+        'otp_created_at': timezone.now().isoformat(),
+    }
+
+    try:
+        send_mail(
+            subject='Verify your NourishAI account',
+            message=(
+                f'Hi {serializer.validated_data["first_name"]},\n\n'
+                f'Your verification code: {otp}\n\n'
+                f'This code expires in {OTP_EXPIRY_MINUTES} minutes.\n\n'
+                f'— The NourishAI Team'
+            ),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[serializer.validated_data['email']],
+            fail_silently=False,
+        )
+    except Exception as e:
+        return Response({'error': f'Failed to send verification email: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    email = serializer.validated_data['email']
+    masked = email[:2] + '***' + email[email.index('@'):]
+    return Response({'message': 'Verification code sent.', 'masked_email': masked}, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def verify_otp_view(request):
+    pending = request.session.get('pending_registration')
+    if not pending:
+        return Response({'error': 'No pending registration. Please register again.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    serializer = VerifyOTPSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    entered_otp = serializer.validated_data['otp']
+    stored_otp = pending.get('otp')
+    otp_created_at = pending.get('otp_created_at')
+
+    created_at = datetime.fromisoformat(otp_created_at)
+    if created_at.tzinfo is None:
+        from django.utils.timezone import make_aware
+        created_at = make_aware(created_at)
+
+    if timezone.now() > created_at + timedelta(minutes=OTP_EXPIRY_MINUTES):
+        return Response({'error': 'expired'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if entered_otp != stored_otp:
+        return Response({'error': 'invalid'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        user = User.objects.create_user(
+            username=pending['username'],
+            email=pending['email'],
+            first_name=pending['first_name'],
+            last_name=pending['last_name'],
+            password=pending['password'],
+        )
+        UserProfile.objects.get_or_create(user=user)
+        del request.session['pending_registration']
+        request.session.modified = True
+        send_welcome_email(user)
+        tokens = get_tokens_for_user(user)
+        return Response({
+            'message': f'Welcome to NourishAI, {user.first_name}!',
+            'tokens': tokens,
+            'user': {'id': user.id, 'first_name': user.first_name, 'username': user.username},
+        }, status=status.HTTP_201_CREATED)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def resend_otp_view(request):
+    pending = request.session.get('pending_registration')
+    if not pending:
+        return Response({'error': 'No pending registration.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    new_otp = str(random.randint(100000, 999999))
+    pending['otp'] = new_otp
+    pending['otp_created_at'] = timezone.now().isoformat()
+    request.session['pending_registration'] = pending
+    request.session.modified = True
+
+    try:
+        send_mail(
+            subject='Your new NourishAI verification code',
+            message=(
+                f'Hi {pending["first_name"]},\n\n'
+                f'Your new verification code: {new_otp}\n\n'
+                f'This code expires in {OTP_EXPIRY_MINUTES} minutes.\n\n'
+                f'— The NourishAI Team'
+            ),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[pending['email']],
+            fail_silently=False,
+        )
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    return Response({'message': 'New code sent.'}, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def login_view(request):
+    username = request.data.get('username', '').strip()
+    password = request.data.get('password', '')
+
+    if not username or not password:
+        return Response({'error': 'Username and password are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    user = authenticate(username=username, password=password)
+    if not user:
+        return Response({'error': 'Invalid username or password.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+    profile, _ = UserProfile.objects.get_or_create(user=user)
+    cleanup_old_plans(user)
+    tokens = get_tokens_for_user(user)
+
+    return Response({
+        'tokens': tokens,
+        'user': {
+            'id': user.id,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'username': user.username,
+            'email': user.email,
+        },
+        'onboarding_complete': profile.onboarding_complete,
+        'subscription_tier': profile.subscription_tier,
+    }, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def forgot_password_view(request):
+    serializer = ForgotPasswordSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    email = serializer.validated_data['email']
+    try:
+        user = User.objects.get(email__iexact=email)
+        token = default_token_generator.make_token(user)
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        frontend_url = 'http://localhost:5173'
+        reset_link = f'{frontend_url}/reset-password/{uid}/{token}'
+        send_mail(
+            subject='Reset your NourishAI password',
+            message=(
+                f'Hi {user.first_name},\n\n'
+                f'Click the link below to reset your password. Expires in 24 hours.\n\n'
+                f'{reset_link}\n\n'
+                f'— The NourishAI Team'
+            ),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+            fail_silently=True,
+        )
+    except User.DoesNotExist:
+        pass
+
+    return Response({'message': 'If that email exists, a reset link has been sent.'}, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def reset_password_view(request):
+    serializer = ResetPasswordSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        uid = force_str(urlsafe_base64_decode(serializer.validated_data['uid']))
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        return Response({'error': 'Invalid reset link.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if not default_token_generator.check_token(user, serializer.validated_data['token']):
+        return Response({'error': 'Invalid or expired reset link.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    user.set_password(serializer.validated_data['new_password'])
+    user.save()
+    return Response({'message': 'Password reset successfully.'}, status=status.HTTP_200_OK)
+
+
+# ─── Profile ──────────────────────────────────────────────────────────────────
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def profile_view(request):
+    profile = request.user.profile
+    serializer = UserProfileSerializer(profile)
+    return Response(serializer.data)
+
+
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def profile_update_view(request):
+    profile = request.user.profile
+    serializer = UserProfileUpdateSerializer(profile, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(UserProfileSerializer(profile).data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# ─── Onboarding ───────────────────────────────────────────────────────────────
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def onboarding_step1(request):
+    profile = request.user.profile
+    serializer = OnboardingStep1Serializer(profile, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response({'message': 'Step 1 saved.', 'next': 'step2'})
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def onboarding_step2(request):
+    profile = request.user.profile
+    serializer = OnboardingStep2Serializer(profile, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response({'message': 'Step 2 saved.', 'next': 'step3'})
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def onboarding_step3(request):
+    profile = request.user.profile
+    serializer = OnboardingStep3Serializer(profile, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        profile.onboarding_complete = True
+        profile.save()
+        return Response({'message': 'Onboarding complete!', 'onboarding_complete': True})
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# ─── Meal Plans ───────────────────────────────────────────────────────────────
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def dashboard_view(request):
+    profile = request.user.profile
+    cutoff = timezone.now() - timedelta(days=7)
+
+    latest_plan = MealPlan.objects.filter(
+        user_profile=profile
+    ).filter(
+        db_models.Q(is_saved=True) | db_models.Q(created_at__gte=cutoff)
+    ).order_by('-created_at').first()
+
+    saved_plans = MealPlan.objects.filter(
+        user_profile=profile, is_saved=True
+    ).order_by('-created_at')
+
+    goal_estimate = profile.calculate_goal_estimate()
+
+    return Response({
+        'profile': UserProfileSerializer(profile).data,
+        'latest_plan': MealPlanSerializer(latest_plan).data if latest_plan else None,
+        'saved_plans': MealPlanListSerializer(saved_plans, many=True).data,
+        'goal_estimate': goal_estimate,
+    })
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def generate_plan_view(request):
+    profile = request.user.profile
+    gen_status = profile.get_generation_status()
+
+    if not gen_status['allowed']:
+        return Response({
+            'error': 'Generation limit reached.',
+            'gen_status': gen_status,
+            'upgrade_required': True,
+        }, status=status.HTTP_403_FORBIDDEN)
+
+    is_premium = (
+        profile.subscription_tier == 'premium'
+        or request.user.is_staff
+        or request.user.is_superuser
+    )
+
+    liked_meals = []
+    disliked_meals = []
+    if is_premium:
+        liked_meals = list(
+            Meal.objects.filter(meal_plan__user_profile=profile, rating__gte=4)
+            .values_list('title', flat=True).distinct()[:10]
+        )
+        disliked_meals = list(
+            Meal.objects.filter(meal_plan__user_profile=profile, rating__lte=2)
+            .values_list('title', flat=True).distinct()[:10]
+        )
+
+    try:
+        is_partial = gen_status['type'] == 'partial'
+        data = generate_meal_plan(profile, liked_meals=liked_meals, disliked_meals=disliked_meals)
+
+        meal_plan = MealPlan.objects.create(
+            user_profile=profile,
+            week_start_date=timezone.now().date(),
+            is_partial=is_partial,
+        )
+
+        for day_data in data['meal_plan']:
+            if is_partial and day_data['day'] not in PARTIAL_DAYS:
+                continue
+            for meal_data in day_data['meals']:
+                Meal.objects.create(
+                    meal_plan=meal_plan,
+                    day=day_data['day'],
+                    meal_type=meal_data['meal_type'],
+                    title=meal_data['title'],
+                    description=meal_data['description'],
+                    ingredients=meal_data['ingredients'],
+                    instructions=meal_data['instructions'],
+                    prep_time=meal_data.get('prep_time', 0),
+                    difficulty=meal_data.get('difficulty', 'easy'),
+                    calories=meal_data.get('calories', 0),
+                    protein=meal_data.get('protein', 0),
+                    carbohydrates=meal_data.get('carbohydrates', 0),
+                    fats=meal_data.get('fats', 0),
+                    fibre=meal_data.get('fibre', 0),
+                    sugar=meal_data.get('sugar', 0),
+                    sodium=meal_data.get('sodium', 0),
+                    portion_guide=meal_data.get('portion_guide', ''),
+                    suggested_time=meal_data.get('suggested_time', ''),
+                )
+
+        shopping_list = ShoppingList.objects.create(meal_plan=meal_plan)
+        for item in data['shopping_list']:
+            ShoppingListItem.objects.create(
+                shopping_list=shopping_list,
+                ingredient_name=item['ingredient_name'],
+                quantity=item['quantity'],
+                unit=item.get('unit', ''),
+                category=item.get('category', 'pantry'),
+            )
+
+        profile.increment_generation_count()
+        notify_plan_generated(request.user, is_partial=is_partial)
+
+        return Response({
+            'message': '3-day preview ready! Upgrade for the full 7-day plan.' if is_partial else 'Meal plan ready!',
+            'meal_plan': MealPlanSerializer(meal_plan).data,
+            'is_partial': is_partial,
+        }, status=status.HTTP_201_CREATED)
+
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def meal_plan_detail_view(request, pk):
+    try:
+        meal_plan = MealPlan.objects.get(pk=pk, user_profile=request.user.profile)
+    except MealPlan.DoesNotExist:
+        return Response({'error': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+    profile = request.user.profile
+    is_premium = (
+        profile.subscription_tier == 'premium'
+        or request.user.is_staff
+        or request.user.is_superuser
+    )
+
+    data = MealPlanSerializer(meal_plan).data
+    data['show_lock'] = meal_plan.is_partial and not is_premium
+    data['locked_days'] = ['thursday', 'friday', 'saturday', 'sunday']
+    data['can_save'] = profile.can_save_plan()[0]
+    return Response(data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def meal_plan_history_view(request):
+    profile = request.user.profile
+    cutoff = timezone.now() - timedelta(days=7)
+    plans = MealPlan.objects.filter(
+        user_profile=profile
+    ).filter(
+        db_models.Q(is_saved=True) | db_models.Q(created_at__gte=cutoff)
+    ).order_by('-created_at')
+    return Response(MealPlanListSerializer(plans, many=True).data)
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_plan_view(request, pk):
+    try:
+        meal_plan = MealPlan.objects.get(pk=pk, user_profile=request.user.profile)
+        meal_plan.delete()
+        return Response({'message': 'Plan deleted.'})
+    except MealPlan.DoesNotExist:
+        return Response({'error': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def save_plan_view(request, pk):
+    try:
+        meal_plan = MealPlan.objects.get(pk=pk, user_profile=request.user.profile)
+    except MealPlan.DoesNotExist:
+        return Response({'error': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = SavePlanSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    can_save, reason = request.user.profile.can_save_plan()
+    if not can_save:
+        send_save_limit_email(request.user)
+        notify_save_limit(request.user)
+        return Response({'error': reason, 'upgrade_required': True}, status=status.HTTP_403_FORBIDDEN)
+
+    title = serializer.validated_data.get('title', '').strip()
+    meal_plan.title = title if title else f"Plan — {meal_plan.week_start_date.strftime('%d %b %Y')}"
+    meal_plan.is_saved = True
+    meal_plan.save()
+    notify_plan_saved(request.user, meal_plan.title)
+    return Response({'message': f'Saved as "{meal_plan.title}".', 'meal_plan': MealPlanListSerializer(meal_plan).data})
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def unsave_plan_view(request, pk):
+    try:
+        meal_plan = MealPlan.objects.get(pk=pk, user_profile=request.user.profile)
+        meal_plan.is_saved = False
+        meal_plan.save()
+        return Response({'message': 'Plan unsaved.'})
+    except MealPlan.DoesNotExist:
+        return Response({'error': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def regenerate_meal_view(request, pk):
+    try:
+        meal = Meal.objects.get(pk=pk, meal_plan__user_profile=request.user.profile)
+    except Meal.DoesNotExist:
+        return Response({'error': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+    try:
+        profile = request.user.profile
+        existing = list(meal.meal_plan.meals.exclude(pk=meal.pk).values_list('title', flat=True))
+        data = regenerate_single_meal(profile, meal.day, meal.meal_type, existing)
+        meal_data = data.get('meal') or data.get('meals', [None])[0] or data
+        meal.title = meal_data['title']
+        meal.description = meal_data['description']
+        meal.ingredients = meal_data['ingredients']
+        meal.instructions = meal_data['instructions']
+        meal.prep_time = meal_data.get('prep_time', 0)
+        meal.difficulty = meal_data.get('difficulty', 'easy')
+        meal.calories = meal_data.get('calories', 0)
+        meal.protein = meal_data.get('protein', 0)
+        meal.carbohydrates = meal_data.get('carbohydrates', 0)
+        meal.fats = meal_data.get('fats', 0)
+        meal.fibre = meal_data.get('fibre', 0)
+        meal.sugar = meal_data.get('sugar', 0)
+        meal.sodium = meal_data.get('sodium', 0)
+        meal.portion_guide = meal_data.get('portion_guide', '')
+        meal.suggested_time = meal_data.get('suggested_time', '')
+        meal.rating = None
+        meal.save()
+        return Response({'message': 'Meal swapped!', 'meal': MealSerializer(meal).data})
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def rate_meal_view(request, pk):
+    try:
+        meal = Meal.objects.get(pk=pk, meal_plan__user_profile=request.user.profile)
+    except Meal.DoesNotExist:
+        return Response({'error': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = RateMealSerializer(data=request.data)
+    if serializer.is_valid():
+        meal.rating = serializer.validated_data['rating']
+        meal.save()
+        return Response({'message': f'Rated {meal.title} {meal.rating}/5.'})
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# ─── Upgrade / Paystack ───────────────────────────────────────────────────────
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_checkout_view(request):
+    try:
+        response = http_requests.post(
+            'https://api.paystack.co/transaction/initialize',
+            headers={
+                'Authorization': f'Bearer {os.getenv("PAYSTACK_SECRET_KEY")}',
+                'Content-Type': 'application/json',
+            },
+            json={
+                'email': request.user.email,
+                'amount': 2000,
+                'currency': 'GHS',
+                'callback_url': 'http://localhost:5173/upgrade/success',
+                'metadata': {'user_id': request.user.id, 'plan': 'premium'}
+            }
+        )
+        data = response.json()
+        if data.get('status'):
+            return Response({'authorization_url': data['data']['authorization_url']})
+        return Response({'error': 'Payment initialization failed.'}, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def upgrade_success_view(request):
+    reference = request.query_params.get('reference')
+    if not reference:
+        return Response({'error': 'No reference provided.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        response = http_requests.get(
+            f'https://api.paystack.co/transaction/verify/{reference}',
+            headers={'Authorization': f'Bearer {os.getenv("PAYSTACK_SECRET_KEY")}'}
+        )
+        data = response.json()
+        if data.get('status') and data['data']['status'] == 'success':
+            profile = request.user.profile
+            profile.subscription_tier = 'premium'
+            profile.paystack_customer_id = str(data['data']['customer']['id'])
+            profile.save()
+            send_premium_upgrade_email(request.user)
+            notify_upgrade(request.user)
+            return Response({'message': 'Upgraded to Premium!', 'subscription_tier': 'premium'})
+        return Response({'error': 'Payment verification failed.'}, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def cancel_subscription_view(request):
+    profile = request.user.profile
+    try:
+        if profile.paystack_subscription_code:
+            http_requests.post(
+                'https://api.paystack.co/subscription/disable',
+                headers={
+                    'Authorization': f'Bearer {os.getenv("PAYSTACK_SECRET_KEY")}',
+                    'Content-Type': 'application/json',
+                },
+                json={
+                    'code': profile.paystack_subscription_code,
+                    'token': profile.paystack_customer_id,
+                }
+            )
+        profile.subscription_tier = 'free'
+        profile.paystack_subscription_code = None
+        profile.save()
+        try:
+            send_cancellation_email(request.user)
+        except Exception as email_err:
+            print(f'[NourishAI] Cancellation email failed: {email_err}')
+        notify_cancelled(request.user)
+        return Response({'message': 'Subscription cancelled.', 'subscription_tier': 'free'})
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@csrf_exempt
+def paystack_webhook(request):
+    if request.method != 'POST':
+        return HttpResponse(status=405)
+
+    paystack_secret = os.getenv('PAYSTACK_SECRET_KEY', '')
+    signature = request.headers.get('X-Paystack-Signature', '')
+    body = request.body
+
+    expected = hmac.new(paystack_secret.encode('utf-8'), body, hashlib.sha512).hexdigest()
+    if not hmac.compare_digest(expected, signature):
+        return HttpResponse(status=401)
+
+    try:
+        payload = json.loads(body)
+    except json.JSONDecodeError:
+        return HttpResponse(status=400)
+
+    event = payload.get('event')
+    data = payload.get('data', {})
+    email = data.get('customer', {}).get('email')
+
+    if not email:
+        return HttpResponse(status=200)
+
+    try:
+        user = User.objects.get(email__iexact=email)
+        profile = user.profile
+
+        if event == 'charge.success':
+            profile.subscription_tier = 'premium'
+            profile.save()
+
+        elif event == 'subscription.create':
+            profile.subscription_tier = 'premium'
+            profile.paystack_subscription_code = data.get('subscription_code', '')
+            profile.save()
+
+        elif event == 'subscription.disable':
+            profile.subscription_tier = 'free'
+            profile.paystack_subscription_code = None
+            profile.save()
+
+        elif event == 'invoice.payment_failed':
+            profile.subscription_tier = 'free'
+            profile.paystack_subscription_code = None
+            profile.save()
+            send_payment_failed_email(user)
+
+    except User.DoesNotExist:
+        pass
+
+    return HttpResponse(status=200)
+
+
+# ─── Notifications ────────────────────────────────────────────────────────────
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def notifications_view(request):
+    notifs = Notification.objects.filter(user=request.user)[:30]
+    unread_count = Notification.objects.filter(user=request.user, is_read=False).count()
+    data = [{
+        'id': n.id,
+        'type': n.type,
+        'icon': n.icon,
+        'title': n.title,
+        'message': n.message,
+        'is_read': n.is_read,
+        'created_at': n.created_at.isoformat(),
+    } for n in notifs]
+    return Response({'notifications': data, 'unread_count': unread_count})
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def mark_read_view(request, pk):
+    try:
+        notif = Notification.objects.get(pk=pk, user=request.user)
+        notif.is_read = True
+        notif.save()
+        return Response({'message': 'Marked as read.'})
+    except Notification.DoesNotExist:
+        return Response({'error': 'Not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def mark_all_read_view(request):
+    Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
+    return Response({'message': 'All marked as read.'})

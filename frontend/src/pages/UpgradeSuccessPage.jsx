@@ -1,0 +1,1 @@
+export { UpgradeSuccessPage as default } from './UpgradePage'

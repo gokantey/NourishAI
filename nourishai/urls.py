@@ -1,12 +1,12 @@
+# nourishai/urls.py — replace your current urls.py with this
+
 from django.contrib import admin
-from django.urls import path, include
-from django.views.generic import RedirectView
-from django.views.defaults import page_not_found
+from django.urls import path, include, re_path
+from django.views.generic import TemplateView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('users/', include('users.urls')),
-    path('meals/', include('meals.urls')),
-    path('', RedirectView.as_view(url='/users/login/', permanent=False)),
-    
+    path('api/', include('api.urls')),
+    # Catch all non-API routes — serve React's index.html
+    re_path(r'^(?!api/).*$', TemplateView.as_view(template_name='index.html'), name='react'),
 ]

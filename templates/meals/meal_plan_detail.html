@@ -15,7 +15,7 @@
 <div class="d-flex justify-content-between align-items-start mb-4 fade-up">
     <div>
         <h2 class="section-title">
-            {% if meal_plan.is_partial %}3-Day Preview Plan{% else %}Your 7-Day Plan{% endif %}
+            {% if show_lock %}3-Day Preview Plan{% else %}Your 7-Day Plan{% endif %}
         </h2>
         <p class="section-sub">Week of {{ meal_plan.week_start_date }}</p>
     </div>
@@ -37,7 +37,12 @@
                         title="You've reached your save limit">
                     🔒 Save Plan
                 </button>
-                
+                <a href="{% url 'meals:upgrade' %}"
+                   style="font-size:0.75rem;color:var(--gold);text-decoration:none;white-space:nowrap"
+                   onmouseover="this.style.textDecoration='underline'"
+                   onmouseout="this.style.textDecoration='none'">
+                    Upgrade to save more →
+                </a>
             </div>
         {% endif %}
         <a href="{% url 'meals:meal_plan_history' %}" class="btn btn-ghost btn-sm">
@@ -46,8 +51,8 @@
     </div>
 </div>
 
-<!-- Partial plan upgrade banner -->
-{% if meal_plan.is_partial %}
+<!-- Partial plan upgrade banner — only shown to free users on a partial plan -->
+{% if show_lock %}
 <div style="background:linear-gradient(135deg,rgba(212,175,55,0.12),rgba(46,204,113,0.06));border:1px solid rgba(212,175,55,0.25);border-radius:var(--radius-sm);padding:1.1rem 1.5rem;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap"
      class="fade-up">
     <div>
@@ -84,7 +89,7 @@
 <div class="card mb-4 fade-up d1">
     <div class="card-body p-4">
         <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);margin-bottom:1rem">
-            📊 {% if meal_plan.is_partial %}3-Day{% else %}Weekly{% endif %} Nutrition Summary
+            📊 {% if show_lock %}3-Day Preview{% else %}Weekly{% endif %} Nutrition Summary
         </div>
         <div class="row g-3 text-center">
             <div class="col">
@@ -123,20 +128,19 @@
 
 <!-- Meal Grid -->
 {% for day in days %}
-<div class="card mb-3 fade-up" style="{% if meal_plan.is_partial and day in locked_days %}position:relative;overflow:hidden;{% endif %}">
+<div class="card mb-3 fade-up" style="{% if show_lock and day in locked_days %}position:relative;overflow:hidden;{% endif %}">
     <div class="card-header d-flex align-items-center gap-2">
         <span class="day-header">{{ day|title }}</span>
-        {% if meal_plan.is_partial and day in locked_days %}
+        {% if show_lock and day in locked_days %}
         <span style="font-size:0.72rem;color:var(--gold);background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.2);border-radius:20px;padding:0.15rem 0.6rem;margin-left:auto">
             🔒 Premium
         </span>
         {% endif %}
     </div>
 
-    {% if meal_plan.is_partial and day in locked_days %}
+    {% if show_lock and day in locked_days %}
     <!-- Locked day — blurred overlay -->
     <div style="position:relative">
-        <!-- Fake blurred content behind overlay -->
         <div style="filter:blur(4px);pointer-events:none;opacity:0.35;padding:1rem">
             <div class="row g-3">
                 {% for meal_type in meal_types %}
@@ -146,10 +150,9 @@
                 {% endfor %}
             </div>
         </div>
-        <!-- Upgrade overlay -->
         <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(10,15,13,0.6);backdrop-filter:blur(2px)">
             <div style="font-size:1.5rem;margin-bottom:0.5rem">🔒</div>
-            <div style="font-size:0.88rem;font-weight:600;color:var(--white);margin-bottom:0.75rem">
+            <div style="font-size:0.88rem;font-weight:600;color:var(--text-primary);margin-bottom:0.75rem">
                 Unlock {{ day|title }} with Premium
             </div>
             <a href="{% url 'meals:upgrade' %}"
@@ -160,7 +163,7 @@
     </div>
 
     {% else %}
-    <!-- Normal unlocked day -->
+    <!-- Unlocked day — shown to everyone on full plans, and to premium users on any plan -->
     <div class="card-body p-3">
         <div class="row g-3">
             {% for meal_type in meal_types %}
@@ -208,6 +211,15 @@
                         </a>
                     </div>
                 </div>
+                {% else %}
+                <!-- No meal data for this slot — only happens on premium viewing a partial plan (days 4-7 have no meals in DB) -->
+                {% if is_premium and meal_plan.is_partial and day in locked_days %}
+                <div style="background:var(--surface2);border:1px dashed var(--border);border-radius:var(--radius-sm);padding:1rem;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;opacity:0.5">
+                    <div style="font-size:1.2rem;margin-bottom:0.4rem">🍽</div>
+                    <div style="font-size:0.78rem;color:var(--text-muted)">No meal data</div>
+                    <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.25rem">Generate a new plan for a full week</div>
+                </div>
+                {% endif %}
                 {% endif %}
                 {% endwith %}
             </div>
@@ -223,7 +235,7 @@
 <div class="card mt-4 fade-up">
     <div class="card-header">
         <span class="day-header">🛒 Shopping List</span>
-        {% if meal_plan.is_partial %}
+        {% if show_lock %}
         <span style="font-size:0.75rem;color:var(--text-muted);margin-left:0.75rem">(3-day preview only)</span>
         {% endif %}
     </div>
