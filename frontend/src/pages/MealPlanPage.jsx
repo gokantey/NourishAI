@@ -3,7 +3,6 @@ import { useParams, Link, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Bookmark, BookmarkCheck, Lock, RefreshCw, Crown, ShoppingCart, X, Clock, ChefHat, Flame } from 'lucide-react'
 import { mealsAPI } from '../api/client'
-import useAuthStore from '../store/authStore'
 import toast from 'react-hot-toast'
 
 const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
@@ -203,7 +202,6 @@ function MealCard({ meal, onRate, onRegenerate, onView }) {
 export default function MealPlanPage() {
   const { pk } = useParams()
   const navigate = useNavigate()
-  const { subscriptionTier } = useAuthStore()
   const [plan, setPlan] = useState(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -211,8 +209,6 @@ export default function MealPlanPage() {
   const [saveTitle, setSaveTitle] = useState('')
   const [activeDay, setActiveDay] = useState('monday')
   const [viewingMeal, setViewingMeal] = useState(null)
-
-  const isPremium = subscriptionTier === 'premium'
 
   const fetchPlan = useCallback(async () => {
     try {
