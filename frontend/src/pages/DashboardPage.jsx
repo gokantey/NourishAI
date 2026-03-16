@@ -96,7 +96,7 @@ export default function DashboardPage() {
         style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
         <div>
           <h1 style={{ fontFamily: 'Playfair Display, serif', fontSize: '2rem', fontWeight: 700, color: '#28281E' }}>
-            {greeting}, {user?.first_name}! 👋
+            {greeting}, {user?.first_name}! 
           </h1>
           <p style={{ color: '#A8A89E', fontSize: '0.9rem', marginTop: '0.25rem' }}>
             {isPremium ? '✨ Premium Plan' : 'Free Plan'} •{' '}
