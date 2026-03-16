@@ -24,7 +24,7 @@ export default defineConfig([
     },
     rules: {
       // Ignore uppercase/underscore vars AND 'motion' (used as motion.div by framer-motion)
-      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]|^motion$' }],
+      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]|^motion$|^Icon$' }],
       // setState inside useEffect is intentional in UpgradeSuccessPage (async verify flow)
       'react-hooks/set-state-in-effect': 'off',
     },
