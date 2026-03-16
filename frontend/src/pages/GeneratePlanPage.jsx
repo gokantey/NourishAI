@@ -111,7 +111,7 @@ export default function GeneratePlanPage() {
             </div>
             <h3 style={{ fontFamily: 'Playfair Display, serif', fontSize: '1.4rem', fontWeight: 700, marginBottom: '0.75rem' }}>Generation limit reached</h3>
             <p style={{ color: '#A8A89E', fontSize: '0.9rem', marginBottom: '1.5rem', maxWidth: 360, margin: '0 auto 1.5rem' }}>
-              You've used your 1 full plan and 1 preview on the free tier. Upgrade to Premium for unlimited generations.
+              You've used all 10 free generations on the free tier for this month. Upgrade to Premium for unlimited generations.
             </p>
             <button onClick={() => navigate('/upgrade')} className="btn-accent btn-lg" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
               <Crown size={18} /> Upgrade to Premium
@@ -148,7 +148,7 @@ export default function GeneratePlanPage() {
               {isPremium
                 ? 'Your AI-powered full plan with taste learning based on your ratings.'
                 : isPartial
-                ? 'Your second and final free generation — a 3-day preview plan.'
+                ? 'Generations 8–10 on the free tier — a 3-day preview plan.'
                 : 'Your first personalised meal plan, built around your profile and Ghanaian food culture.'}
             </p>
             <button onClick={handleGenerate} className="btn-primary btn-lg" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>

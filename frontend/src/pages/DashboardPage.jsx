@@ -96,7 +96,7 @@ export default function DashboardPage() {
         style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
         <div>
           <h1 style={{ fontFamily: 'Playfair Display, serif', fontSize: '2rem', fontWeight: 700, color: '#28281E' }}>
-            {greeting}, {user?.first_name}! 
+            {greeting}, {user?.first_name}! 👋
           </h1>
           <p style={{ color: '#A8A89E', fontSize: '0.9rem', marginTop: '0.25rem' }}>
             {isPremium ? '✨ Premium Plan' : 'Free Plan'} •{' '}
@@ -131,7 +131,7 @@ export default function DashboardPage() {
             <StatCard icon={Flame} label="Daily Calories" value={profile?.daily_calorie_target} unit="kcal/day" color="#F4845F" delay={0} />
             <StatCard icon={TrendingUp} label="BMI" value={profile?.bmi} unit={profile?.bmi_category} color="#2D6A4F" delay={0.05} />
             <StatCard icon={Droplets} label="Water Intake" value={profile?.daily_water_intake} unit="litres/day" color="#60a5fa" delay={0.1} />
-            <StatCard icon={Bookmark} label="Saved Plans" value={savedPlans.length} unit={isPremium ? 'unlimited' : 'max 1 free'} color="#a78bfa" delay={0.15} />
+            <StatCard icon={Bookmark} label="Saved Plans" value={savedPlans.length} unit={isPremium ? 'unlimited' : 'max 7 free'} color="#a78bfa" delay={0.15} />
           </>
         )}
       </div>

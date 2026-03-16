@@ -169,7 +169,15 @@ class UserProfile(models.Model):
         return None
 
     def get_generation_status(self):
-        """Returns generation status, resetting count monthly for free users."""
+        """
+        Returns generation status for the current period.
+        Free tier:
+          Generations 1–7  → full 7-day plan
+          Generations 8–10 → partial 3-day plan (days 4–7 blurred)
+          Generation  11+  → blocked, must upgrade
+        Premium / staff / superuser → always full, never blocked.
+        Count resets monthly.
+        """
         is_premium = (
             self.subscription_tier == 'premium'
             or self.user.is_staff
@@ -189,11 +197,15 @@ class UserProfile(models.Model):
             self.generation_reset_date = today
             self.save(update_fields=['plan_generations_count', 'generation_reset_date'])
 
-        if self.plan_generations_count == 0:
+        count = self.plan_generations_count
+        if count < 7:
+            # Generations 1–7: full 7-day plans
             return {'type': 'full', 'allowed': True}
-        elif self.plan_generations_count == 1:
+        elif count < 10:
+            # Generations 8–10: 3-day partial plans
             return {'type': 'partial', 'allowed': True}
         else:
+            # Generation 11+: blocked
             return {'type': 'blocked', 'allowed': False}
 
     def can_save_plan(self):
@@ -206,8 +218,8 @@ class UserProfile(models.Model):
         if self.subscription_tier == 'premium':
             return True, None
         saved_count = self.meal_plans.filter(is_saved=True).count()
-        if saved_count >= 1:
-            return False, "You've saved your 1 free plan. Upgrade to Premium for unlimited saves."
+        if saved_count >= 7:
+            return False, "You've saved your 7 free plans. Upgrade to Premium for unlimited saves."
         return True, None
 
     def increment_generation_count(self):

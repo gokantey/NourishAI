@@ -16,8 +16,8 @@ def send_welcome_email(user):
                 f'Hi {user.first_name},\n\n'
                 f'Your account has been verified and you\'re officially part of NourishAI!\n\n'
                 f'Here\'s what you can do on the free plan:\n'
-                f'  • Generate 1 full 7-day meal plan\n'
-                f'  • Get a 3-day preview on your second generation\n'
+                f'  • Generate 7 full 7-day meal plans per month\n'
+                f'  • Get 3-day previews on generations 8–10\n'
                 f'  • Save 1 meal plan\n'
                 f'  • Rate your meals and track your goals\n\n'
                 f'Ready to eat well? Head to your dashboard and generate your first plan.\n\n'
@@ -113,7 +113,7 @@ def send_save_limit_email(user):
             subject='You\'ve reached your save limit on NourishAI',
             message=(
                 f'Hi {user.first_name},\n\n'
-                f'You\'ve saved your 1 free meal plan — that\'s the limit on the free tier.\n\n'
+                f'You\'ve saved your 7 free meal plans — that\'s the limit on the free tier.\n\n'
                 f'To save more plans, upgrade to NourishAI Premium:\n'
                 f'  • Unlimited saved plans\n'
                 f'  • Unlimited meal plan generations\n'

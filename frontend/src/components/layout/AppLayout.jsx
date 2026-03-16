@@ -25,7 +25,7 @@ function getTopbar(pathname, isPremium) {
   }
   if (pathname === '/generate') return {
     title: 'Generate Meal Plan',
-    sub: 'Powered by AI — personalised for you',
+    sub: 'Powered by NourishAI — personalised for you',
     action: null,
   }
   if (pathname === '/history') return {

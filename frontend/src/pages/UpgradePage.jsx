@@ -8,9 +8,9 @@ import ConfirmModal from '../components/ui/ConfirmModal'
 import toast from 'react-hot-toast'
 
 const FREE_FEATURES = [
-  '1 full 7-day meal plan per month',
+  '7 full 7-day meal plans per month',
   '1 three-day preview plan per month',
-  'Save 1 plan',
+  'Save up to 7 plans',
   'Meal ratings',
   'Goal estimate calculator',
   'Shopping list',
