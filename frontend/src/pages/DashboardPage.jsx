@@ -6,7 +6,7 @@ import { mealsAPI } from '../api/client'
 import useAuthStore from '../store/authStore'
 import toast from 'react-hot-toast'
 
-function StatCard({ icon: Icon, label, value, unit, color, delay }) {
+function StatCard({ icon: Icon, label, value, unit, color, delay }) { // eslint-disable-line no-unused-vars
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}

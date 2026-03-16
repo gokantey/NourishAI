@@ -25,7 +25,7 @@ function getTopbar(pathname, isPremium) {
   }
   if (pathname === '/generate') return {
     title: 'Generate Meal Plan',
-    sub: 'Powered by NourishAI — personalised for you',
+    sub: 'Powered by AI — personalised for you',
     action: null,
   }
   if (pathname === '/history') return {
@@ -72,7 +72,7 @@ function SidebarContent({ user, isPremium, onClose, onLogout }) {
       {/* Nav links */}
       <nav style={{ flex: 1, padding: '1rem 0.875rem', overflowY: 'auto' }}>
         <p style={{ fontSize: '0.65rem', fontWeight: 700, color: '#C8C8BE', textTransform: 'uppercase', letterSpacing: '0.1em', padding: '0 0.625rem', marginBottom: '0.625rem' }}>Menu</p>
-        {navItems.map(({ to, icon: Icon, label }) => (
+        {navItems.map(({ to, icon: Icon, label }) => ( // eslint-disable-line no-unused-vars
           <NavLink key={to} to={to} onClick={onClose}
             style={({ isActive }) => ({
               display: 'flex', alignItems: 'center', gap: '0.75rem',
