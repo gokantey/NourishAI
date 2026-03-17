@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
+from datetime import date
 
 
 class UserProfile(models.Model):
@@ -82,7 +83,8 @@ class UserProfile(models.Model):
     ]
 
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
-    age = models.PositiveIntegerField(null=True, blank=True)
+    # date_of_birth replaces age — age is now always computed from DOB
+    date_of_birth = models.DateField(null=True, blank=True, help_text="User's date of birth (DD/MM/YYYY)")
     region = models.CharField(max_length=50, choices=REGION_CHOICES, null=True, blank=True)
     dietary_preference = models.CharField(max_length=50, choices=DIETARY_CHOICES, default='none')
     allergies = models.JSONField(default=list, blank=True)
@@ -105,6 +107,23 @@ class UserProfile(models.Model):
     paystack_subscription_code = models.CharField(max_length=100, blank=True, null=True)
     plan_generations_count = models.IntegerField(default=0)
     generation_reset_date = models.DateField(null=True, blank=True)
+
+    @property
+    def age(self):
+        """Computed age from date_of_birth. Returns None if DOB not set."""
+        if not self.date_of_birth:
+            return None
+        today = date.today()
+        dob = self.date_of_birth
+        return today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+
+    @property
+    def is_birthday_today(self):
+        """Returns True if today is the user's birthday."""
+        if not self.date_of_birth:
+            return False
+        today = date.today()
+        return self.date_of_birth.month == today.month and self.date_of_birth.day == today.day
 
     def calculate_bmi(self):
         if self.height and self.weight:
@@ -170,47 +189,57 @@ class UserProfile(models.Model):
 
     def get_generation_status(self):
         """
-        Returns generation status for the current period.
+        Returns generation status for the current 30-day window.
         Free tier:
-          Generations 1–7  → full 7-day plan
-          Generations 8–10 → partial 3-day plan (days 4–7 blurred)
-          Generation  11+  → blocked, must upgrade
-        Premium / staff / superuser → always full, never blocked.
-        Count resets monthly.
+          Generations 1-7  -> full 7-day plan
+          Generations 8-10 -> partial 3-day plan (days 4-7 blurred)
+          Generation  11+  -> blocked until reset
+
+        The 30-day window starts on the day the user generates their first plan.
+        reset_date = generation_reset_date + 30 days.
+        When today >= reset_date, the count resets and a new 30-day window begins.
+        Premium / staff / superuser -> always full, never blocked.
         """
+        from datetime import timedelta
+
         is_premium = (
             self.subscription_tier == 'premium'
             or self.user.is_staff
             or self.user.is_superuser
         )
         if is_premium:
-            return {'type': 'full', 'allowed': True}
+            return {'type': 'full', 'allowed': True, 'reset_date': None}
 
-        # Monthly reset check
         today = timezone.now().date()
-        if (
-            self.generation_reset_date is None
-            or today.month != self.generation_reset_date.month
-            or today.year != self.generation_reset_date.year
-        ):
-            self.plan_generations_count = 0
-            self.generation_reset_date = today
-            self.save(update_fields=['plan_generations_count', 'generation_reset_date'])
+
+        # If a window is active, check if 30 days have passed since it started
+        if self.generation_reset_date is not None:
+            window_reset = self.generation_reset_date + timedelta(days=30)
+            if today >= window_reset:
+                # 30-day window expired — reset the count
+                self.plan_generations_count = 0
+                self.generation_reset_date = None
+                self.save(update_fields=['plan_generations_count', 'generation_reset_date'])
 
         count = self.plan_generations_count
+
+        # No generations yet in this window — window hasn't started
+        if self.generation_reset_date is None:
+            return {'type': 'full', 'allowed': True, 'reset_date': None}
+
+        # Window is active — compute reset date to show user
+        reset_date = (self.generation_reset_date + timedelta(days=30)).isoformat()
+
         if count < 7:
-            # Generations 1–7: full 7-day plans
-            return {'type': 'full', 'allowed': True}
+            return {'type': 'full', 'allowed': True, 'reset_date': reset_date}
         elif count < 10:
-            # Generations 8–10: 3-day partial plans
-            return {'type': 'partial', 'allowed': True}
+            return {'type': 'partial', 'allowed': True, 'reset_date': reset_date}
         else:
-            # Generation 11+: blocked
-            return {'type': 'blocked', 'allowed': False}
+            return {'type': 'blocked', 'allowed': False, 'reset_date': reset_date}
 
     def can_save_plan(self):
         """
-        Free users can save 1 plan only.
+        Free users can save up to 7 plans.
         Premium users and staff have unlimited saves.
         """
         if self.user.is_staff or self.user.is_superuser:
@@ -223,7 +252,13 @@ class UserProfile(models.Model):
         return True, None
 
     def increment_generation_count(self):
+        """
+        Called after every successful generation.
+        Sets generation_reset_date on the first generation of a new window.
+        The window then runs for 30 days from this date.
+        """
         if self.generation_reset_date is None:
+            # First generation — start the 30-day window from today
             self.generation_reset_date = timezone.now().date()
         self.plan_generations_count += 1
         self.save(update_fields=['plan_generations_count', 'generation_reset_date'])

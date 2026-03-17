@@ -107,7 +107,7 @@ export default function OnboardingPage() {
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState({})
 
-  const [step1, setStep1] = useState({ age: '', height: '', weight: '' })
+  const [step1, setStep1] = useState({ date_of_birth: '', height: '', weight: '' })
   const [step2, setStep2] = useState({ dietary_preference: 'none', allergies: [], other_allergy: '', health_conditions: [], other_health_condition: '' })
   const [step3, setStep3] = useState({ region: '', fitness_goal: 'maintain', budget: '' })
 
@@ -125,8 +125,15 @@ export default function OnboardingPage() {
   const validateStep = () => {
     const errs = {}
     if (step === 0) {
-      if (!step1.age) errs.age = 'Required'
-      else if (Number(step1.age) < 10 || Number(step1.age) > 100) errs.age = 'Must be 10–100'
+      if (!step1.date_of_birth) errs.date_of_birth = 'Required'
+      else {
+        const dob = new Date(step1.date_of_birth)
+        const today = new Date()
+        const age = today.getFullYear() - dob.getFullYear() - ((today.getMonth(), today.getDate()) < (dob.getMonth(), dob.getDate()) ? 1 : 0)
+        if (age < 10) errs.date_of_birth = 'You must be at least 10 years old'
+        if (age > 100) errs.date_of_birth = 'Please enter a valid date of birth'
+        if (dob > today) errs.date_of_birth = 'Date of birth cannot be in the future'
+      }
       if (!step1.height) errs.height = 'Required'
       if (!step1.weight) errs.weight = 'Required'
     }
@@ -206,16 +213,26 @@ export default function OnboardingPage() {
               {/* ── Step 1: Body ── */}
               {step === 0 && (
                 <div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
-                    {[['age', 'Age (years)', '25', 10, 100], ['height', 'Height (cm)', '170'], ['weight', 'Weight (kg)', '65']].map(([field, label, ph, min, max]) => (
-                      <div key={field}>
-                        <label className="label">{label}</label>
-                        <input type="number" className={`input${errors[field] ? ' input-error' : ''}`}
-                          placeholder={ph} min={min} max={max} value={step1[field]}
-                          onChange={(e) => setStep1((s) => ({ ...s, [field]: e.target.value }))} />
-                        {errors[field] && <p className="error-text">{errors[field]}</p>}
-                      </div>
-                    ))}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.25rem' }}>
+                    <div>
+                      <label className="label">Date of Birth</label>
+                      <input type="date" className={`input${errors.date_of_birth ? ' input-error' : ''}`}
+                        max={new Date().toISOString().split('T')[0]}
+                        value={step1.date_of_birth}
+                        onChange={(e) => setStep1((s) => ({ ...s, date_of_birth: e.target.value }))} />
+                      {errors.date_of_birth && <p className="error-text">{errors.date_of_birth}</p>}
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                      {[['height', 'Height (cm)', '170'], ['weight', 'Weight (kg)', '65']].map(([field, label, ph]) => (
+                        <div key={field}>
+                          <label className="label">{label}</label>
+                          <input type="number" className={`input${errors[field] ? ' input-error' : ''}`}
+                            placeholder={ph} value={step1[field]}
+                            onChange={(e) => setStep1((s) => ({ ...s, [field]: e.target.value }))} />
+                          {errors[field] && <p className="error-text">{errors[field]}</p>}
+                        </div>
+                      ))}
+                    </div>
                   </div>
 
                   {/* Live BMI preview */}

@@ -23,7 +23,7 @@ class GenerationStatusTests(TestCase):
             password='testpass123'
         )
         self.profile = self.user.profile
-        # Make sure we're in the current month so monthly reset doesn't interfere
+        # Set generation_reset_date to today so the 30-day window is active but not expired
         self.profile.generation_reset_date = timezone.now().date()
         self.profile.save()
 
@@ -94,14 +94,14 @@ class GenerationStatusTests(TestCase):
         self.assertEqual(status['type'], 'full')
         self.assertTrue(status['allowed'])
 
-    def test_monthly_reset_resets_count(self):
+    def test_30_day_reset_resets_count(self):
         """
-        If generation_reset_date is from a previous month,
+        If generation_reset_date was set more than 30 days ago,
         the count should reset to 0 and the user gets a full plan.
         """
         self.profile.plan_generations_count = 10  # would normally be blocked
         self.profile.generation_reset_date = (
-            timezone.now().date() - timedelta(days=35)  # last month
+            timezone.now().date() - timedelta(days=31)  # 31 days ago — window expired
         )
         self.profile.save()
         status = self.profile.get_generation_status()
@@ -111,6 +111,20 @@ class GenerationStatusTests(TestCase):
         # And the count should have been reset in the database
         self.profile.refresh_from_db()
         self.assertEqual(self.profile.plan_generations_count, 0)
+
+    def test_29_day_window_not_reset(self):
+        """
+        If generation_reset_date was set 29 days ago, the window
+        is still active and a blocked user should remain blocked.
+        """
+        self.profile.plan_generations_count = 10
+        self.profile.generation_reset_date = (
+            timezone.now().date() - timedelta(days=29)  # still within window
+        )
+        self.profile.save()
+        status = self.profile.get_generation_status()
+        self.assertEqual(status['type'], 'blocked')
+        self.assertFalse(status['allowed'])
 
 
 class SavePlanTests(TestCase):

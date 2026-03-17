@@ -61,3 +61,10 @@ def notify_save_limit(user):
         title='Save limit reached',
         message="You've used your 1 free saved plan. Upgrade to Premium for unlimited saves.",
     )
+
+def notify_birthday(user):
+    notify(
+        user, 'general',
+        title=f'Happy Birthday, {user.first_name}! 🎂',
+        message='Wishing you a wonderful birthday from the NourishAI team. Eat well and celebrate today! 🎉',
+    )

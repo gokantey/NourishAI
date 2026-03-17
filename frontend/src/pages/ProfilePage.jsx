@@ -55,7 +55,7 @@ export default function ProfilePage() {
     profileAPI.get().then((res) => {
       setProfile(res.data)
       setForm({
-        age: res.data.age || '', height: res.data.height || '', weight: res.data.weight || '',
+        date_of_birth: res.data.date_of_birth || '', height: res.data.height || '', weight: res.data.weight || '',
         region: res.data.region || '', dietary_preference: res.data.dietary_preference || 'none',
         allergies: res.data.allergies || [], other_allergy: res.data.other_allergy || '',
         health_conditions: res.data.health_conditions || [],
@@ -109,6 +109,7 @@ export default function ProfilePage() {
             </div>
             <div style={{ fontWeight: 600, color: '#28281E' }}>{user?.first_name} {user?.last_name}</div>
             <div style={{ fontSize: '0.8rem', color: '#A8A89E', marginTop: '0.2rem' }}>@{user?.username}</div>
+            <div style={{ fontSize: '0.78rem', color: '#A8A89E', marginTop: '0.15rem' }}>{user?.email}</div>
             <div style={{ marginTop: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.78rem', fontWeight: 600, padding: '0.25rem 0.75rem', borderRadius: 9999, background: isPremium ? '#fff4f0' : '#F5F5F0', color: isPremium ? '#F4845F' : '#A8A89E' }}>
               {isPremium ? '✨ Premium' : 'Free Plan'}
             </div>
@@ -119,8 +120,10 @@ export default function ProfilePage() {
               <p style={{ fontSize: '0.7rem', fontWeight: 700, color: '#A8A89E', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem' }}>Current Stats</p>
               {[
                 ['BMI', `${profile.bmi ?? '—'} (${profile.bmi_category ?? '—'})`],
+                ['Age', profile.age ? `${profile.age} years` : '—'],
                 ['Calories', profile.daily_calorie_target ? `${profile.daily_calorie_target} kcal/day` : '—'],
                 ['Water', profile.daily_water_intake ? `${profile.daily_water_intake}L/day` : '—'],
+                ['Gen Reset', profile.generation_status?.reset_date ? new Date(profile.generation_status.reset_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'],
               ].map(([label, val]) => (
                 <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.4rem 0', borderBottom: '1px solid #F5F5F0', fontSize: '0.875rem' }}>
                   <span style={{ color: '#A8A89E' }}>{label}</span>
@@ -137,12 +140,21 @@ export default function ProfilePage() {
           <section>
             <h3 style={{ fontWeight: 600, color: '#68685E', fontSize: '0.875rem', marginBottom: '1rem', paddingBottom: '0.5rem', borderBottom: '1px solid #F5F5F0' }}>Body Measurements</h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
-              {[['age', 'Age (years)', '25'], ['height', 'Height (cm)', '175'], ['weight', 'Weight (kg)', '70']].map(([f, l, p]) => (
-                <div key={f}>
-                  <label className="label">{l}</label>
-                  <input type="number" className="input" placeholder={p} value={form[f] || ''} onChange={(e) => setForm((s) => ({ ...s, [f]: e.target.value }))} />
-                </div>
-              ))}
+              <div>
+                <label className="label">Date of Birth</label>
+                <input type="date" className="input"
+                  max={new Date().toISOString().split('T')[0]}
+                  value={form.date_of_birth || ''}
+                  onChange={(e) => setForm((s) => ({ ...s, date_of_birth: e.target.value }))} />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                {[['height', 'Height (cm)', '175'], ['weight', 'Weight (kg)', '70']].map(([f, l, p]) => (
+                  <div key={f}>
+                    <label className="label">{l}</label>
+                    <input type="number" className="input" placeholder={p} value={form[f] || ''} onChange={(e) => setForm((s) => ({ ...s, [f]: e.target.value }))} />
+                  </div>
+                ))}
+              </div>
             </div>
           </section>
 

@@ -111,8 +111,13 @@ export default function GeneratePlanPage() {
             </div>
             <h3 style={{ fontFamily: 'Playfair Display, serif', fontSize: '1.4rem', fontWeight: 700, marginBottom: '0.75rem' }}>Generation limit reached</h3>
             <p style={{ color: '#A8A89E', fontSize: '0.9rem', marginBottom: '1.5rem', maxWidth: 360, margin: '0 auto 1.5rem' }}>
-              You've used all 10 free generations on the free tier for this month. Upgrade to Premium for unlimited generations.
+              You've used all 10 free generations in your current 30-day window (7 full + 3 previews). Upgrade to Premium for unlimited generations.
             </p>
+            {genStatus?.reset_date && (
+              <p style={{ color: '#A8A89E', fontSize: '0.8rem', marginBottom: '1.5rem' }}>
+                🔄 Your free generations reset on <strong>{new Date(genStatus.reset_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</strong>
+              </p>
+            )}
             <button onClick={() => navigate('/upgrade')} className="btn-accent btn-lg" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
               <Crown size={18} /> Upgrade to Premium
             </button>
@@ -136,7 +141,7 @@ export default function GeneratePlanPage() {
                 <span style={{ fontSize: '1.1rem' }}>ℹ️</span>
                 <div>
                   <p style={{ fontWeight: 600, color: '#92400e', fontSize: '0.875rem' }}>3-Day Preview</p>
-                  <p style={{ color: '#a16207', fontSize: '0.8rem' }}>Monday to Wednesday only. Upgrade to Premium for full 7-day plans.</p>
+                  <p style={{ color: '#a16207', fontSize: '0.8rem' }}>Monday to Wednesday only. Upgrade to Premium for full 7-day plans always.</p>
                 </div>
               </div>
             )}
@@ -148,7 +153,7 @@ export default function GeneratePlanPage() {
               {isPremium
                 ? 'Your AI-powered full plan with taste learning based on your ratings.'
                 : isPartial
-                ? 'Generations 8–10 on the free tier — a 3-day preview plan.'
+                ? 'Generations 8–10 on the free tier — 3-day preview plans only.'
                 : 'Your first personalised meal plan, built around your profile and Ghanaian food culture.'}
             </p>
             <button onClick={handleGenerate} className="btn-primary btn-lg" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>

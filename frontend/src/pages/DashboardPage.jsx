@@ -100,7 +100,8 @@ export default function DashboardPage() {
           </h1>
           <p style={{ color: '#A8A89E', fontSize: '0.9rem', marginTop: '0.25rem' }}>
             {isPremium ? '✨ Premium Plan' : 'Free Plan'} •{' '}
-            {genStatus?.type === 'blocked' ? 'Generation limit reached'
+            {genStatus?.type === 'blocked'
+              ? `Limit reached — resets ${genStatus?.reset_date ? new Date(genStatus.reset_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : 'soon'}`
               : genStatus?.type === 'full' ? 'Full plan available'
               : '3-day preview available'}
           </p>

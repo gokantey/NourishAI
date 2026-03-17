@@ -148,7 +148,7 @@ def verify_otp_view(request):
         return Response({
             'message': f'Welcome to NourishAI, {user.first_name}!',
             'tokens': tokens,
-            'user': {'id': user.id, 'first_name': user.first_name, 'username': user.username},
+            'user': {'id': user.id, 'first_name': user.first_name, 'last_name': user.last_name, 'username': user.username, 'email': user.email},
         }, status=status.HTTP_201_CREATED)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

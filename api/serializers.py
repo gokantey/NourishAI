@@ -20,13 +20,14 @@ class UserProfileSerializer(serializers.ModelSerializer):
     bmi_category = serializers.CharField(read_only=True)
     daily_calorie_target = serializers.IntegerField(read_only=True)
     daily_water_intake = serializers.FloatField(read_only=True)
+    age = serializers.IntegerField(read_only=True)  # computed from date_of_birth
     generation_status = serializers.SerializerMethodField()
     can_save = serializers.SerializerMethodField()
 
     class Meta:
         model = UserProfile
         fields = [
-            'user', 'age', 'region', 'dietary_preference', 'allergies',
+            'user', 'date_of_birth', 'age', 'region', 'dietary_preference', 'allergies',
             'other_allergy', 'health_conditions', 'other_health_condition',
             'budget', 'fitness_goal', 'height', 'weight', 'bmi', 'bmi_category',
             'daily_calorie_target', 'daily_water_intake', 'subscription_tier',
@@ -46,20 +47,37 @@ class UserProfileUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
         fields = [
-            'age', 'region', 'dietary_preference', 'allergies', 'other_allergy',
+            'date_of_birth', 'region', 'dietary_preference', 'allergies', 'other_allergy',
             'health_conditions', 'other_health_condition', 'budget', 'fitness_goal',
             'height', 'weight',
         ]
+
+    def validate_date_of_birth(self, value):
+        if value:
+            from datetime import date
+            today = date.today()
+            age = today.year - value.year - ((today.month, today.day) < (value.month, value.day))
+            if age < 10:
+                raise serializers.ValidationError('You must be at least 10 years old.')
+            if age > 100:
+                raise serializers.ValidationError('Please enter a valid date of birth.')
+        return value
 
 
 class OnboardingStep1Serializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
-        fields = ['age', 'height', 'weight']
+        fields = ['date_of_birth', 'height', 'weight']
 
-    def validate_age(self, value):
-        if value and (value < 10 or value > 100):
-            raise serializers.ValidationError('Age must be between 10 and 100.')
+    def validate_date_of_birth(self, value):
+        if value:
+            from datetime import date
+            today = date.today()
+            age = today.year - value.year - ((today.month, today.day) < (value.month, value.day))
+            if age < 10:
+                raise serializers.ValidationError('You must be at least 10 years old.')
+            if age > 100:
+                raise serializers.ValidationError('Please enter a valid date of birth.')
         return value
 
     def validate_height(self, value):
