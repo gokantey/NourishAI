@@ -260,11 +260,28 @@ export default function DashboardPage() {
                     <div style={{ fontWeight: 600, fontSize: '1rem', color: 'var(--espresso)', letterSpacing: '-0.01em', fontFamily: 'var(--font-body)' }}>
                       {latestPlan.title || `Plan — ${new Date(latestPlan.week_start_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}`}
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.3rem', flexWrap: 'wrap' }}>
-                      <span className={latestPlan.is_partial ? 'badge-orange' : 'badge-green'}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.375rem', flexWrap: 'wrap' }}>
+                      <span style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 4,
+                        padding: '3px 10px', borderRadius: 100, fontSize: '0.72rem', fontWeight: 600,
+                        background: latestPlan.is_partial ? 'var(--terra-light)' : 'var(--sage-light)',
+                        color: latestPlan.is_partial ? 'var(--terracotta)' : 'var(--forest)',
+                        border: latestPlan.is_partial ? '1px solid rgba(196,82,26,0.18)' : '1px solid rgba(61,122,88,0.18)',
+                        fontFamily: 'var(--font-body)',
+                      }}>
                         {latestPlan.is_partial ? '3-Day Preview' : '7-Day Full Plan'}
                       </span>
-                      {latestPlan.is_saved && <span className="badge-yellow">📌 Saved</span>}
+                      {latestPlan.is_saved && (
+                        <span style={{
+                          display: 'inline-flex', alignItems: 'center', gap: 4,
+                          padding: '3px 10px', borderRadius: 100, fontSize: '0.72rem', fontWeight: 600,
+                          background: 'var(--gold-light)', color: 'var(--gold)',
+                          border: '1px solid rgba(192,125,26,0.18)',
+                          fontFamily: 'var(--font-body)',
+                        }}>
+                          📌 Saved
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
