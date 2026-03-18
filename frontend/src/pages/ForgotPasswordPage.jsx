@@ -14,7 +14,7 @@ export default function ForgotPasswordPage() {
     e.preventDefault()
     if (!email) { setError('Please enter your email address.'); return }
     setLoading(true); setError('')
-    try { await authAPI.forgotPassword({ email }) } catch (_) { /* intentional — never reveal if email exists */ }
+    try { await authAPI.forgotPassword({ email }) } catch { /* swallowed intentionally */ }
     finally { setLoading(false); setSent(true) }
   }
 
