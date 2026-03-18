@@ -36,8 +36,8 @@ export default function HistoryPage() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       <div>
-        <h1 style={{ fontFamily: 'Playfair Display, serif', fontSize: '2rem', fontWeight: 700, color: '#28281E' }}>Plan History</h1>
-        <p style={{ color: '#A8A89E', fontSize: '0.9rem', marginTop: '0.25rem' }}>All your meal plans in one place</p>
+        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2rem', fontWeight: 700, color: 'var(--espresso)' }}>Plan History</h1>
+        <p style={{ color: 'var(--warm-gray)', fontSize: '0.9rem', marginTop: '0.25rem' }}>All your meal plans in one place</p>
       </div>
 
       {loading ? (
@@ -49,9 +49,9 @@ export default function HistoryPage() {
       ) : plans.length === 0 ? (
         <div className="card" style={{ padding: '3rem', textAlign: 'center' }}>
           <div style={{ fontSize: '3.5rem', marginBottom: '1rem' }}>📋</div>
-          <h3 style={{ fontFamily: 'Playfair Display, serif', fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem' }}>No plans yet</h3>
-          <p style={{ color: '#A8A89E', fontSize: '0.9rem', marginBottom: '1.5rem' }}>Generate your first meal plan to see it here.</p>
-          <Link to="/generate" className="btn-primary btn-lg" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+          <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem' }}>No plans yet</h3>
+          <p style={{ color: 'var(--warm-gray)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>Generate your first meal plan to see it here.</p>
+          <Link to="/generate" className="btn btn-primary btn-lg" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
             Generate a Plan
           </Link>
         </div>
@@ -68,11 +68,11 @@ export default function HistoryPage() {
                 opacity: 0,
               }}
             >
-              <div style={{ width: 48, height: 48, background: '#f0fdf4', borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', flexShrink: 0 }}>
+              <div style={{ width: 48, height: 48, background: 'var(--sage-light)', borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', flexShrink: 0 }}>
                 🍽️
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 600, color: '#28281E', marginBottom: '0.375rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div style={{ fontWeight: 600, color: 'var(--espresso)', marginBottom: '0.375rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {plan.title || `Week of ${plan.week_start_date}`}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
@@ -80,7 +80,7 @@ export default function HistoryPage() {
                     {plan.is_partial ? '3-Day Preview' : '7-Day Plan'}
                   </span>
                   {plan.is_saved && <span className="badge-yellow">📌 Saved</span>}
-                  <span style={{ fontSize: '0.75rem', color: '#C8C8BE', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--stone)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                     <Calendar size={11} /> {plan.week_start_date}
                   </span>
                 </div>
@@ -88,17 +88,17 @@ export default function HistoryPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
                 <button
                   onClick={() => setPlanToDelete(plan)}
-                  style={{ width: 32, height: 32, borderRadius: 10, border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#C8C8BE', transition: 'all 0.15s' }}
+                  style={{ width: 32, height: 32, borderRadius: 10, border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--stone)', transition: 'all 0.15s' }}
                   onMouseEnter={(e) => { e.currentTarget.style.background = '#fef2f2'; e.currentTarget.style.color = '#ef4444' }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#C8C8BE' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--stone)' }}
                 >
                   <Trash2 size={14} />
                 </button>
                 <Link
                   to={`/plans/${plan.id}`}
-                  style={{ width: 32, height: 32, borderRadius: 10, background: '#F5F5F0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#68685E', textDecoration: 'none', transition: 'all 0.15s' }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = '#f0fdf4'; e.currentTarget.style.color = '#2D6A4F' }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = '#F5F5F0'; e.currentTarget.style.color = '#68685E' }}
+                  style={{ width: 32, height: 32, borderRadius: 10, background: 'var(--linen)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--warm-gray)', textDecoration: 'none', transition: 'all 0.15s' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--sage-light)'; e.currentTarget.style.color = 'var(--fern)' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--linen)'; e.currentTarget.style.color = 'var(--warm-gray)' }}
                 >
                   <ChevronRight size={14} />
                 </Link>

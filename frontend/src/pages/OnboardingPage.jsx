@@ -70,9 +70,9 @@ function ToggleButton({ active, onClick, children }) {
       style={{
         display: 'flex', alignItems: 'center', gap: '0.5rem',
         padding: '0.5rem 0.75rem', borderRadius: '0.75rem', width: '100%',
-        border: `1px solid ${active ? '#2D6A4F' : '#E0E0D8'}`,
-        background: active ? '#f0fdf4' : 'white',
-        color: active ? '#2D6A4F' : '#88887E',
+        border: `1px solid ${active ? 'var(--fern)' : 'var(--linen-mid)'}`,
+        background: active ? 'var(--sage-light)' : 'white',
+        color: active ? 'var(--fern)' : 'var(--warm-gray)',
         fontWeight: active ? 600 : 400, fontSize: '0.85rem',
         cursor: 'pointer', transition: 'all 0.15s', textAlign: 'left',
       }}>
@@ -87,12 +87,12 @@ function CheckboxItem({ label, checked, onChange }) {
       style={{
         display: 'flex', alignItems: 'center', gap: '0.5rem',
         padding: '0.45rem 0.625rem', borderRadius: '0.625rem', width: '100%',
-        border: `1px solid ${checked ? '#2D6A4F' : '#E0E0D8'}`,
-        background: checked ? '#f0fdf4' : 'white',
-        color: checked ? '#2D6A4F' : '#88887E',
+        border: `1px solid ${checked ? 'var(--fern)' : 'var(--linen-mid)'}`,
+        background: checked ? 'var(--sage-light)' : 'white',
+        color: checked ? 'var(--fern)' : 'var(--warm-gray)',
         fontSize: '0.82rem', cursor: 'pointer', transition: 'all 0.15s', textAlign: 'left',
       }}>
-      <span style={{ width: 15, height: 15, borderRadius: 4, border: `2px solid ${checked ? '#2D6A4F' : '#C8C8BE'}`, background: checked ? '#2D6A4F' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+      <span style={{ width: 15, height: 15, borderRadius: 4, border: `2px solid ${checked ? 'var(--fern)' : 'var(--stone)'}`, background: checked ? 'var(--fern)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
         {checked && <Check size={9} color="white" strokeWidth={3} />}
       </span>
       {label}
@@ -168,40 +168,40 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#FAFAF8', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem 1rem' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--cream)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem 1rem' }}>
       <div style={{ width: '100%', maxWidth: 580 }}>
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-            <div style={{ width: 36, height: 36, background: '#2D6A4F', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: 36, height: 36, background: 'var(--fern)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Leaf size={18} color="white" />
             </div>
-            <span style={{ fontFamily: 'Playfair Display, serif', fontSize: '1.25rem', fontWeight: 700, color: '#28281E' }}>
-              Nourish<span style={{ color: '#F4845F' }}>AI</span>
+            <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 700, color: 'var(--espresso)' }}>
+              Nourish<span style={{ color: 'var(--terracotta)' }}>AI</span>
             </span>
           </div>
-          <h1 style={{ fontFamily: 'Playfair Display, serif', fontSize: '1.6rem', fontWeight: 700, color: '#28281E', marginBottom: '0.25rem' }}>
+          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.6rem', fontWeight: 700, color: 'var(--espresso)', marginBottom: '0.25rem' }}>
             Let's set up your profile, {user?.first_name} 👋
           </h1>
-          <p style={{ color: '#A8A89E', fontSize: '0.875rem' }}>Step {step + 1} of 3 — {STEPS[step]}</p>
+          <p style={{ color: 'var(--warm-gray)', fontSize: '0.875rem' }}>Step {step + 1} of 3 — {STEPS[step]}</p>
         </div>
 
         {/* Progress */}
         <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.75rem' }}>
           {STEPS.map((_, i) => (
-            <div key={i} style={{ height: 5, flex: 1, borderRadius: 9999, background: i <= step ? '#2D6A4F' : '#E0E0D8', transition: 'background 0.4s' }} />
+            <div key={i} style={{ height: 5, flex: 1, borderRadius: 9999, background: i <= step ? 'var(--fern)' : 'var(--linen-mid)', transition: 'background 0.4s' }} />
           ))}
         </div>
 
         {/* Card */}
-        <div style={{ background: 'white', borderRadius: 24, boxShadow: '0 4px 24px -4px rgba(0,0,0,0.08)', border: '1px solid #F5F5F0', padding: '1.75rem', overflow: 'hidden' }}>
+        <div style={{ background: 'white', borderRadius: 22, boxShadow: '0 4px 20px rgba(28,58,43,0.08)', border: '1px solid var(--linen)', padding: '1.75rem', overflow: 'hidden' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
-            <div style={{ width: 40, height: 40, background: '#f0fdf4', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>
+            <div style={{ width: 40, height: 40, background: 'var(--sage-light)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>
               {['📏', '🥗', '🎯'][step]}
             </div>
             <div>
-              <h2 style={{ fontFamily: 'Playfair Display, serif', fontSize: '1.15rem', fontWeight: 700, marginBottom: '0.1rem', color: '#28281E' }}>{STEPS[step]}</h2>
-              <p style={{ fontSize: '0.78rem', color: '#A8A89E' }}>
+              <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.15rem', fontWeight: 700, marginBottom: '0.1rem', color: 'var(--espresso)' }}>{STEPS[step]}</h2>
+              <p style={{ fontSize: '0.78rem', color: 'var(--warm-gray)' }}>
                 {['Enter your body measurements for accurate nutrition targets', 'Tell us about your dietary preferences and health', 'Set your goals and weekly food budget'][step]}
               </p>
             </div>
@@ -238,21 +238,21 @@ export default function OnboardingPage() {
                   {/* Live BMI preview */}
                   {bmi && bmiInfo ? (
                     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-                      style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem 1.25rem', background: '#FAFAF8', borderRadius: 14, border: '1px solid #F5F5F0' }}>
+                      style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem 1.25rem', background: 'var(--cream)', borderRadius: 14, border: '1px solid var(--linen)' }}>
                       <div style={{ textAlign: 'center', flexShrink: 0 }}>
-                        <div style={{ fontFamily: 'Playfair Display, serif', fontSize: '2rem', fontWeight: 700, color: bmiInfo.color, lineHeight: 1 }}>{bmi}</div>
-                        <div style={{ fontSize: '0.65rem', color: '#A8A89E', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: 2 }}>BMI</div>
+                        <div style={{ fontFamily: 'var(--font-display)', fontSize: '2rem', fontWeight: 700, color: bmiInfo.color, lineHeight: 1 }}>{bmi}</div>
+                        <div style={{ fontSize: '0.65rem', color: 'var(--warm-gray)', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: 2 }}>BMI</div>
                       </div>
                       <div style={{ width: 1, height: 40, background: '#EEEEE8' }} />
                       <div>
                         <div style={{ fontWeight: 600, color: bmiInfo.color, fontSize: '0.9rem' }}>{bmiInfo.label}</div>
-                        <div style={{ fontSize: '0.78rem', color: '#A8A89E', marginTop: '0.2rem' }}>
+                        <div style={{ fontSize: '0.78rem', color: 'var(--warm-gray)', marginTop: '0.2rem' }}>
                           Healthy range: 18.5 – 24.9
                         </div>
                       </div>
                     </motion.div>
                   ) : (
-                    <div style={{ padding: '0.875rem 1rem', background: '#fff4f0', borderRadius: 12, border: '1px solid #ffe8e0', fontSize: '0.8rem', color: '#F4845F' }}>
+                    <div style={{ padding: '0.875rem 1rem', background: '#fff4f0', borderRadius: 12, border: '1px solid #ffe8e0', fontSize: '0.8rem', color: 'var(--terracotta)' }}>
                       🍽️ Enter your height and weight above to see your BMI
                     </div>
                   )}
@@ -288,11 +288,11 @@ export default function OnboardingPage() {
 
                   <div>
                     <label className="label" style={{ marginBottom: '0.5rem' }}>
-                      Health Conditions <span style={{ color: '#A8A89E', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span>
+                      Health Conditions <span style={{ color: 'var(--warm-gray)', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span>
                     </label>
                     {HEALTH_GROUPS.map((group) => (
                       <div key={group.label} style={{ marginBottom: '1rem' }}>
-                        <p style={{ fontSize: '0.68rem', fontWeight: 700, color: '#7c3aed', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.4rem' }}>{group.label}</p>
+                        <p style={{ fontSize: '0.68rem', fontWeight: 700, color: '#7C3AED', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.4rem' }}>{group.label}</p>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.35rem' }}>
                           {group.conditions.map(([value, label]) => (
                             <CheckboxItem key={value} label={label} checked={step2.health_conditions.includes(value)} onChange={() => toggleArray(setStep2, 'health_conditions', value)} />
@@ -349,12 +349,12 @@ export default function OnboardingPage() {
         {/* Navigation */}
         <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.25rem' }}>
           {step > 0 && (
-            <button onClick={() => setStep(step - 1)} disabled={loading} className="btn-outline"
+            <button onClick={() => setStep(step - 1)} disabled={loading} className="btn btn-ghost"
               style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
               <ChevronLeft size={16} /> Back
             </button>
           )}
-          <button onClick={handleNext} disabled={loading} className="btn-primary btn-lg"
+          <button onClick={handleNext} disabled={loading} className="btn btn-primary btn-lg"
             style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
             {loading
               ? <span style={{ width: 20, height: 20, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin 1s linear infinite', display: 'inline-block' }} />

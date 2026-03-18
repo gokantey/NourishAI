@@ -16,7 +16,7 @@ function MealDetailModal({ meal, onClose }) {
   const pillStyle = {
     breakfast: { background: '#fef9c3', color: '#a16207' },
     lunch: { background: '#dcfce7', color: '#15803d' },
-    dinner: { background: '#f3e8ff', color: '#7c3aed' },
+    dinner: { background: '#f3e8ff', color: '#7C3AED' },
   }[meal.meal_type]
 
   return (
@@ -24,31 +24,31 @@ function MealDetailModal({ meal, onClose }) {
       style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)', zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', overflowY: 'auto' }}
       onClick={onClose}>
       <motion.div initial={{ scale: 0.95, opacity: 0, y: 16 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0 }}
-        style={{ background: 'white', borderRadius: 24, width: '100%', maxWidth: 580, maxHeight: '90vh', overflowY: 'auto', position: 'relative' }}
+        style={{ background: 'white', borderRadius: 22, width: '100%', maxWidth: 580, maxHeight: '90vh', overflowY: 'auto', position: 'relative' }}
         onClick={(e) => e.stopPropagation()}>
 
         {/* Header */}
         <div style={{ padding: '1.5rem 1.5rem 1rem', borderBottom: '1px solid #F5F5F0', position: 'sticky', top: 0, background: 'white', zIndex: 1 }}>
           <button onClick={onClose}
-            style={{ position: 'absolute', top: '1rem', right: '1rem', width: 32, height: 32, borderRadius: 10, background: '#F5F5F0', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            style={{ position: 'absolute', top: '1rem', right: '1rem', width: 32, height: 32, borderRadius: 10, background: 'var(--linen)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <X size={15} color="#68685E" />
           </button>
           <span style={{ ...pillStyle, display: 'inline-flex', alignItems: 'center', padding: '0.2rem 0.75rem', borderRadius: 9999, fontSize: '0.78rem', fontWeight: 600, marginBottom: '0.75rem' }}>
             {{ breakfast: '🌄', lunch: '☀️', dinner: '🌙' }[meal.meal_type]} {meal.meal_type}
           </span>
-          <h2 style={{ fontFamily: 'Playfair Display, serif', fontSize: '1.4rem', fontWeight: 700, color: '#28281E', marginBottom: '0.5rem', paddingRight: '2.5rem' }}>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.4rem', fontWeight: 700, color: 'var(--espresso)', marginBottom: '0.5rem', paddingRight: '2.5rem' }}>
             {meal.title}
           </h2>
-          <p style={{ color: '#A8A89E', fontSize: '0.875rem', lineHeight: 1.6 }}>{meal.description}</p>
+          <p style={{ color: 'var(--warm-gray)', fontSize: '0.875rem', lineHeight: 1.6 }}>{meal.description}</p>
         </div>
 
         {/* Nutrition */}
         <div style={{ padding: '1rem 1.5rem', borderBottom: '1px solid #F5F5F0' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.5rem' }}>
             {[['🔥', meal.calories, 'kcal'], ['💪', `${meal.protein}g`, 'protein'], ['🌾', `${meal.carbohydrates}g`, 'carbs'], ['🫙', `${meal.fats}g`, 'fats'], ['🌿', `${meal.fibre}g`, 'fibre']].map(([emoji, val, label]) => (
-              <div key={label} style={{ textAlign: 'center', padding: '0.625rem 0.375rem', background: '#FAFAF8', borderRadius: 10, border: '1px solid #F5F5F0' }}>
-                <div style={{ fontFamily: 'Playfair Display, serif', fontSize: '1rem', fontWeight: 700, color: '#2D6A4F' }}>{emoji} {val}</div>
-                <div style={{ fontSize: '0.65rem', color: '#A8A89E', textTransform: 'uppercase', letterSpacing: '0.04em', marginTop: 2 }}>{label}</div>
+              <div key={label} style={{ textAlign: 'center', padding: '0.625rem 0.375rem', background: 'var(--cream)', borderRadius: 10, border: '1px solid var(--linen)' }}>
+                <div style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', fontWeight: 700, color: 'var(--fern)' }}>{emoji} {val}</div>
+                <div style={{ fontSize: '0.65rem', color: 'var(--warm-gray)', textTransform: 'uppercase', letterSpacing: '0.04em', marginTop: 2 }}>{label}</div>
               </div>
             ))}
           </div>
@@ -57,22 +57,22 @@ function MealDetailModal({ meal, onClose }) {
         {/* Meta info */}
         <div style={{ padding: '1rem 1.5rem', borderBottom: '1px solid #F5F5F0', display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
           {meal.prep_time && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.875rem', color: '#68685E' }}>
-              <Clock size={15} style={{ color: '#2D6A4F' }} /> {meal.prep_time} min prep
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.875rem', color: 'var(--warm-gray)' }}>
+              <Clock size={15} style={{ color: 'var(--fern)' }} /> {meal.prep_time} min prep
             </div>
           )}
           {meal.difficulty && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.875rem', color: '#68685E' }}>
-              <ChefHat size={15} style={{ color: '#2D6A4F' }} /> {meal.difficulty}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.875rem', color: 'var(--warm-gray)' }}>
+              <ChefHat size={15} style={{ color: 'var(--fern)' }} /> {meal.difficulty}
             </div>
           )}
           {meal.suggested_time && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.875rem', color: '#68685E' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.875rem', color: 'var(--warm-gray)' }}>
               🕐 Suggested: {meal.suggested_time}
             </div>
           )}
           {meal.portion_guide && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.875rem', color: '#68685E' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.875rem', color: 'var(--warm-gray)' }}>
               🍽️ {meal.portion_guide}
             </div>
           )}
@@ -80,32 +80,32 @@ function MealDetailModal({ meal, onClose }) {
 
         {/* Ingredients */}
         <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid #F5F5F0' }}>
-          <h3 style={{ fontFamily: 'Playfair Display, serif', fontSize: '1rem', fontWeight: 700, color: '#28281E', marginBottom: '0.875rem' }}>🛒 Ingredients</h3>
+          <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', fontWeight: 700, color: 'var(--espresso)', marginBottom: '0.875rem' }}>🛒 Ingredients</h3>
           {Array.isArray(meal.ingredients) ? (
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
               {meal.ingredients.map((ing, i) => (
-                <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.625rem', fontSize: '0.875rem', color: '#68685E' }}>
-                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#2D6A4F', marginTop: 6, flexShrink: 0 }} />
+                <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.625rem', fontSize: '0.875rem', color: 'var(--warm-gray)' }}>
+                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--fern)', marginTop: 6, flexShrink: 0 }} />
                   {typeof ing === 'object' ? `${ing.quantity || ''} ${ing.unit || ''} ${ing.name || ing.ingredient_name || ''}`.trim() : ing}
                 </li>
               ))}
             </ul>
           ) : (
-            <p style={{ fontSize: '0.875rem', color: '#68685E', whiteSpace: 'pre-wrap' }}>{meal.ingredients}</p>
+            <p style={{ fontSize: '0.875rem', color: 'var(--warm-gray)', whiteSpace: 'pre-wrap' }}>{meal.ingredients}</p>
           )}
         </div>
 
         {/* Instructions */}
         <div style={{ padding: '1.25rem 1.5rem' }}>
-          <h3 style={{ fontFamily: 'Playfair Display, serif', fontSize: '1rem', fontWeight: 700, color: '#28281E', marginBottom: '0.875rem' }}>👨‍🍳 Instructions</h3>
+          <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', fontWeight: 700, color: 'var(--espresso)', marginBottom: '0.875rem' }}>👨‍🍳 Instructions</h3>
           {Array.isArray(meal.instructions) ? (
             <ol style={{ paddingLeft: '1.25rem', margin: 0, display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
               {meal.instructions.map((step, i) => (
-                <li key={i} style={{ fontSize: '0.875rem', color: '#68685E', lineHeight: 1.6 }}>{step}</li>
+                <li key={i} style={{ fontSize: '0.875rem', color: 'var(--warm-gray)', lineHeight: 1.6 }}>{step}</li>
               ))}
             </ol>
           ) : (
-            <p style={{ fontSize: '0.875rem', color: '#68685E', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{meal.instructions}</p>
+            <p style={{ fontSize: '0.875rem', color: 'var(--warm-gray)', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{meal.instructions}</p>
           )}
         </div>
       </motion.div>
@@ -123,7 +123,7 @@ function MealCard({ meal, onRate, onRegenerate, onView }) {
   const pillStyle = {
     breakfast: { background: '#fef9c3', color: '#a16207' },
     lunch: { background: '#dcfce7', color: '#15803d' },
-    dinner: { background: '#f3e8ff', color: '#7c3aed' },
+    dinner: { background: '#f3e8ff', color: '#7C3AED' },
   }[meal.meal_type]
 
   const mealEmoji = { breakfast: '🌄', lunch: '☀️', dinner: '🌙' }[meal.meal_type]
@@ -150,28 +150,28 @@ function MealCard({ meal, onRate, onRegenerate, onView }) {
   }
 
   return (
-    <div style={{ background: 'white', border: '1px solid #F5F5F0', borderRadius: 16, padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', transition: 'border-color 0.2s, box-shadow 0.2s' }}
+    <div style={{ background: 'white', border: '1px solid var(--linen)', borderRadius: 16, padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', transition: 'border-color 0.2s, box-shadow 0.2s' }}
       onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#bbf7d0'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(45,106,79,0.08)' }}
-      onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#F5F5F0'; e.currentTarget.style.boxShadow = 'none' }}>
+      onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--linen)'; e.currentTarget.style.boxShadow = 'none' }}>
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <span style={{ ...pillStyle, display: 'inline-flex', alignItems: 'center', gap: '0.25rem', padding: '0.15rem 0.6rem', borderRadius: 9999, fontSize: '0.75rem', fontWeight: 600 }}>
           {mealEmoji} {meal.meal_type}
         </span>
-        <span style={{ fontSize: '0.72rem', color: '#A8A89E' }}>⏱ {meal.prep_time}m</span>
+        <span style={{ fontSize: '0.72rem', color: 'var(--warm-gray)' }}>⏱ {meal.prep_time}m</span>
       </div>
 
-      <h4 style={{ fontWeight: 700, color: '#28281E', fontSize: '0.9rem', lineHeight: 1.4, margin: 0 }}>{meal.title}</h4>
-      <p style={{ fontSize: '0.8rem', color: '#A8A89E', lineHeight: 1.5, margin: 0 }}>{meal.description?.slice(0, 75)}...</p>
+      <h4 style={{ fontWeight: 700, color: 'var(--espresso)', fontSize: '0.9rem', lineHeight: 1.4, margin: 0 }}>{meal.title}</h4>
+      <p style={{ fontSize: '0.8rem', color: 'var(--warm-gray)', lineHeight: 1.5, margin: 0 }}>{meal.description?.slice(0, 75)}...</p>
 
       {meal.suggested_time && (
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.72rem', color: '#F4845F', background: '#fff4f0', borderRadius: 9999, padding: '0.15rem 0.5rem', width: 'fit-content' }}>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.72rem', color: 'var(--terracotta)', background: '#fff4f0', borderRadius: 9999, padding: '0.15rem 0.5rem', width: 'fit-content' }}>
           🕐 {meal.suggested_time}
         </span>
       )}
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#2D6A4F' }}>🔥 {meal.calories} kcal</span>
+        <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--fern)' }}>🔥 {meal.calories} kcal</span>
         <div style={{ display: 'flex', gap: 2 }}>
           {[1, 2, 3, 4, 5].map((s) => (
             <button key={s} onMouseEnter={() => setHoveredStar(s)} onMouseLeave={() => setHoveredStar(0)}
@@ -183,15 +183,15 @@ function MealCard({ meal, onRate, onRegenerate, onView }) {
 
       <div style={{ display: 'flex', gap: '0.5rem' }}>
         <button onClick={() => onView(meal)}
-          style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.375rem', padding: '0.5rem', borderRadius: 10, border: '1px solid #2D6A4F', background: '#f0fdf4', color: '#2D6A4F', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s' }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = '#2D6A4F'; e.currentTarget.style.color = 'white' }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = '#f0fdf4'; e.currentTarget.style.color = '#2D6A4F' }}>
+          style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.375rem', padding: '0.5rem', borderRadius: 10, border: '1px solid #2D6A4F', background: 'var(--sage-light)', color: 'var(--fern)', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s' }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--fern)'; e.currentTarget.style.color = 'white' }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--sage-light)'; e.currentTarget.style.color = 'var(--fern)' }}>
           <Flame size={12} /> View Details
         </button>
         <button onClick={handleRegen} disabled={regenLoading}
-          style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.375rem', padding: '0.5rem', borderRadius: 10, border: '1px solid #E0E0D8', background: 'transparent', color: '#A8A89E', fontSize: '0.78rem', cursor: 'pointer', transition: 'all 0.15s' }}
-          onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#F4845F'; e.currentTarget.style.color = '#F4845F' }}
-          onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#E0E0D8'; e.currentTarget.style.color = '#A8A89E' }}>
+          style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.375rem', padding: '0.5rem', borderRadius: 10, border: '1px solid #E0E0D8', background: 'transparent', color: 'var(--warm-gray)', fontSize: '0.78rem', cursor: 'pointer', transition: 'all 0.15s' }}
+          onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--terracotta)'; e.currentTarget.style.color = 'var(--terracotta)' }}
+          onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--linen-mid)'; e.currentTarget.style.color = 'var(--warm-gray)' }}>
           <RefreshCw size={11} style={{ animation: regenLoading ? 'spin 1s linear infinite' : 'none' }} /> Swap
         </button>
       </div>
@@ -279,25 +279,25 @@ export default function MealPlanPage() {
       {/* Header */}
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem' }}>
         <div>
-          <h1 style={{ fontFamily: 'Playfair Display, serif', fontSize: '1.75rem', fontWeight: 700, color: '#28281E' }}>
+          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.75rem', fontWeight: 700, color: 'var(--espresso)' }}>
             {plan.is_partial ? '3-Day Preview Plan' : 'Your 7-Day Plan'}
           </h1>
-          <p style={{ color: '#A8A89E', fontSize: '0.875rem', marginTop: '0.2rem' }}>
+          <p style={{ color: 'var(--warm-gray)', fontSize: '0.875rem', marginTop: '0.2rem' }}>
             Week of {plan.week_start_date}
-            {plan.is_saved && <span style={{ marginLeft: '0.5rem', color: '#F4845F' }}>📌 Saved</span>}
+            {plan.is_saved && <span style={{ marginLeft: '0.5rem', color: 'var(--terracotta)' }}>📌 Saved</span>}
           </p>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
           {plan.is_saved ? (
-            <button onClick={handleUnsave} className="btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <BookmarkCheck size={15} style={{ color: '#2D6A4F' }} /> Saved
+            <button onClick={handleUnsave} className="btn btn-ghost" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <BookmarkCheck size={15} style={{ color: 'var(--fern)' }} /> Saved
             </button>
           ) : plan.can_save ? (
-            <button onClick={() => setSaveModalOpen(true)} className="btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <button onClick={() => setSaveModalOpen(true)} className="btn btn-ghost" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Bookmark size={15} /> Save Plan
             </button>
           ) : (
-            <Link to="/upgrade" className="btn-accent btn-sm" style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+            <Link to="/upgrade" className="btn btn-accent btn-sm" style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
               <Crown size={13} /> Upgrade to Save
             </Link>
           )}
@@ -318,8 +318,8 @@ export default function MealPlanPage() {
       )}
 
       {/* Nutrition summary */}
-      <div style={{ background: 'white', borderRadius: 20, border: '1px solid #F5F5F0', padding: '1.25rem', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-        <h3 style={{ fontWeight: 600, color: '#68685E', fontSize: '0.875rem', marginBottom: '1rem' }}>
+      <div style={{ background: 'white', borderRadius: 20, border: '1px solid var(--linen)', padding: '1.25rem', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+        <h3 style={{ fontWeight: 600, color: 'var(--warm-gray)', fontSize: '0.875rem', marginBottom: '1rem' }}>
           📊 {plan.is_partial ? '3-Day' : 'Weekly'} Nutrition Summary
         </h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.75rem' }}>
@@ -339,7 +339,7 @@ export default function MealPlanPage() {
           const isActive = activeDay === day
           return (
             <button key={day} onClick={() => setActiveDay(day)}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', padding: '0.5rem 1rem', borderRadius: '1rem', fontSize: '0.85rem', fontWeight: 500, whiteSpace: 'nowrap', flexShrink: 0, border: 'none', cursor: 'pointer', transition: 'all 0.15s', background: isActive ? (locked ? '#E0E0D8' : '#2D6A4F') : 'white', color: isActive ? (locked ? '#68685E' : 'white') : (locked ? '#A8A89E' : '#68685E'), boxShadow: isActive && !locked ? '0 2px 8px rgba(45,106,79,0.25)' : '0 0 0 1px #E0E0D8' }}>
+              style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', padding: '0.5rem 1rem', borderRadius: '1rem', fontSize: '0.85rem', fontWeight: 500, whiteSpace: 'nowrap', flexShrink: 0, border: 'none', cursor: 'pointer', transition: 'all 0.15s', background: isActive ? (locked ? 'var(--linen-mid)' : 'var(--fern)') : 'white', color: isActive ? (locked ? 'var(--warm-gray)' : 'white') : (locked ? 'var(--warm-gray)' : 'var(--warm-gray)'), boxShadow: isActive && !locked ? '0 2px 8px rgba(45,106,79,0.25)' : '0 0 0 1px #E0E0D8' }}>
               {DAY_EMOJIS[day]} {day.charAt(0).toUpperCase() + day.slice(1)}
               {locked && <Lock size={11} />}
             </button>
@@ -351,15 +351,15 @@ export default function MealPlanPage() {
       <AnimatePresence mode="wait">
         <motion.div key={activeDay} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}>
           {isLockedDay ? (
-            <div style={{ background: 'white', borderRadius: 24, border: '1px solid #F5F5F0', padding: '3rem', textAlign: 'center' }}>
-              <div style={{ width: 64, height: 64, background: '#F5F5F0', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
-                <Lock size={28} style={{ color: '#C8C8BE' }} />
+            <div style={{ background: 'white', borderRadius: 22, border: '1px solid var(--linen)', padding: '3rem', textAlign: 'center' }}>
+              <div style={{ width: 64, height: 64, background: 'var(--linen)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
+                <Lock size={28} style={{ color: 'var(--stone)' }} />
               </div>
-              <h3 style={{ fontFamily: 'Playfair Display, serif', fontSize: '1.25rem', fontWeight: 700, color: '#68685E', marginBottom: '0.5rem' }}>
+              <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 700, color: 'var(--warm-gray)', marginBottom: '0.5rem' }}>
                 {activeDay.charAt(0).toUpperCase() + activeDay.slice(1)} is locked
               </h3>
-              <p style={{ color: '#A8A89E', fontSize: '0.9rem', marginBottom: '1.5rem' }}>Upgrade to Premium to unlock all 7 days.</p>
-              <Link to="/upgrade" className="btn-accent btn-lg" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+              <p style={{ color: 'var(--warm-gray)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>Upgrade to Premium to unlock all 7 days.</p>
+              <Link to="/upgrade" className="btn btn-accent btn-lg" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Crown size={18} /> Upgrade Now ✨
               </Link>
             </div>
@@ -368,7 +368,7 @@ export default function MealPlanPage() {
               {MEAL_TYPES.map((type) => (
                 dayMeals[type]
                   ? <MealCard key={type} meal={dayMeals[type]} onRate={fetchPlan} onRegenerate={handleMealUpdate} onView={setViewingMeal} />
-                  : <div key={type} style={{ background: '#FAFAF8', border: '1px solid #F5F5F0', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#C8C8BE', fontSize: '0.875rem', minHeight: 120 }}>No {type} found</div>
+                  : <div key={type} style={{ background: 'var(--cream)', border: '1px solid var(--linen)', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--stone)', fontSize: '0.875rem', minHeight: 120 }}>No {type} found</div>
               ))}
             </div>
           )}
@@ -377,9 +377,9 @@ export default function MealPlanPage() {
 
       {/* Shopping list */}
       {plan.shopping_list?.items?.length > 0 && (
-        <div style={{ background: 'white', borderRadius: 20, border: '1px solid #F5F5F0', padding: '1.5rem' }}>
-          <h3 style={{ fontFamily: 'Playfair Display, serif', fontSize: '1.1rem', fontWeight: 700, color: '#28281E', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <ShoppingCart size={18} style={{ color: '#2D6A4F' }} /> Shopping List
+        <div style={{ background: 'white', borderRadius: 20, border: '1px solid var(--linen)', padding: '1.5rem' }}>
+          <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', fontWeight: 700, color: 'var(--espresso)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <ShoppingCart size={18} style={{ color: 'var(--fern)' }} /> Shopping List
             {plan.is_partial && <span className="badge-orange" style={{ marginLeft: '0.5rem' }}>3-day only</span>}
           </h3>
           {(() => {
@@ -391,11 +391,11 @@ export default function MealPlanPage() {
             return (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '0.875rem' }}>
                 {Object.entries(grouped).map(([cat, items]) => (
-                  <div key={cat} style={{ background: '#FAFAF8', borderRadius: 12, padding: '0.875rem', border: '1px solid #F5F5F0' }}>
-                    <div style={{ fontSize: '0.68rem', fontWeight: 700, color: '#2D6A4F', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.625rem', paddingBottom: '0.375rem', borderBottom: '1px solid #EEEEE8' }}>{cat}</div>
+                  <div key={cat} style={{ background: 'var(--cream)', borderRadius: 12, padding: '0.875rem', border: '1px solid var(--linen)' }}>
+                    <div style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--fern)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.625rem', paddingBottom: '0.375rem', borderBottom: '1px solid #EEEEE8' }}>{cat}</div>
                     {items.map((item) => (
-                      <div key={item.id} style={{ fontSize: '0.78rem', color: '#68685E', padding: '0.2rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#2D6A4F', flexShrink: 0 }} />
+                      <div key={item.id} style={{ fontSize: '0.78rem', color: 'var(--warm-gray)', padding: '0.2rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--fern)', flexShrink: 0 }} />
                         {item.ingredient_name} — {item.quantity}{item.unit}
                       </div>
                     ))}
@@ -416,12 +416,12 @@ export default function MealPlanPage() {
             <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
               style={{ background: 'white', borderRadius: 20, padding: '1.5rem', width: '100%', maxWidth: 400 }}
               onClick={(e) => e.stopPropagation()}>
-              <h3 style={{ fontFamily: 'Playfair Display, serif', fontSize: '1.25rem', fontWeight: 700, marginBottom: '1rem' }}>Save this plan</h3>
+              <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 700, marginBottom: '1rem' }}>Save this plan</h3>
               <label className="label">Plan Name (optional)</label>
               <input type="text" className="input" placeholder={`Plan — ${plan.week_start_date}`} value={saveTitle} onChange={(e) => setSaveTitle(e.target.value)} autoFocus style={{ marginBottom: '1rem' }} />
               <div style={{ display: 'flex', gap: '0.75rem' }}>
-                <button onClick={() => setSaveModalOpen(false)} className="btn-ghost" style={{ flex: 1 }}>Cancel</button>
-                <button onClick={handleSave} disabled={saving} className="btn-primary" style={{ flex: 1 }}>
+                <button onClick={() => setSaveModalOpen(false)} className="btn btn-ghost" style={{ flex: 1 }}>Cancel</button>
+                <button onClick={handleSave} disabled={saving} className="btn btn-primary" style={{ flex: 1 }}>
                   {saving ? <span style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin 1s linear infinite', display: 'inline-block', margin: '0 auto' }} /> : 'Save Plan'}
                 </button>
               </div>

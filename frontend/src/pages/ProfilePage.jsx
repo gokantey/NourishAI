@@ -32,9 +32,9 @@ function ToggleBtn({ active, onClick, children }) {
     <button type="button" onClick={onClick}
       style={{
         padding: '0.5rem 0.75rem', borderRadius: '0.75rem', fontSize: '0.82rem', cursor: 'pointer',
-        border: `1px solid ${active ? '#2D6A4F' : '#E0E0D8'}`,
-        background: active ? '#f0fdf4' : 'white',
-        color: active ? '#2D6A4F' : '#88887E',
+        border: `1px solid ${active ? 'var(--fern)' : 'var(--linen-mid)'}`,
+        background: active ? 'var(--sage-light)' : 'white',
+        color: active ? 'var(--fern)' : 'var(--warm-gray)',
         fontWeight: active ? 600 : 400,
         transition: 'all 0.15s', textAlign: 'left', width: '100%',
       }}>
@@ -96,8 +96,8 @@ export default function ProfilePage() {
   return (
     <div style={{ maxWidth: 900, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       <div>
-        <h1 style={{ fontFamily: 'Playfair Display, serif', fontSize: '2rem', fontWeight: 700, color: '#28281E' }}>My Profile</h1>
-        <p style={{ color: '#A8A89E', fontSize: '0.9rem', marginTop: '0.25rem' }}>Keep your details updated for accurate meal plans</p>
+        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2rem', fontWeight: 700, color: 'var(--espresso)' }}>My Profile</h1>
+        <p style={{ color: 'var(--warm-gray)', fontSize: '0.9rem', marginTop: '0.25rem' }}>Keep your details updated for accurate meal plans</p>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1.5rem', alignItems: 'start' }}>
@@ -107,17 +107,17 @@ export default function ProfilePage() {
             <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'linear-gradient(135deg, #2D6A4F, #F4845F)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: '1.5rem', margin: '0 auto 0.75rem' }}>
               {user?.first_name?.[0]?.toUpperCase()}{user?.last_name?.[0]?.toUpperCase()}
             </div>
-            <div style={{ fontWeight: 600, color: '#28281E' }}>{user?.first_name} {user?.last_name}</div>
-            <div style={{ fontSize: '0.8rem', color: '#A8A89E', marginTop: '0.2rem' }}>@{user?.username}</div>
-            <div style={{ fontSize: '0.78rem', color: '#A8A89E', marginTop: '0.15rem' }}>{user?.email}</div>
-            <div style={{ marginTop: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.78rem', fontWeight: 600, padding: '0.25rem 0.75rem', borderRadius: 9999, background: isPremium ? '#fff4f0' : '#F5F5F0', color: isPremium ? '#F4845F' : '#A8A89E' }}>
+            <div style={{ fontWeight: 600, color: 'var(--espresso)' }}>{user?.first_name} {user?.last_name}</div>
+            <div style={{ fontSize: '0.8rem', color: 'var(--warm-gray)', marginTop: '0.2rem' }}>@{user?.username}</div>
+            <div style={{ fontSize: '0.78rem', color: 'var(--warm-gray)', marginTop: '0.15rem' }}>{user?.email}</div>
+            <div style={{ marginTop: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.78rem', fontWeight: 600, padding: '0.25rem 0.75rem', borderRadius: 9999, background: isPremium ? '#fff4f0' : 'var(--linen)', color: isPremium ? 'var(--terracotta)' : 'var(--warm-gray)' }}>
               {isPremium ? '✨ Premium' : 'Free Plan'}
             </div>
           </div>
 
           {profile && (
             <div className="card" style={{ padding: '1.25rem' }}>
-              <p style={{ fontSize: '0.7rem', fontWeight: 700, color: '#A8A89E', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem' }}>Current Stats</p>
+              <p style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--warm-gray)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem' }}>Current Stats</p>
               {[
                 ['BMI', `${profile.bmi ?? '—'} (${profile.bmi_category ?? '—'})`],
                 ['Age', profile.age ? `${profile.age} years` : '—'],
@@ -126,8 +126,8 @@ export default function ProfilePage() {
                 ['Gen Reset', profile.generation_status?.reset_date ? new Date(profile.generation_status.reset_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'],
               ].map(([label, val]) => (
                 <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.4rem 0', borderBottom: '1px solid #F5F5F0', fontSize: '0.875rem' }}>
-                  <span style={{ color: '#A8A89E' }}>{label}</span>
-                  <span style={{ fontWeight: 600, color: '#28281E' }}>{val}</span>
+                  <span style={{ color: 'var(--warm-gray)' }}>{label}</span>
+                  <span style={{ fontWeight: 600, color: 'var(--espresso)' }}>{val}</span>
                 </div>
               ))}
             </div>
@@ -138,7 +138,7 @@ export default function ProfilePage() {
         <form onSubmit={handleSave} className="card" style={{ padding: '1.75rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           {/* Body */}
           <section>
-            <h3 style={{ fontWeight: 600, color: '#68685E', fontSize: '0.875rem', marginBottom: '1rem', paddingBottom: '0.5rem', borderBottom: '1px solid #F5F5F0' }}>Body Measurements</h3>
+            <h3 style={{ fontWeight: 600, color: 'var(--warm-gray)', fontSize: '0.875rem', marginBottom: '1rem', paddingBottom: '0.5rem', borderBottom: '1px solid #F5F5F0' }}>Body Measurements</h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
               <div>
                 <label className="label">Date of Birth</label>
@@ -160,7 +160,7 @@ export default function ProfilePage() {
 
           {/* Location */}
           <section>
-            <h3 style={{ fontWeight: 600, color: '#68685E', fontSize: '0.875rem', marginBottom: '1rem', paddingBottom: '0.5rem', borderBottom: '1px solid #F5F5F0' }}>Location</h3>
+            <h3 style={{ fontWeight: 600, color: 'var(--warm-gray)', fontSize: '0.875rem', marginBottom: '1rem', paddingBottom: '0.5rem', borderBottom: '1px solid #F5F5F0' }}>Location</h3>
             <label className="label">Region in Ghana</label>
             <select className="input" value={form.region || ''} onChange={(e) => setForm((s) => ({ ...s, region: e.target.value }))}>
               <option value="">— Select region —</option>
@@ -170,7 +170,7 @@ export default function ProfilePage() {
 
           {/* Diet */}
           <section>
-            <h3 style={{ fontWeight: 600, color: '#68685E', fontSize: '0.875rem', marginBottom: '1rem', paddingBottom: '0.5rem', borderBottom: '1px solid #F5F5F0' }}>Diet & Allergies</h3>
+            <h3 style={{ fontWeight: 600, color: 'var(--warm-gray)', fontSize: '0.875rem', marginBottom: '1rem', paddingBottom: '0.5rem', borderBottom: '1px solid #F5F5F0' }}>Diet & Allergies</h3>
             <div style={{ marginBottom: '1rem' }}>
               <label className="label" style={{ marginBottom: '0.5rem' }}>Dietary Preference</label>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
@@ -195,7 +195,7 @@ export default function ProfilePage() {
 
           {/* Goals */}
           <section>
-            <h3 style={{ fontWeight: 600, color: '#68685E', fontSize: '0.875rem', marginBottom: '1rem', paddingBottom: '0.5rem', borderBottom: '1px solid #F5F5F0' }}>Goals & Budget</h3>
+            <h3 style={{ fontWeight: 600, color: 'var(--warm-gray)', fontSize: '0.875rem', marginBottom: '1rem', paddingBottom: '0.5rem', borderBottom: '1px solid #F5F5F0' }}>Goals & Budget</h3>
             <div style={{ marginBottom: '1rem' }}>
               <label className="label" style={{ marginBottom: '0.5rem' }}>Fitness Goal</label>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
@@ -210,7 +210,7 @@ export default function ProfilePage() {
             </div>
           </section>
 
-          <button type="submit" disabled={saving} className="btn-primary btn-lg" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+          <button type="submit" disabled={saving} className="btn btn-primary btn-lg" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
             {saving
               ? <span style={{ width: 18, height: 18, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin 1s linear infinite', display: 'inline-block' }} />
               : <><Save size={18} /> Save Changes</>
