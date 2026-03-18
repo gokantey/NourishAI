@@ -123,7 +123,7 @@ export function UpgradeSuccessPage() {
     upgradeAPI.verifySuccess(ref)
       .then(() => { setSubscriptionTier('premium'); setStatus('success') })
       .catch(() => setStatus('error'))
-  }, [ref, setSubscriptionTier])    // eslint-disable-line react-hooks/exhaustive-deps
+  }, [ref, setSubscriptionTier])
 
   return (
     <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
