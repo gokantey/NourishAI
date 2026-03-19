@@ -595,15 +595,14 @@ def create_checkout_view(request):
             json={
                 'email': request.user.email,
                 'amount': 2000,
-                'currency': 'GHS',
-                'callback_url': 'http://localhost:5173/upgrade/success',
+                'callback_url': os.getenv('PAYSTACK_CALLBACK_URL', 'http://localhost:5173/upgrade/success'),  # use https:// in production
                 'metadata': {'user_id': request.user.id, 'plan': 'premium'}
             }
         )
         data = response.json()
         if data.get('status'):
             return Response({'authorization_url': data['data']['authorization_url']})
-        return Response({'error': 'Payment initialization failed.'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'error': data.get('message', 'Payment initialization failed.')}, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -755,3 +754,81 @@ def mark_read_view(request, pk):
 def mark_all_read_view(request):
     Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
     return Response({'message': 'All marked as read.'})
+
+# ── Progress views ────────────────────────────────────────────────────────────
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def progress_view(request):
+    from progress_service import get_full_progress_data
+    data = get_full_progress_data(request.user)
+    return Response(data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def checkin_view(request):
+    """
+    Submit today's daily checklist.
+    Body: { "completed_items": ["followed_plan", "drank_water", ...] }
+    """
+    from progress_service import submit_checkin, check_and_award_achievements
+    from notifications import notify_streak_milestone, notify_achievement
+
+    completed_items = request.data.get('completed_items', [])
+    if not isinstance(completed_items, list):
+        return Response({'error': 'completed_items must be a list.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    checkin, streak, is_new_consistent = submit_checkin(request.user, completed_items)
+    newly_unlocked = check_and_award_achievements(request.user)
+
+    MILESTONE_LABELS = {7: 'Starter', 30: 'Disciplined', 90: 'Elite'}
+    if is_new_consistent and streak.current_streak in MILESTONE_LABELS:
+        notify_streak_milestone(request.user, streak.current_streak, MILESTONE_LABELS[streak.current_streak])
+
+    for achievement in newly_unlocked:
+        notify_achievement(request.user, achievement['name'], achievement['description'])
+
+    return Response({
+        'checkin': {
+            'date': checkin.date.isoformat(),
+            'completed_items': checkin.completed_items,
+            'items_completed': checkin.items_completed,
+            'is_consistent': checkin.is_consistent,
+        },
+        'streak': {'current': streak.current_streak, 'longest': streak.longest_streak},
+        'is_new_consistent_day': is_new_consistent,
+        'newly_unlocked': newly_unlocked,
+    })
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def update_checklist_prefs_view(request):
+    """Save the user's active checklist item keys."""
+    from progress_service import DEFAULT_ACTIVE_ITEMS
+    items = request.data.get('items', [])
+    if not isinstance(items, list) or len(items) < 2:
+        return Response({'error': 'Please select at least 2 checklist items.'}, status=status.HTTP_400_BAD_REQUEST)
+    valid = [k for k in items if k in DEFAULT_ACTIVE_ITEMS]
+    request.user.profile.checklist_items = valid
+    request.user.profile.save(update_fields=['checklist_items'])
+    return Response({'items': valid})
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def use_freeze_view(request):
+    from meals.models import StreakRecord
+    profile = request.user.profile
+    if profile.subscription_tier != 'premium' and not request.user.is_staff:
+        return Response({'error': 'Streak freeze is a Premium feature.'}, status=status.HTTP_403_FORBIDDEN)
+    try:
+        streak = request.user.streak
+    except StreakRecord.DoesNotExist:
+        return Response({'error': 'No streak record found.'}, status=status.HTTP_404_NOT_FOUND)
+    if streak.freeze_tokens <= 0:
+        return Response({'error': 'No freeze tokens remaining.'}, status=status.HTTP_400_BAD_REQUEST)
+    streak.freeze_tokens -= 1
+    streak.save()
+    return Response({'message': 'Freeze token used.', 'freeze_tokens': streak.freeze_tokens})

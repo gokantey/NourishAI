@@ -128,3 +128,54 @@ class Notification(models.Model):
 
     def __str__(self):
         return f'{self.user.username} — {self.title}'
+
+# ── Progress & Streak Models ──────────────────────────────────────────────────
+
+class DailyCheckin(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='checkins')
+    date = models.DateField()
+    completed_items = models.JSONField(default=list)
+    items_completed = models.IntegerField(default=0)
+    is_consistent = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ('user', 'date')
+        ordering = ['-date']
+
+    def __str__(self):
+        return f'{self.user.username} — {self.date}'
+
+
+class StreakRecord(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='streak')
+    current_streak = models.IntegerField(default=0)
+    longest_streak = models.IntegerField(default=0)
+    last_active_date = models.DateField(null=True, blank=True)
+    freeze_tokens = models.IntegerField(default=1)
+    total_active_days = models.IntegerField(default=0)
+
+    def __str__(self):
+        return f'{self.user.username} — streak {self.current_streak}'
+
+
+class Achievement(models.Model):
+    slug = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=80)
+    description = models.CharField(max_length=200)
+    icon = models.CharField(max_length=10, default='🏆')
+
+    def __str__(self):
+        return self.name
+
+
+class UserAchievement(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='achievements')
+    achievement = models.ForeignKey(Achievement, on_delete=models.CASCADE)
+    unlocked_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'achievement')
+        ordering = ['-unlocked_at']
+
+    def __str__(self):
+        return f'{self.user.username} — {self.achievement.name}'

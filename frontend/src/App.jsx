@@ -16,6 +16,7 @@ import HistoryPage from './pages/HistoryPage'
 import ProfilePage from './pages/ProfilePage'
 import UpgradePage from './pages/UpgradePage'
 import UpgradeSuccessPage from './pages/UpgradeSuccessPage'
+import ProgressPage from './pages/ProgressPage'
 
 // Layout
 import AppLayout from './components/layout/AppLayout'
@@ -32,6 +33,14 @@ function OnboardingRoute({ children }) {
   const { isAuthenticated, onboardingComplete } = useAuthStore()
   if (!isAuthenticated) return <Navigate to="/login" replace />
   if (onboardingComplete) return <Navigate to="/dashboard" replace />
+  return children
+}
+
+function PremiumRoute({ children }) {
+  const { isAuthenticated, onboardingComplete, subscriptionTier } = useAuthStore()
+  if (!isAuthenticated) return <Navigate to="/login" replace />
+  if (!onboardingComplete) return <Navigate to="/onboarding" replace />
+  if (subscriptionTier !== 'premium') return <Navigate to="/upgrade" replace />
   return children
 }
 
@@ -57,7 +66,7 @@ export default function App() {
             border: '1px solid #EEEEE8',
             boxShadow: '0 4px 24px -4px rgba(0,0,0,0.08)',
             fontSize: '0.875rem',
-            fontFamily: 'Inter, sans-serif',
+            fontFamily: 'Plus Jakarta Sans, sans-serif',
           },
           success: { iconTheme: { primary: '#2D6A4F', secondary: '#fff' } },
           error: { iconTheme: { primary: '#ef4444', secondary: '#fff' } },
@@ -83,6 +92,7 @@ export default function App() {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/upgrade" element={<UpgradePage />} />
           <Route path="/upgrade/success" element={<UpgradeSuccessPage />} />
+          <Route path="/progress" element={<PremiumRoute><ProgressPage /></PremiumRoute>} />
         </Route>
 
         {/* Default redirect */}

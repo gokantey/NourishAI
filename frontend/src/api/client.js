@@ -81,4 +81,12 @@ export const upgradeAPI = {
   cancel: () => api.post('/upgrade/cancel/'),
 }
 
+// ── Progress endpoints ──
+export const progressAPI = {
+  get:              () => api.get('/progress/'),
+  checkin:          (completed_items) => api.post('/progress/checkin/', { completed_items }),
+  useFreeze:        () => api.post('/progress/freeze/'),
+  saveChecklistPrefs: (items) => api.post('/progress/checklist-prefs/', { items }),
+}
+
 export default api

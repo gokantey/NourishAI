@@ -42,4 +42,10 @@ urlpatterns = [
     path('notifications/', views.notifications_view, name='api_notifications'),
     path('notifications/read-all/', views.mark_all_read_view, name='api_notifications_read_all'),
     path('notifications/<int:pk>/read/', views.mark_read_view, name='api_notification_read'),
+
+    # Progress
+    path('progress/', views.progress_view, name='api_progress'),
+    path('progress/checkin/', views.checkin_view, name='api_checkin'),
+    path('progress/freeze/', views.use_freeze_view, name='api_freeze'),
+    path('progress/checklist-prefs/', views.update_checklist_prefs_view, name='api_checklist_prefs'),
 ]

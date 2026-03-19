@@ -108,6 +108,14 @@ class UserProfile(models.Model):
     plan_generations_count = models.IntegerField(default=0)
     generation_reset_date = models.DateField(null=True, blank=True)
 
+    # Daily checklist customisation — stores list of active item keys
+    # Defaults to all 6 items enabled
+    checklist_items = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="List of active daily checklist item keys chosen by the user"
+    )
+
     @property
     def age(self):
         """Computed age from date_of_birth. Returns None if DOB not set."""

@@ -1,0 +1,26 @@
+[build]
+builder = "NIXPACKS"
+
+[deploy]
+startCommand = "cd NourishAI && gunicorn nourishai.wsgi --bind 0.0.0.0:$PORT"
+healthcheckPath = "/api/health/"
+healthcheckTimeout = 30
+restartPolicyType = "ON_FAILURE"
+
+# ── Cron jobs ──────────────────────────────────────────────────────────────────
+# All times are UTC. Ghana is GMT+0 (UTC) so no offset needed.
+
+[[deploy.cronJobs]]
+name = "checkin-reminders"
+schedule = "0 20 * * *"
+command = "cd NourishAI && python manage.py send_checkin_reminders"
+
+[[deploy.cronJobs]]
+name = "birthday-wishes"
+schedule = "0 8 * * *"
+command = "cd NourishAI && python manage.py send_birthday_wishes"
+
+[[deploy.cronJobs]]
+name = "weekly-summary"
+schedule = "0 9 * * 0"
+command = "cd NourishAI && python manage.py send_weekly_summary"
