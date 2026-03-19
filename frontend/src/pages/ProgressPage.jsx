@@ -114,13 +114,21 @@ function CalHeatmap({ data }) {
 
 function AchievementBadge({ a }) {
   return (
-    <motion.div whileHover={a.unlocked ? { y: -2 } : {}}
-      style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, padding: '0.75rem 0.375rem', borderRadius: 14, textAlign: 'center',
-        background: a.unlocked ? 'white' : 'var(--cream)', border: `1px solid ${a.unlocked ? 'var(--linen-mid)' : 'var(--linen)'}`,
-        opacity: a.unlocked ? 1 : 0.4, filter: a.unlocked ? 'none' : 'grayscale(1)', transition: 'all 0.18s' }}>
-      <span style={{ fontSize: '1.375rem', lineHeight: 1 }}>{a.icon}</span>
-      <span style={{ fontSize: '0.65rem', fontWeight: 700, color: a.unlocked ? 'var(--espresso)' : 'var(--stone)', fontFamily: 'var(--font-body)', lineHeight: 1.3 }}>{a.name}</span>
-      {a.unlocked && <div style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--fern)' }} />}
+    <motion.div whileHover={a.unlocked ? { y: -3, transition: { duration: 0.15 } } : {}}
+      style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '0.875rem 0.5rem', borderRadius: 14, textAlign: 'center',
+        background: a.unlocked ? 'var(--surface2)' : 'var(--surface)',
+        border: `1px solid ${a.unlocked ? 'rgba(200,241,53,0.25)' : 'var(--border)'}`,
+        boxShadow: a.unlocked ? '0 0 16px rgba(200,241,53,0.08)' : 'none',
+        opacity: a.unlocked ? 1 : 0.35,
+        filter: a.unlocked ? 'none' : 'grayscale(1) brightness(0.5)',
+        transition: 'all 0.18s',
+        cursor: a.unlocked ? 'default' : 'default',
+      }}>
+      <span style={{ fontSize: '1.5rem', lineHeight: 1 }}>{a.icon}</span>
+      <span style={{ fontSize: '0.65rem', fontWeight: 700,
+        color: a.unlocked ? 'var(--lime)' : 'var(--text-muted)',
+        fontFamily: 'var(--font-body)', lineHeight: 1.3 }}>{a.name}</span>
+      {a.unlocked && <div style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--lime)' }} />}
     </motion.div>
   )
 }

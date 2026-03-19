@@ -68,3 +68,19 @@ def notify_birthday(user):
         title=f'Happy Birthday, {user.first_name}! 🎂',
         message='Wishing you a wonderful birthday from the NourishAI team. Eat well and celebrate today! 🎉',
     )
+
+
+def notify_streak_milestone(user, days, label):
+    notify(
+        user, 'streak',
+        title=f'🔥 {label} streak — {days} days!',
+        message=f"You've maintained a {days}-day streak. You've earned the '{label}' milestone. Keep going!",
+    )
+
+
+def notify_achievement(user, name, description):
+    notify(
+        user, 'achievement',
+        title=f'🏆 Achievement unlocked: {name}',
+        message=description,
+    )
