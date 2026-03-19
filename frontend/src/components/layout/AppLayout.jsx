@@ -44,7 +44,7 @@ function SidebarInner({ user, isPremium, onClose, onLogout }) {
       {/* Nav */}
       <nav style={{ flex: 1, padding: '0.5rem 0.75rem', overflowY: 'auto' }}>
         <div style={{ fontSize: '0.6rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', padding: '0 0.5rem', marginBottom: '0.375rem', fontFamily: 'var(--font-body)' }}>Menu</div>
-        {NAV.map(({ to, icon: Icon, label }) => (
+        {NAV.map(({ to, icon: Icon, label }) => ( // eslint-disable-line no-unused-vars
           <NavLink key={to} to={to} onClick={onClose}
             style={({ isActive }) => ({
               display: 'flex', alignItems: 'center', gap: '0.75rem',

@@ -18,7 +18,7 @@ const MESSAGES = [
 
 const FOOD_WORDS = ['Waakye', 'Jollof', 'Fufu', 'Banku', 'Kelewele', 'Kontomire', 'Abenkwan', 'Kenkey']
 
-function ProfileStat({ icon: Icon, label, value, color }) {
+function ProfileStat({ icon: Icon, label, value, color }) { // eslint-disable-line no-unused-vars
   return (
     <div style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 14, padding: '1rem', display: 'flex', flexDirection: 'column', gap: 6 }}>
       <div style={{ width: 28, height: 28, borderRadius: 8, background: color + '20', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

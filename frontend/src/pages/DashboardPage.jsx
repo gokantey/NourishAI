@@ -117,7 +117,7 @@ export default function DashboardPage() {
           { icon: TrendingUp, value: profile?.bmi,                  label: profile?.bmi_category || 'BMI', color: 'var(--lime)', sub: 'Body Mass Index' },
           { icon: Droplets,   value: profile?.daily_water_intake,    label: 'L/day',     color: '#60A5FA', sub: 'Hydration target' },
           { icon: Bookmark,   value: savedPlans.length,              label: isPremium ? 'unlimited' : 'of 7', color: '#A78BFA', sub: 'Saved plans' },
-        ].map(({ icon: Icon, value, label, color, sub }, i) => (
+        ].map(({ icon: Icon, value, label, color, sub }, i) => ( // eslint-disable-line no-unused-vars
           <motion.div key={i} {...up(0.04 + i * 0.04)}
             style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '1rem', transition: 'all 0.2s var(--ease)', cursor: 'default' }}
             onMouseEnter={e => { e.currentTarget.style.borderColor = color; e.currentTarget.style.transform = 'translateY(-2px)' }}

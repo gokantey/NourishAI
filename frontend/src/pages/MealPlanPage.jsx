@@ -339,7 +339,7 @@ export default function MealPlanPage() {
           const isActive = activeDay === day
           return (
             <button key={day} onClick={() => setActiveDay(day)}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', padding: '0.5rem 1rem', borderRadius: '1rem', fontSize: '0.85rem', fontWeight: 500, whiteSpace: 'nowrap', flexShrink: 0, border: 'none', cursor: 'pointer', transition: 'all 0.15s', background: isActive ? (locked ? 'var(--surface3)' : 'var(--lime)') : 'var(--surface2)', color: isActive ? (locked ? 'var(--text-muted)' : 'var(--night)') : 'var(--text-muted)', border: `1px solid ${isActive && !locked ? 'var(--lime)' : 'var(--border)'}`, boxShadow: isActive && !locked ? '0 2px 12px var(--lime-glow)' : 'none' }}>
+              style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', padding: '0.5rem 1rem', borderRadius: '1rem', fontSize: '0.85rem', fontWeight: 500, whiteSpace: 'nowrap', flexShrink: 0, cursor: 'pointer', transition: 'all 0.15s', background: isActive ? (locked ? 'var(--surface3)' : 'var(--lime)') : 'var(--surface2)', color: isActive ? (locked ? 'var(--text-muted)' : 'var(--night)') : 'var(--text-muted)', border: `1px solid ${isActive && !locked ? 'var(--lime)' : 'var(--border)'}`, boxShadow: isActive && !locked ? '0 2px 12px var(--lime-glow)' : 'none' }}>
               {DAY_EMOJIS[day]} {day.charAt(0).toUpperCase() + day.slice(1)}
               {locked && <Lock size={11} />}
             </button>
