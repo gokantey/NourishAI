@@ -114,7 +114,7 @@ function GeneratingAnimation({ msgIdx }) {
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: 5, height: 36, marginTop: '1.5rem' }}>
         {Array.from({ length: 9 }).map((_, i) => (
           <motion.div key={i}
-            animate={{ height: [8, 14 + Math.random() * 22, 8] }}
+            animate={{ height: [8, [24,32,18,36,22,30,16,28,20][i], 8] }}
             transition={{ duration: 0.6 + i * 0.08, repeat: Infinity, ease: 'easeInOut', delay: i * 0.06 }}
             style={{ width: 4, borderRadius: 4, background: i % 3 === 0 ? 'var(--amber)' : 'var(--lime)', opacity: 0.7 }}
           />
