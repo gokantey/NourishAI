@@ -63,27 +63,27 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-warm-50 px-4 py-12">
-      <div className="w-full" style={{ maxWidth: 520 }}>
+    <div style={{ minHeight: "100vh", background: "var(--night)", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "2rem 1rem" }}>
+      <div style={{ width: "100%", maxWidth: 440 }}>
         {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-            <div style={{ width: 40, height: 40, background: '#2D6A4F', borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Leaf size={20} className="text-white" />
+            <div style={{ width: 36, height: 36, background: 'var(--lime)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Leaf size={16} color="var(--night)" />
             </div>
-            <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', fontWeight: 700 }}>
-              Nourish<span style={{ color: '#F4845F' }}>AI</span>
+            <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 700, color: 'var(--text)' }}>
+              Nourish<span style={{ color: 'var(--lime)' }}>AI</span>
             </span>
           </div>
-          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2rem', fontWeight: 700, marginBottom: '0.25rem' }}>
+          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.625rem', fontWeight: 700, marginBottom: '0.25rem', color: 'var(--text)' }}>
             Create your account
           </h1>
-          <p className="text-warm-500" style={{ fontSize: '0.9rem' }}>
+          <p style={{ fontSize: "0.875rem", color: "var(--text-muted)" }}>
             Your personalised Ghanaian meal planner awaits 🌿
           </p>
         </div>
 
-        <div className="card" style={{ padding: '2rem' }}>
+        <div style={{ background: "var(--surface)", border: "1px solid var(--border2)", borderRadius: 20, padding: "1.5rem" }}>
           {/* Non-field errors */}
           {errors.non_field_errors && (
             <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 12, padding: '0.75rem 1rem', marginBottom: '1.25rem', fontSize: '0.875rem', color: '#ef4444' }}>
@@ -147,7 +147,7 @@ export default function RegisterPage() {
             {/* Info note */}
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', padding: '0.75rem 1rem', background: 'var(--lime-glow)', border: '1px solid #bbf7d0', borderRadius: 12, marginBottom: '1.5rem' }}>
               <Shield size={16} style={{ color: '#2D6A4F', marginTop: 2, flexShrink: 0 }} />
-              <p style={{ fontSize: '0.8rem', color: '#50806a' }}>
+              <p style={{ fontSize: '0.78rem', color: 'var(--text-dim)', lineHeight: 1.5 }}>
                 We'll send a 6-digit verification code to your email to confirm your account.
               </p>
             </div>
@@ -167,7 +167,7 @@ export default function RegisterPage() {
           </form>
         </div>
 
-        <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '1.5rem' }}>
+        <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '1.25rem' }}>
           Already have an account?{' '}
           <Link to="/login" style={{ color: '#2D6A4F', fontWeight: 600, textDecoration: 'none' }}>
             Sign in

@@ -193,7 +193,7 @@ export default function GeneratePlanPage() {
           <div style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.875rem', fontFamily: 'var(--font-body)' }}>
             Your profile at a glance
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.625rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.625rem' }}>
             <ProfileStat icon={Flame}     label="Calories"  value={profile.daily_calorie_target ? `${profile.daily_calorie_target} kcal` : null} color="#FF6B35" />
             <ProfileStat icon={TrendingUp} label="BMI"       value={profile.bmi ? `${profile.bmi} (${profile.bmi_category})` : null}              color="var(--lime)" />
             <ProfileStat icon={Utensils}   label="Diet"      value={profile.dietary_preference?.replace('_',' ') || 'None'}                        color="#A78BFA" />

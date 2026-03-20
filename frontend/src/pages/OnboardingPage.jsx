@@ -169,7 +169,7 @@ export default function OnboardingPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--deep)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem 1rem' }}>
-      <div style={{ width: '100%', maxWidth: 580 }}>
+      <div style={{ width: '100%', maxWidth: 500 }}>
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
@@ -240,7 +240,7 @@ export default function OnboardingPage() {
                     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
                       style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem 1.25rem', background: 'var(--deep)', borderRadius: 14, border: '1px solid var(--border)' }}>
                       <div style={{ textAlign: 'center', flexShrink: 0 }}>
-                        <div style={{ fontFamily: 'var(--font-display)', fontSize: '2rem', fontWeight: 700, color: bmiInfo.color, lineHeight: 1 }}>{bmi}</div>
+                        <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.625rem', fontWeight: 700, color: bmiInfo.color, lineHeight: 1 }}>{bmi}</div>
                         <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: 2 }}>BMI</div>
                       </div>
                       <div style={{ width: 1, height: 40, background: '#EEEEE8' }} />

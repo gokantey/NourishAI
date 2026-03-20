@@ -62,8 +62,20 @@ export function UpgradePage() {
 
   return (
     <div style={{ maxWidth: 860, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+      <style>{`
+        .upgrade-cards-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 1.5rem;
+        }
+        @media (max-width: 600px) {
+          .upgrade-cards-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+      `}</style>
       <div style={{ textAlign: 'center' }}>
-        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2.5rem', fontWeight: 700, color: 'var(--text)', marginBottom: '0.5rem' }}>
+        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.5rem, 5vw, 2.5rem)', fontWeight: 700, color: 'var(--text)', marginBottom: '0.5rem' }}>
           {isPremium ? "You're on Premium ✨" : 'Upgrade to Premium'}
         </h1>
         <p style={{ color: 'var(--text-muted)', maxWidth: 400, margin: '0 auto' }}>
@@ -73,21 +85,21 @@ export function UpgradePage() {
         </p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+      <div className="upgrade-cards-grid">
         {/* Free card */}
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="card" style={{ padding: '1.75rem' }}>
           <span className="badge-green" style={{ marginBottom: '1rem', display: 'inline-flex' }}>Free</span>
-          <div style={{ fontFamily: 'var(--font-display)', fontSize: '2.5rem', fontWeight: 700, color: 'var(--text)', marginBottom: '0.25rem' }}>GHS 0</div>
+          <div style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.75rem, 6vw, 2.5rem)', fontWeight: 700, color: 'var(--text)', marginBottom: '0.25rem' }}>GHS 0</div>
           <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: '1.5rem' }}>Forever free</div>
           <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             {FREE_FEATURES.map((f) => (
               <li key={f} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', fontSize: '0.875rem', color: 'var(--text-dim)' }}>
-                <Check size={15} style={{ color: '#2D6A4F', flexShrink: 0, marginTop: 2 }} /> {f}
+                <Check size={15} style={{ color: 'var(--lime)', flexShrink: 0, marginTop: 2 }} /> {f}
               </li>
             ))}
           </ul>
           {!isPremium && (
-            <div style={{ marginTop: '1.5rem', padding: '0.75rem', background: 'var(--lime-glow)', borderRadius: 12, textAlign: 'center', fontSize: '0.875rem', fontWeight: 600, color: '#2D6A4F' }}>
+            <div style={{ marginTop: '1.5rem', padding: '0.75rem', background: 'var(--lime-glow)', border: '1px solid rgba(200,241,53,0.2)', borderRadius: 12, textAlign: 'center', fontSize: '0.875rem', fontWeight: 600, color: 'var(--lime)' }}>
               Your current plan
             </div>
           )}
@@ -107,12 +119,12 @@ export function UpgradePage() {
           <span className="badge-orange" style={{ marginBottom: '1rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
             <Crown size={11} /> Premium
           </span>
-          <div style={{ fontFamily: 'var(--font-display)', fontSize: '2.5rem', fontWeight: 700, color: 'var(--text)', marginBottom: '0.25rem' }}>GHS 20</div>
+          <div style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.75rem, 6vw, 2.5rem)', fontWeight: 700, color: 'var(--text)', marginBottom: '0.25rem' }}>GHS 20</div>
           <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: '1.5rem' }}>per month</div>
           <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 1.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             {PREMIUM_FEATURES.map((f) => (
               <li key={f} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', fontSize: '0.875rem', color: 'var(--text-dim)' }}>
-                <Check size={15} style={{ color: '#F4845F', flexShrink: 0, marginTop: 2 }} /> {f}
+                <Check size={15} style={{ color: 'var(--amber)', flexShrink: 0, marginTop: 2 }} /> {f}
               </li>
             ))}
           </ul>

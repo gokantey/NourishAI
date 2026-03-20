@@ -83,7 +83,7 @@ export default function NotificationBell() {
               position: 'fixed',
               top: panelPos.top,
               right: panelPos.right,
-              width: 340,
+              width: Math.min(340, window.innerWidth - 16),
               background: 'var(--deep)',
               borderRadius: 18,
               boxShadow: '0 20px 60px rgba(0,0,0,0.8)',

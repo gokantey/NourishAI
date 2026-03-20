@@ -91,22 +91,22 @@ export default function VerifyOTPPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-warm-50 px-4 py-12">
-      <div className="w-full" style={{ maxWidth: 440 }}>
+    <div style={{ minHeight: "100vh", background: "var(--night)", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "2rem 1rem" }}>
+      <div style={{ width: "100%", maxWidth: 420 }}>
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
-            <div style={{ width: 40, height: 40, background: '#2D6A4F', borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: 40, height: 40, background: 'var(--lime)', borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Leaf size={20} className="text-white" />
             </div>
             <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', fontWeight: 700 }}>
-              Nourish<span style={{ color: '#F4845F' }}>AI</span>
+              Nourish<span style={{ color: 'var(--amber)' }}>AI</span>
             </span>
           </div>
 
           <div style={{ width: 64, height: 64, background: 'var(--lime-glow)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
-            <Mail size={28} style={{ color: '#2D6A4F' }} />
+            <Mail size={28} style={{ color: 'var(--lime)' }} />
           </div>
-          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2rem', fontWeight: 700, marginBottom: '0.5rem' }}>
+          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.625rem', fontWeight: 700, marginBottom: '0.5rem', color: 'var(--text)' }}>
             Check your email
           </h1>
           <p className="text-warm-500" style={{ fontSize: '0.9rem' }}>
@@ -115,7 +115,7 @@ export default function VerifyOTPPage() {
           </p>
         </div>
 
-        <div className="card" style={{ padding: '2rem' }}>
+        <div style={{ background: "var(--surface)", border: "1px solid var(--border2)", borderRadius: 20, padding: "1.5rem" }}>
           {error && (
             <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 12, padding: '0.75rem 1rem', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: '#ef4444' }}>
               ⚠️ {error}
@@ -167,7 +167,7 @@ export default function VerifyOTPPage() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
               Didn't receive it?
               <button onClick={handleResend} disabled={resending}
-                style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#2D6A4F', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', opacity: resending ? 0.5 : 1 }}>
+                style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'var(--lime)', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', opacity: resending ? 0.5 : 1 }}>
                 <RefreshCw size={13} style={{ animation: resending ? 'spin 1s linear infinite' : 'none' }} />
                 Resend code
               </button>
@@ -177,7 +177,7 @@ export default function VerifyOTPPage() {
 
         <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '1.5rem' }}>
           Wrong email?{' '}
-          <Link to="/register" style={{ color: '#2D6A4F', fontWeight: 500, textDecoration: 'none' }}>
+          <Link to="/register" style={{ color: 'var(--lime)', fontWeight: 500, textDecoration: 'none' }}>
             Register again
           </Link>
         </p>

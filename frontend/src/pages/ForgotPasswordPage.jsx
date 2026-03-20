@@ -25,19 +25,19 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-warm-50 px-4 py-12">
-      <div className="w-full" style={{ maxWidth: 440 }}>
+    <div style={{ minHeight: "100vh", background: "var(--night)", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "2rem 1rem" }}>
+      <div style={{ width: "100%", maxWidth: 420 }}>
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
-            <div style={{ width: 40, height: 40, background: '#2D6A4F', borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: 40, height: 40, background: 'var(--lime)', borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Leaf size={20} className="text-white" />
             </div>
             <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', fontWeight: 700 }}>
-              Nourish<span style={{ color: '#F4845F' }}>AI</span>
+              Nourish<span style={{ color: 'var(--amber)' }}>AI</span>
             </span>
           </div>
           <div style={{ fontSize: '3.5rem', marginBottom: '1rem' }}>🔑</div>
-          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2rem', fontWeight: 700, marginBottom: '0.25rem' }}>
+          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.625rem', fontWeight: 700, marginBottom: '0.25rem', color: 'var(--text)' }}>
             Forgot your password?
           </h1>
           <p className="text-warm-500" style={{ fontSize: '0.9rem' }}>
@@ -45,11 +45,11 @@ export default function ForgotPasswordPage() {
           </p>
         </div>
 
-        <div className="card" style={{ padding: '2rem' }}>
+        <div style={{ background: "var(--surface)", border: "1px solid var(--border2)", borderRadius: 20, padding: "1.5rem" }}>
           {sent ? (
             <div style={{ textAlign: 'center', padding: '1rem 0' }}>
               <div style={{ width: 64, height: 64, background: 'var(--lime-glow)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
-                <CheckCircle size={32} style={{ color: '#2D6A4F' }} />
+                <CheckCircle size={32} style={{ color: 'var(--lime)' }} />
               </div>
               <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>
                 Check your email
@@ -93,7 +93,7 @@ export default function ForgotPasswordPage() {
 
         <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '1.5rem' }}>
           Remembered it?{' '}
-          <Link to="/login" style={{ color: '#2D6A4F', fontWeight: 500, textDecoration: 'none' }}>Back to Login</Link>
+          <Link to="/login" style={{ color: 'var(--lime)', fontWeight: 500, textDecoration: 'none' }}>Back to Login</Link>
         </p>
       </div>
     </div>

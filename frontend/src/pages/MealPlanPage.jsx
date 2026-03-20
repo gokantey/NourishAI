@@ -44,7 +44,7 @@ function MealDetailModal({ meal, onClose }) {
 
         {/* Nutrition */}
         <div style={{ padding: '1rem 1.5rem', borderBottom: '1px solid #F5F5F0' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.5rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))', gap: '0.5rem' }}>
             {[['🔥', meal.calories, 'kcal'], ['💪', `${meal.protein}g`, 'protein'], ['🌾', `${meal.carbohydrates}g`, 'carbs'], ['🫙', `${meal.fats}g`, 'fats'], ['🌿', `${meal.fibre}g`, 'fibre']].map(([emoji, val, label]) => (
               <div key={label} style={{ textAlign: 'center', padding: '0.625rem 0.375rem', background: 'var(--deep)', borderRadius: 10, border: '1px solid var(--border)' }}>
                 <div style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', fontWeight: 700, color: '#2D6A4F' }}>{emoji} {val}</div>
@@ -321,7 +321,7 @@ export default function MealPlanPage() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       {/* Header */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.75rem' }}>
         <div>
           <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.75rem', fontWeight: 700, color: 'var(--text)' }}>
             {plan.is_partial ? '3-Day Preview Plan' : 'Your 7-Day Plan'}
@@ -386,7 +386,7 @@ export default function MealPlanPage() {
         <h3 style={{ fontWeight: 600, color: 'var(--text-dim)', fontSize: '0.875rem', marginBottom: '1rem' }}>
           📊 {plan.is_partial ? '3-Day' : 'Weekly'} Nutrition Summary
         </h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.75rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))', gap: '0.75rem' }}>
           {[['Calories', plan.nutrition_totals?.calories, 'kcal'], ['Protein', `${plan.nutrition_totals?.protein}g`, ''], ['Carbs', `${plan.nutrition_totals?.carbohydrates}g`, ''], ['Fats', `${plan.nutrition_totals?.fats}g`, ''], ['Fibre', `${plan.nutrition_totals?.fibre}g`, '']].map(([label, val]) => (
             <div key={label} className="nutrition-chip">
               <span className="nutrition-value">{val}</span>

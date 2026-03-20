@@ -272,3 +272,52 @@ select.input option { background: var(--surface2); color: var(--text); }
   .desktop-sidebar { display: flex !important; flex-direction: column; }
   .mobile-menu-btn { display: none !important; }
 }
+
+/* ── Mobile Responsiveness ─────────────────────────────────────────────────── */
+
+/* Show desktop sidebar only on large screens */
+@media (min-width: 1024px) {
+  .desktop-sidebar { display: flex !important; flex-direction: column; }
+  .mobile-menu-btn { display: none !important; }
+}
+
+/* Tablet (768px - 1023px) */
+@media (max-width: 1023px) {
+  .desktop-sidebar { display: none !important; }
+  .mobile-menu-btn { display: flex !important; }
+}
+
+/* Mobile base adjustments */
+@media (max-width: 768px) {
+  body { font-size: 14px; }
+
+  /* Tighter page padding */
+  .page-content { padding: 1rem !important; }
+
+  /* Full-width buttons on mobile */
+  .btn-block-mobile { width: 100% !important; }
+
+  /* Stack grids on mobile */
+  .grid-mobile-1 { grid-template-columns: 1fr !important; }
+  .grid-mobile-2 { grid-template-columns: 1fr 1fr !important; }
+
+  /* Auth pages */
+  .auth-left-panel { display: none !important; }
+  .auth-mobile-logo { display: flex !important; }
+
+  /* Inputs full width */
+  .input { font-size: 16px !important; } /* Prevents iOS zoom */
+
+  /* Notifications panel */
+  .notification-panel-mobile {
+    right: 8px !important;
+    left: 8px !important;
+    width: auto !important;
+  }
+}
+
+/* Small phones */
+@media (max-width: 480px) {
+  h1 { font-size: 1.5rem !important; }
+  h2 { font-size: 1.25rem !important; }
+}

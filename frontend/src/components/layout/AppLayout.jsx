@@ -152,8 +152,10 @@ export default function AppLayout() {
             style={{ width: 34, height: 34, borderRadius: 9, background: 'var(--surface2)', border: '1px solid var(--border2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <Menu size={14} color="var(--text-dim)" />
           </button>
-          <div style={{ flex: 1, fontSize: '0.875rem', fontWeight: 700, color: 'var(--text)', fontFamily: 'var(--font-display)', letterSpacing: '-0.01em' }}>
-            {NAV.find(n => location.pathname.startsWith(n.to))?.label || 'NourishAI'}
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text)', fontFamily: 'var(--font-display)', letterSpacing: '-0.01em' }}>
+              {NAV.find(n => location.pathname.startsWith(n.to))?.label || 'NourishAI'}
+            </span>
           </div>
           <NotificationBell />
         </header>
@@ -162,7 +164,7 @@ export default function AppLayout() {
           <motion.div key={location.pathname}
             initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-            style={{ maxWidth: 1100, margin: '0 auto', padding: '1.5rem' }}>
+            style={{ maxWidth: 1100, margin: '0 auto', padding: 'clamp(1rem, 4vw, 1.5rem)' }}>
             <Outlet />
           </motion.div>
         </main>

@@ -27,7 +27,6 @@ export default function DashboardPage() {
   const { user, subscriptionTier, setSubscriptionTier } = useAuthStore()
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [generating, setGenerating] = useState(false)
   const isPremium = subscriptionTier === 'premium'
 
   const fetchDashboard = useCallback(async () => {
@@ -41,18 +40,10 @@ export default function DashboardPage() {
 
   useEffect(() => { fetchDashboard() }, [fetchDashboard])
 
-  const handleGenerate = async () => {
+  const handleGenerate = () => {
     const gs = data?.profile?.generation_status
     if (gs && !gs.allowed) { navigate('/upgrade'); return }
-    setGenerating(true)
-    try {
-      const res = await mealsAPI.generate()
-      toast.success(res.data.message)
-      navigate(`/plans/${res.data.meal_plan.id}`)
-    } catch (err) {
-      if (err.response?.status === 403) navigate('/upgrade')
-      else toast.error(err.response?.data?.error || 'Failed to generate.')
-    } finally { setGenerating(false) }
+    navigate('/generate')
   }
 
   const profile = data?.profile
@@ -66,10 +57,10 @@ export default function DashboardPage() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
 
       {/* ── Row 1: Greeting + Generate ── */}
-      <motion.div {...up(0)} style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '1rem', alignItems: 'stretch' }}>
+      <motion.div {...up(0)} style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.75rem' }}>
 
         {/* Greeting card */}
-        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 20, padding: '1.75rem', position: 'relative', overflow: 'hidden', minHeight: 160 }}>
+        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 20, padding: '1.375rem 1.5rem', position: 'relative', overflow: 'hidden' }}>
           {/* Adinkra watermark */}
           <div style={{ position: 'absolute', right: 20, bottom: 24, fontSize: '5rem', opacity: 0.04, lineHeight: 1, pointerEvents: 'none', userSelect: 'none', fontFamily: 'serif' }}>✦</div>
 
@@ -89,17 +80,15 @@ export default function DashboardPage() {
         </div>
 
         {/* Generate CTA card */}
-        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+        <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
           onClick={handleGenerate}
-          style={{ background: isBlocked ? 'var(--surface)' : 'var(--lime)', borderRadius: 20, padding: '1.75rem', cursor: 'pointer', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minWidth: 180, border: isBlocked ? '1px solid var(--border)' : 'none', transition: 'all 0.2s', boxShadow: isBlocked ? 'none' : '0 8px 32px var(--lime-glow)' }}>
-          <div style={{ width: 44, height: 44, borderRadius: 12, background: isBlocked ? 'var(--lime-glow)' : 'rgba(0,0,0,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            {generating
-              ? <span style={{ width: 18, height: 18, border: `2px solid ${isBlocked ? 'var(--lime)' : 'rgba(0,0,0,0.3)'}`, borderTopColor: isBlocked ? 'var(--text)' : 'var(--night)', borderRadius: '50%', animation: 'spin 0.8s linear infinite', display: 'inline-block' }} />
-              : isBlocked ? <Crown size={20} color="var(--lime)" /> : <Sparkles size={20} color="var(--night)" />}
+          style={{ background: isBlocked ? 'var(--surface)' : 'var(--lime)', borderRadius: 20, padding: '1.25rem 1.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '1rem', border: isBlocked ? '1px solid var(--border)' : 'none', transition: 'all 0.2s', boxShadow: isBlocked ? 'none' : '0 8px 32px var(--lime-glow)' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 12, background: isBlocked ? 'var(--lime-glow)' : 'rgba(0,0,0,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            {isBlocked ? <Crown size={20} color="var(--lime)" /> : <Sparkles size={20} color="var(--night)" />}
           </div>
-          <div>
-            <div style={{ fontFamily: 'var(--font-display)', fontSize: '0.9375rem', fontWeight: 700, color: isBlocked ? 'var(--text)' : 'var(--night)', lineHeight: 1.2, marginBottom: '0.25rem' }}>
-              {generating ? 'Generating...' : isBlocked ? 'Upgrade to Generate' : gs?.type === 'partial' ? 'Generate 3-Day Preview' : 'Generate 7-Day Plan'}
+          <div style={{ flex: 1 }}>
+            <div style={{ fontFamily: 'var(--font-display)', fontSize: '0.9375rem', fontWeight: 700, color: isBlocked ? 'var(--text)' : 'var(--night)', lineHeight: 1.2, marginBottom: '0.2rem' }}>
+              {isBlocked ? 'Upgrade to Generate' : gs?.type === 'partial' ? 'Generate 3-Day Preview' : 'Generate 7-Day Plan'}
             </div>
             <div style={{ fontSize: '0.72rem', color: isBlocked ? 'var(--text-muted)' : 'rgba(0,0,0,0.55)', fontFamily: 'var(--font-body)' }}>
               {isBlocked ? `Resets ${gs?.reset_date ? new Date(gs.reset_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : 'soon'}` : 'AI-powered · Ghanaian taste'}
@@ -109,7 +98,7 @@ export default function DashboardPage() {
       </motion.div>
 
       {/* ── Row 2: Stats bento ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.75rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.75rem' }}>
         {loading ? (
           Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} h={100} />)
         ) : [
@@ -125,7 +114,7 @@ export default function DashboardPage() {
             <div style={{ width: 32, height: 32, borderRadius: 9, background: color + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '0.625rem' }}>
               <Icon size={14} color={color} />
             </div>
-            <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.375rem', fontWeight: 700, color: 'var(--text)', lineHeight: 1, letterSpacing: '-0.01em', marginBottom: '0.2rem' }}>
+            <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.125rem', fontWeight: 700, color: 'var(--text)', lineHeight: 1, letterSpacing: '-0.01em', marginBottom: '0.2rem' }}>
               {value ?? '—'}
             </div>
             <div style={{ fontSize: '0.7rem', color: color, fontWeight: 600, fontFamily: 'var(--font-body)' }}>{label}</div>
@@ -136,7 +125,7 @@ export default function DashboardPage() {
 
       {/* ── Row 3: Latest plan + Quick actions ── */}
       {!loading && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: '0.75rem', alignItems: 'start' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr)', gap: '0.75rem' }}>
 
           {/* Latest plan */}
           <motion.div {...up(0.2)}>
@@ -199,7 +188,7 @@ export default function DashboardPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             {!isPremium && (
               <motion.div {...up(0.24)}>
-                <Link to="/upgrade" style={{ display: 'block', background: 'var(--surface)', border: '1px solid rgba(245,166,35,0.2)', borderRadius: 18, padding: '1.25rem', textDecoration: 'none', transition: 'all 0.2s', overflow: 'hidden', position: 'relative' }}
+                <Link to="/upgrade" style={{ display: 'block', background: 'var(--surface)', border: '1px solid rgba(245,166,35,0.2)', borderRadius: 18, padding: '1.25rem', textDecoration: 'none', transition: 'all 0.2s', overflow: 'hidden', position: 'relative', maxWidth: 400 }}
                   onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--amber)'; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 24px var(--amber-glow)' }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(245,166,35,0.2)'; e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '' }}>
                   <div style={{ position: 'absolute', right: -20, top: -20, width: 100, height: 100, borderRadius: '50%', background: 'var(--amber-glow)', pointerEvents: 'none' }} />

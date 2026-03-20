@@ -34,11 +34,11 @@ function FlameIcon({ streak }) {
 
 function ScoreRing({ score }) {
   const sz = 110, r = (sz - 10) / 2, circ = 2 * Math.PI * r
-  const color = score >= 80 ? 'var(--fern)' : score >= 60 ? 'var(--gold)' : score >= 40 ? 'var(--terracotta)' : 'var(--stone)'
+  const color = score >= 80 ? 'var(--lime)' : score >= 60 ? 'var(--amber)' : score >= 40 ? 'var(--amber)' : 'var(--text-muted)'
   return (
     <div style={{ position: 'relative', width: sz, height: sz }}>
       <svg width={sz} height={sz} style={{ transform: 'rotate(-90deg)' }}>
-        <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke="var(--linen)" strokeWidth={7} />
+        <circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke="var(--border)" strokeWidth={7} />
         <motion.circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke={color} strokeWidth={7}
           strokeLinecap="round"
           initial={{ strokeDasharray: circ, strokeDashoffset: circ }}
@@ -86,7 +86,7 @@ function WeeklyChart({ data }) {
           <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
             <motion.div initial={{ height: 0 }} animate={{ height: h }} transition={{ duration: 0.5, delay: i * 0.07, ease: 'easeOut' }}
               title={`${w.calories} kcal`}
-              style={{ width: '100%', background: 'var(--fern)', borderRadius: '5px 5px 3px 3px', opacity: 0.6 + i * 0.07 }} />
+              style={{ width: '100%', background: 'var(--lime)', borderRadius: '5px 5px 3px 3px', opacity: 0.6 + i * 0.07 }} />
             <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', fontFamily: 'var(--font-body)', fontWeight: 600 }}>{w.label}</span>
           </div>
         )
@@ -96,7 +96,7 @@ function WeeklyChart({ data }) {
 }
 
 function CalHeatmap({ data }) {
-  const STATUS = { green: 'var(--fern)', yellow: 'var(--gold)', empty: 'var(--linen)' }
+  const STATUS = { green: 'var(--lime)', yellow: 'var(--amber)', empty: 'var(--border)' }
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
       {['M','T','W','T','F','S','S'].map((d, i) => (
@@ -171,7 +171,7 @@ function DailyChecklist({ checklist, onSubmit, loading }) {
             : `${count} / ${needed} needed for a consistent day`}
         </div>
         {!submitted && (
-          <div style={{ fontSize: '0.72rem', color: isConsistent ? 'var(--fern)' : 'var(--stone)', fontFamily: 'var(--font-body)', fontWeight: 700 }}>
+          <div style={{ fontSize: '0.72rem', color: isConsistent ? 'var(--lime)' : 'var(--text-muted)', fontFamily: 'var(--font-body)', fontWeight: 700 }}>
             {isConsistent ? '🔥 Ready!' : `${needed - count} more`}
           </div>
         )}
@@ -206,7 +206,7 @@ function DailyChecklist({ checklist, onSubmit, loading }) {
                   : <span style={{ fontSize: '0.875rem' }}>{item.icon}</span>}
               </div>
               <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.875rem', fontWeight: done ? 600 : 400,
-                color: done ? 'var(--forest)' : 'var(--warm-gray)', flex: 1 }}>
+                color: done ? 'var(--forest)' : 'var(--text-muted)', flex: 1 }}>
                 {item.label}
               </span>
               {done && !submitted && (
@@ -253,7 +253,7 @@ function ChecklistSettingsModal({ items, onSave, onClose }) {
             Customise Checklist
           </h3>
           <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: 9, background: 'var(--surface2)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <X size={14} color="var(--warm-gray)" />
+            <X size={14} color="var(--text-muted)" />
           </button>
         </div>
         <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontFamily: 'var(--font-body)', marginBottom: '1rem', lineHeight: 1.5 }}>
@@ -267,8 +267,8 @@ function ChecklistSettingsModal({ items, onSave, onClose }) {
                 style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.625rem 0.875rem', borderRadius: 12, border: `1.5px solid ${on ? 'var(--lime)' : 'var(--border2)'}`,
                   background: on ? 'var(--lime-glow)' : 'var(--surface2)', cursor: 'pointer', transition: 'all 0.15s', textAlign: 'left' }}>
                 <span style={{ fontSize: '1rem' }}>{item.icon}</span>
-                <span style={{ flex: 1, fontSize: '0.875rem', fontWeight: on ? 600 : 400, color: on ? 'var(--forest)' : 'var(--warm-gray)', fontFamily: 'var(--font-body)' }}>{item.label}</span>
-                <div style={{ width: 20, height: 20, borderRadius: 6, background: on ? 'var(--fern)' : 'white', border: `1.5px solid ${on ? 'var(--lime)' : 'var(--border2)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <span style={{ flex: 1, fontSize: '0.875rem', fontWeight: on ? 600 : 400, color: on ? 'var(--forest)' : 'var(--text-muted)', fontFamily: 'var(--font-body)' }}>{item.label}</span>
+                <div style={{ width: 20, height: 20, borderRadius: 6, background: on ? 'var(--lime)' : 'var(--surface)', border: `1.5px solid ${on ? 'var(--lime)' : 'var(--border2)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   {on && <Check size={11} color="white" strokeWidth={3} />}
                 </div>
               </button>
@@ -355,6 +355,24 @@ export default function ProgressPage() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: 900, margin: '0 auto' }}>
+      <style>{`
+        .progress-grid-main,
+        .progress-grid-score,
+        .progress-grid-stats {
+          display: grid;
+          gap: 1rem;
+        }
+        .progress-grid-main  { grid-template-columns: minmax(0,3fr) minmax(0,2fr); }
+        .progress-grid-score { grid-template-columns: minmax(0,1fr) minmax(0,2fr); }
+        .progress-grid-stats { grid-template-columns: minmax(0,1fr) minmax(0,2fr); }
+        @media (max-width: 700px) {
+          .progress-grid-main,
+          .progress-grid-score,
+          .progress-grid-stats {
+            grid-template-columns: 1fr;
+          }
+        }
+      `}</style>
 
       {/* Header */}
       <motion.div {...up(0)} style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
@@ -380,7 +398,7 @@ export default function ProgressPage() {
       ) : (
         <>
           {/* ── Daily Checklist + Streak side by side ── */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,3fr) minmax(0,2fr)', gap: '1rem' }}>
+          <div className="progress-grid-main">
 
             {/* Daily checklist */}
             <motion.div {...up(0.05)} style={{ background: 'var(--surface)', borderRadius: 22, border: '1px solid var(--border)', padding: '1.5rem' }}>
@@ -395,9 +413,9 @@ export default function ProgressPage() {
                 </div>
                 <button onClick={() => setShowSettings(true)}
                   style={{ width: 32, height: 32, borderRadius: 9, background: 'var(--surface2)', border: '1px solid var(--border2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' }}
-                  onMouseEnter={e => e.currentTarget.style.background = 'var(--sage-light)'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'var(--cream)'}>
-                  <Settings size={13} color="var(--warm-gray)" />
+                  onMouseEnter={e => e.currentTarget.style.background = 'var(--surface3)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'var(--surface2)'}>
+                  <Settings size={13} color="var(--text-muted)" />
                 </button>
               </div>
               <DailyChecklist checklist={data?.checklist} onSubmit={handleCheckin} loading={checkinLoading} />
@@ -486,7 +504,7 @@ export default function ProgressPage() {
           </div>
 
           {/* ── Health Score + Nutrition Snapshot ── */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,2fr)', gap: '1rem' }}>
+          <div className="progress-grid-score">
             <motion.div {...up(0.12)} style={{ background: 'var(--surface)', borderRadius: 22, border: '1px solid var(--border)', padding: '1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.875rem' }}>
               <div style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--font-body)' }}>Health Score</div>
               <ScoreRing score={data?.health_score || 0} />
@@ -505,9 +523,9 @@ export default function ProgressPage() {
               </div>
               {snap ? (
                 <>
-                  <Bar label="Calories" value={snap.calories} max={snap.calorie_target} color="var(--terracotta)" unit=" kcal" icon="🔥" />
-                  <Bar label="Protein"  value={snap.protein}  max={Math.round(snap.calorie_target * 0.03)}  color="var(--fern)"  unit="g" icon="💪" />
-                  <Bar label="Carbs"    value={snap.carbs}    max={Math.round(snap.calorie_target * 0.075)} color="var(--gold)"  unit="g" icon="🌾" />
+                  <Bar label="Calories" value={snap.calories} max={snap.calorie_target} color="var(--amber)" unit=" kcal" icon="🔥" />
+                  <Bar label="Protein"  value={snap.protein}  max={Math.round(snap.calorie_target * 0.03)}  color="var(--lime)"  unit="g" icon="💪" />
+                  <Bar label="Carbs"    value={snap.carbs}    max={Math.round(snap.calorie_target * 0.075)} color="var(--spice)"  unit="g" icon="🌾" />
                   <Bar label="Fats"     value={snap.fats}     max={Math.round(snap.calorie_target * 0.025)} color="#8B5CF6"      unit="g" icon="🫙" />
                 </>
               ) : (
@@ -520,7 +538,7 @@ export default function ProgressPage() {
           </div>
 
           {/* ── Stats + Weekly Chart ── */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,2fr)', gap: '1rem' }}>
+          <div className="progress-grid-stats">
             <motion.div {...up(0.17)} style={{ background: 'var(--surface)', borderRadius: 22, border: '1px solid var(--border)', padding: '1.5rem' }}>
               <div style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--font-body)', marginBottom: '1rem' }}>All-Time</div>
               {[
@@ -549,7 +567,7 @@ export default function ProgressPage() {
             <motion.div {...up(0.21)} style={{ background: 'var(--surface)', borderRadius: 22, border: '1px solid var(--border)', padding: '1.5rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '1rem' }}>
                 <div style={{ width: 32, height: 32, borderRadius: 9, background: 'var(--lime-glow)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <TrendingUp size={14} color="var(--fern)" />
+                  <TrendingUp size={14} color="var(--lime)" />
                 </div>
                 <div style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--font-body)' }}>Smart Insights</div>
                 {!isPremium && (
@@ -563,7 +581,7 @@ export default function ProgressPage() {
                   const TYPE = {
                     positive: { bg: 'var(--sage-light)', border: 'rgba(61,122,88,0.2)', text: 'var(--forest)' },
                     warning:  { bg: 'var(--gold-light)',  border: 'rgba(192,125,26,0.2)', text: '#7A5B1A' },
-                    info:     { bg: 'var(--cream)',       border: 'var(--linen-mid)',     text: 'var(--warm-gray)' },
+                    info:     { bg: 'var(--surface2)',       border: 'var(--linen-mid)',     text: 'var(--text-muted)' },
                   }
                   const s = TYPE[ins.type] || TYPE.info
                   return (
@@ -582,7 +600,7 @@ export default function ProgressPage() {
           <motion.div {...up(0.23)} style={{ background: 'var(--surface)', borderRadius: 22, border: '1px solid var(--border)', padding: '1.5rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '1rem' }}>
               <div style={{ width: 32, height: 32, borderRadius: 9, background: 'rgba(245,166,35,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Trophy size={14} color="var(--gold)" />
+                <Trophy size={14} color="var(--spice)" />
               </div>
               <div style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--font-body)' }}>Achievements</div>
               <span style={{ marginLeft: 'auto', fontSize: '0.75rem', color: 'var(--text-muted)', fontFamily: 'var(--font-body)' }}>
@@ -599,14 +617,14 @@ export default function ProgressPage() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.75rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
                 <div style={{ width: 32, height: 32, borderRadius: 9, background: 'var(--lime-glow)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Calendar size={14} color="var(--fern)" />
+                  <Calendar size={14} color="var(--lime)" />
                 </div>
                 <div style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--font-body)' }}>
                   Activity — Last 35 Days
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '0.875rem' }}>
-                {[['var(--fern)', '4+ items'], ['var(--gold)', '1-3 items'], ['var(--linen)', 'No check-in']].map(([c, l]) => (
+                {[['var(--lime)', '4+ items'], ['var(--amber)', '1-3 items'], ['var(--border)', 'No check-in']].map(([c, l]) => (
                   <div key={l} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.65rem', color: 'var(--text-muted)', fontFamily: 'var(--font-body)' }}>
                     <div style={{ width: 9, height: 9, borderRadius: 2, background: c }} /> {l}
                   </div>

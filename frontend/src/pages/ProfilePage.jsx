@@ -32,11 +32,13 @@ function ToggleBtn({ active, onClick, children }) {
     <button type="button" onClick={onClick}
       style={{
         padding: '0.5rem 0.75rem', borderRadius: '0.75rem', fontSize: '0.82rem', cursor: 'pointer',
-        border: `1px solid ${active ? '#2D6A4F' : '#E0E0D8'}`,
-        background: active ? '#f0fdf4' : 'white',
-        color: active ? '#2D6A4F' : '#88887E',
+        border: `1px solid ${active ? 'var(--lime)' : 'var(--border2)'}`,
+        background: active ? 'rgba(200,241,53,0.12)' : 'var(--surface2)',
+        color: active ? 'var(--lime)' : 'var(--text-dim)',
         fontWeight: active ? 600 : 400, fontFamily: 'var(--font-body)',
         transition: 'all 0.15s', textAlign: 'left', width: '100%',
+        display: 'flex', alignItems: 'center', gap: '0.375rem',
+        overflow: 'hidden',
       }}>
       {children}
     </button>
@@ -95,12 +97,25 @@ export default function ProfilePage() {
 
   return (
     <div style={{ maxWidth: 900, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+      <style>{`
+        .profile-layout {
+          display: grid;
+          grid-template-columns: 1fr 2fr;
+          gap: 1.5rem;
+          align-items: start;
+        }
+        @media (max-width: 768px) {
+          .profile-layout {
+            grid-template-columns: 1fr;
+          }
+        }
+      `}</style>
       <div>
         <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2rem', fontWeight: 700, color: 'var(--text)' }}>My Profile</h1>
         <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.25rem' }}>Keep your details updated for accurate meal plans</p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1.5rem', alignItems: 'start' }}>
+      <div className="profile-layout">
         {/* Stats sidebar */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <div className="card" style={{ padding: '1.5rem', textAlign: 'center' }}>
@@ -139,7 +154,7 @@ export default function ProfilePage() {
           {/* Body */}
           <section>
             <h3 style={{ fontWeight: 600, color: 'var(--text-dim)', fontSize: '0.875rem', marginBottom: '1rem', paddingBottom: '0.5rem', borderBottom: '1px solid var(--border)' }}>Body Measurements</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: '0.5rem' }}>
               <div>
                 <label className="label">Date of Birth</label>
                 <input type="date" className="input"
@@ -147,7 +162,7 @@ export default function ProfilePage() {
                   value={form.date_of_birth || ''}
                   onChange={(e) => setForm((s) => ({ ...s, date_of_birth: e.target.value }))} />
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '0.75rem' }}>
                 {[['height', 'Height (cm)', '175'], ['weight', 'Weight (kg)', '70']].map(([f, l, p]) => (
                   <div key={f}>
                     <label className="label">{l}</label>
@@ -173,7 +188,7 @@ export default function ProfilePage() {
             <h3 style={{ fontWeight: 600, color: 'var(--text-dim)', fontSize: '0.875rem', marginBottom: '1rem', paddingBottom: '0.5rem', borderBottom: '1px solid var(--border)' }}>Diet & Allergies</h3>
             <div style={{ marginBottom: '1rem' }}>
               <label className="label" style={{ marginBottom: '0.5rem' }}>Dietary Preference</label>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem' }}>
                 {DIET_OPTIONS.map(([v, l]) => (
                   <ToggleBtn key={v} active={form.dietary_preference === v} onClick={() => setForm((s) => ({ ...s, dietary_preference: v }))}>{l}</ToggleBtn>
                 ))}
