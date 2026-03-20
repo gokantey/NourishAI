@@ -832,3 +832,139 @@ def use_freeze_view(request):
     streak.freeze_tokens -= 1
     streak.save()
     return Response({'message': 'Freeze token used.', 'freeze_tokens': streak.freeze_tokens})
+
+
+# ── Phase 8: PDF Export & Share Link ─────────────────────────────────────────
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def export_pdf_view(request, pk):
+    """Generate and return a PDF for a meal plan."""
+    from django.http import FileResponse
+    from meals.models import MealPlan
+    import sys, os
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    from pdf_service import generate_meal_plan_pdf
+
+    try:
+        plan = MealPlan.objects.get(pk=pk, user_profile=request.user.profile)
+    except MealPlan.DoesNotExist:
+        return Response({'error': 'Plan not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+    try:
+        buf = generate_meal_plan_pdf(plan)
+        filename = f"NourishAI_{plan.title or plan.week_start_date}.pdf".replace(' ', '_')
+        return FileResponse(buf, as_attachment=True, filename=filename, content_type='application/pdf')
+    except Exception as e:
+        return Response({'error': f'PDF generation failed: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def share_plan_view(request, pk):
+    """Generate a share token for a plan and return the share URL."""
+    import uuid
+    from meals.models import MealPlan
+
+    try:
+        plan = MealPlan.objects.get(pk=pk, user_profile=request.user.profile)
+    except MealPlan.DoesNotExist:
+        return Response({'error': 'Plan not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+    try:
+        if not plan.share_token:
+            plan.share_token = uuid.uuid4()
+            plan.save(update_fields=['share_token'])
+    except Exception:
+        # Field may not exist yet — run migrations
+        return Response({'error': 'Share feature requires migration. Run: python manage.py migrate'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    return Response({
+        'share_token': str(plan.share_token),
+        'share_url': f'/shared/{plan.share_token}',
+    })
+
+
+@api_view(['GET'])
+@permission_classes([])
+def public_shared_plan_view(request, token):
+    """Public endpoint — no auth required. Returns read-only plan data."""
+    from meals.models import MealPlan
+
+    try:
+        plan = MealPlan.objects.get(share_token=token)
+    except MealPlan.DoesNotExist:
+        return Response({'error': 'Plan not found or link is invalid.'}, status=status.HTTP_404_NOT_FOUND)
+
+    profile = plan.user_profile
+    meals = plan.meals.all().order_by('day', 'meal_type')
+
+    days_order = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday']
+    meal_type_order = ['breakfast','lunch','dinner']
+
+    days = {}
+    for meal in meals:
+        days.setdefault(meal.day, {})
+        days[meal.day][meal.meal_type] = {
+            'id': meal.id,
+            'title': meal.title,
+            'description': meal.description,
+            'ingredients': meal.ingredients,
+            'instructions': meal.instructions,
+            'calories': meal.calories,
+            'protein': meal.protein,
+            'carbohydrates': meal.carbohydrates,
+            'fats': meal.fats,
+            'fibre': meal.fibre,
+            'prep_time': meal.prep_time,
+            'difficulty': meal.difficulty,
+            'suggested_time': meal.suggested_time,
+            'portion_guide': meal.portion_guide,
+        }
+
+    schedule = []
+    for day in days_order:
+        if day in days:
+            schedule.append({
+                'day': day,
+                'meals': {mt: days[day].get(mt) for mt in meal_type_order if days[day].get(mt)},
+            })
+
+    # Shopping list
+    shopping = {}
+    try:
+        for item in plan.shopping_list.items.all():
+            shopping.setdefault(item.category, []).append({
+                'name': item.ingredient_name,
+                'quantity': item.quantity,
+                'unit': item.unit,
+            })
+    except Exception:
+        pass
+
+    # Nutrition totals
+    nutrition = {
+        'calories':      sum(m.calories for m in meals),
+        'protein':       round(sum(m.protein for m in meals), 1),
+        'carbohydrates': round(sum(m.carbohydrates for m in meals), 1),
+        'fats':          round(sum(m.fats for m in meals), 1),
+        'fibre':         round(sum(m.fibre for m in meals), 1),
+    }
+
+    return Response({
+        'plan': {
+            'id': plan.id,
+            'title': plan.title or f'Week of {plan.week_start_date}',
+            'week_start_date': str(plan.week_start_date),
+            'is_partial': plan.is_partial,
+            'created_at': plan.created_at.isoformat(),
+        },
+        'owner': {
+            'name': f'{profile.user.first_name} {profile.user.last_name}',
+            'region': profile.region or '',
+            'fitness_goal': profile.fitness_goal or '',
+        },
+        'nutrition_totals': nutrition,
+        'schedule': schedule,
+        'shopping_list': shopping,
+    })

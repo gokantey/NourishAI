@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Bookmark, BookmarkCheck, Lock, RefreshCw, Crown, ShoppingCart, X, Clock, ChefHat, Flame } from 'lucide-react'
+import { Bookmark, BookmarkCheck, Lock, RefreshCw, Crown, ShoppingCart, X, Clock, ChefHat, Flame, Download, Share2, Check } from 'lucide-react'
 import { mealsAPI } from '../api/client'
 import toast from 'react-hot-toast'
 
@@ -209,6 +209,9 @@ export default function MealPlanPage() {
   const [saveTitle, setSaveTitle] = useState('')
   const [activeDay, setActiveDay] = useState('monday')
   const [viewingMeal, setViewingMeal] = useState(null)
+  const [exporting, setExporting] = useState(false)
+  const [sharing, setSharing] = useState(false)
+  const [shareCopied, setShareCopied] = useState(false)
 
   const fetchPlan = useCallback(async () => {
     try {
@@ -235,6 +238,47 @@ export default function MealPlanPage() {
       if (err.response?.status === 403) { toast.error('Save limit reached. Upgrade to Premium!'); navigate('/upgrade') }
       else toast.error('Failed to save plan.')
     } finally { setSaving(false) }
+  }
+
+  const handleExportPdf = async () => {
+    setExporting(true)
+    try {
+      const res = await mealsAPI.exportPdf(pk)
+      const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }))
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `NourishAI_${(plan?.title || plan?.week_start_date || pk)}.pdf`
+      a.click()
+      window.URL.revokeObjectURL(url)
+      toast.success('PDF downloaded!')
+    } catch(err) { toast.error(err.response?.data?.error || 'Failed to export PDF.') }
+    finally { setExporting(false) }
+  }
+
+  const handleShare = async () => {
+    setSharing(true)
+    try {
+      const res = await mealsAPI.sharePlan(pk)
+      const url = `${window.location.origin}/shared/${res.data.share_token}`
+      // Clipboard API requires HTTPS — use fallback for localhost
+      try {
+        await navigator.clipboard.writeText(url)
+      } catch {
+        const el = document.createElement('textarea')
+        el.value = url
+        el.style.position = 'fixed'
+        el.style.opacity = '0'
+        document.body.appendChild(el)
+        el.focus()
+        el.select()
+        document.execCommand('copy')
+        document.body.removeChild(el)
+      }
+      setShareCopied(true)
+      toast.success('Share link copied to clipboard!')
+      setTimeout(() => setShareCopied(false), 3000)
+    } catch(err) { toast.error(err.response?.data?.error || 'Failed to generate share link.') }
+    finally { setSharing(false) }
   }
 
   const handleUnsave = async () => {
@@ -287,7 +331,27 @@ export default function MealPlanPage() {
             {plan.is_saved && <span style={{ marginLeft: '0.5rem', color: '#F4845F' }}>📌 Saved</span>}
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+          {/* Export PDF */}
+          <button onClick={handleExportPdf} disabled={exporting}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '0.5rem 0.875rem', borderRadius: 100, background: 'var(--surface2)', border: '1px solid var(--border2)', color: 'var(--text-dim)', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.18s', fontFamily: 'var(--font-body)', opacity: exporting ? 0.6 : 1 }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--lime)'; e.currentTarget.style.color = 'var(--lime)' }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border2)'; e.currentTarget.style.color = 'var(--text-dim)' }}>
+            {exporting
+              ? <span style={{ width: 12, height: 12, border: '2px solid rgba(200,241,53,0.3)', borderTopColor: 'var(--lime)', borderRadius: '50%', animation: 'spin 0.8s linear infinite', display: 'inline-block' }} />
+              : <Download size={13} />}
+            {exporting ? 'Exporting...' : 'Export PDF'}
+          </button>
+
+          {/* Share */}
+          <button onClick={handleShare} disabled={sharing}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '0.5rem 0.875rem', borderRadius: 100, background: shareCopied ? 'var(--lime-glow)' : 'var(--surface2)', border: `1px solid ${shareCopied ? 'rgba(200,241,53,0.3)' : 'var(--border2)'}`, color: shareCopied ? 'var(--lime)' : 'var(--text-dim)', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.18s', fontFamily: 'var(--font-body)' }}
+            onMouseEnter={e => { if (!shareCopied) { e.currentTarget.style.borderColor = 'var(--amber)'; e.currentTarget.style.color = 'var(--amber)' } }}
+            onMouseLeave={e => { if (!shareCopied) { e.currentTarget.style.borderColor = 'var(--border2)'; e.currentTarget.style.color = 'var(--text-dim)' } }}>
+            {shareCopied ? <Check size={13} /> : <Share2 size={13} />}
+            {shareCopied ? 'Copied!' : sharing ? 'Sharing...' : 'Share'}
+          </button>
+
           {plan.is_saved ? (
             <button onClick={handleUnsave} className="btn btn-ghost" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <BookmarkCheck size={15} style={{ color: '#2D6A4F' }} /> Saved

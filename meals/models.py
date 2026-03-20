@@ -1,3 +1,4 @@
+import uuid
 from django.db import models
 from users.models import UserProfile
 from django.contrib.auth.models import User
@@ -10,6 +11,7 @@ class MealPlan(models.Model):
     is_saved = models.BooleanField(default=False)
     title = models.CharField(max_length=100, blank=True, default='')
     is_partial = models.BooleanField(default=False, help_text="True if this is a 3-day half plan for free tier")
+    share_token = models.UUIDField(default=None, null=True, blank=True, unique=True, help_text="Public share token — generated on first share")
 
     def __str__(self):
         return f"{self.user_profile.user.username} - Week of {self.week_start_date}"

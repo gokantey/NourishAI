@@ -72,6 +72,9 @@ export const mealsAPI = {
   unsavePlan: (pk) => api.post(`/plans/${pk}/unsave/`),
   regenerateMeal: (pk) => api.post(`/meals/${pk}/regenerate/`),
   rateMeal: (pk, rating) => api.post(`/meals/${pk}/rate/`, { rating }),
+  exportPdf: (pk) => api.get(`/plans/${pk}/export-pdf/`, { responseType: 'blob' }),
+  sharePlan: (pk) => api.post(`/plans/${pk}/share/`),
+  getSharedPlan: (token) => api.get(`/shared/${token}/`),
 }
 
 // ── Upgrade endpoints ──
