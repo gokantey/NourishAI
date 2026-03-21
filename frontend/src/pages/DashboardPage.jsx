@@ -193,7 +193,7 @@ export default function DashboardPage() {
                   onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(245,166,35,0.2)'; e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '' }}>
                   <div style={{ position: 'absolute', right: -20, top: -20, width: 100, height: 100, borderRadius: '50%', background: 'var(--amber-glow)', pointerEvents: 'none' }} />
                   <Crown size={20} color="var(--amber)" style={{ marginBottom: '0.75rem' }} />
-                  <div style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', fontWeight: 800, color: 'var(--text)', marginBottom: '0.375rem', letterSpacing: '-0.01em' }}>Go Premium</div>
+                  <div style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', fontWeight: 700, color: 'var(--text)', marginBottom: '0.375rem', letterSpacing: '-0.01em' }}>Go Premium</div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: 1.5, fontFamily: 'var(--font-body)', marginBottom: '0.875rem' }}>
                     Unlimited plans · AI taste learning · Weekly summaries
                   </div>

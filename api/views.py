@@ -978,3 +978,68 @@ def public_shared_plan_view(request, token):
         'schedule': schedule,
         'shopping_list': shopping,
     })
+
+
+# ── Phase 9: Snack Suggestions + Meal Rebalancing ────────────────────────────
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def snacks_view(request, pk):
+    """Generate AI snack suggestions for a meal plan."""
+    from meals.models import MealPlan
+    from meals.groq_service import generate_snacks
+
+    try:
+        plan = MealPlan.objects.get(pk=pk, user_profile=request.user.profile)
+    except MealPlan.DoesNotExist:
+        return Response({'error': 'Plan not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+    try:
+        snacks = generate_snacks(plan, request.user.profile)
+        plan.snacks = snacks
+        plan.save(update_fields=['snacks'])
+        return Response({'snacks': snacks, 'message': 'Snacks generated successfully!'})
+    except Exception as e:
+        return Response({'error': f'Failed to generate snacks: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def rebalance_view(request, pk):
+    """Rebalance a meal plan — adjust portions and swap similar meals to hit macro targets."""
+    from meals.models import MealPlan, Meal
+    from meals.groq_service import rebalance_meal_plan
+
+    try:
+        plan = MealPlan.objects.get(pk=pk, user_profile=request.user.profile)
+    except MealPlan.DoesNotExist:
+        return Response({'error': 'Plan not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+    try:
+        updates = rebalance_meal_plan(plan, request.user.profile)
+        change_notes = []
+
+        for update in updates:
+            meal_id = update.get('id')
+            try:
+                meal = Meal.objects.get(pk=meal_id, meal_plan=plan)
+                meal.title          = update.get('title', meal.title)
+                meal.description    = update.get('description', meal.description)
+                meal.calories       = update.get('calories', meal.calories)
+                meal.protein        = update.get('protein', meal.protein)
+                meal.carbohydrates  = update.get('carbohydrates', meal.carbohydrates)
+                meal.fats           = update.get('fats', meal.fats)
+                meal.fibre          = update.get('fibre', meal.fibre)
+                meal.portion_guide  = update.get('portion_guide', meal.portion_guide)
+                meal.save()
+                if update.get('change_note'):
+                    change_notes.append(f"{meal.day.title()} {meal.meal_type}: {update['change_note']}")
+            except Meal.DoesNotExist:
+                continue
+
+        return Response({
+            'message': 'Plan rebalanced successfully!',
+            'changes': change_notes,
+        })
+    except Exception as e:
+        return Response({'error': f'Failed to rebalance plan: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

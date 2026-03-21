@@ -75,6 +75,8 @@ export const mealsAPI = {
   exportPdf: (pk) => api.get(`/plans/${pk}/export-pdf/`, { responseType: 'blob' }),
   sharePlan: (pk) => api.post(`/plans/${pk}/share/`),
   getSharedPlan: (token) => api.get(`/shared/${token}/`),
+  generateSnacks: (pk) => api.post(`/plans/${pk}/snacks/`),
+  rebalancePlan: (pk) => api.post(`/plans/${pk}/rebalance/`),
 }
 
 // ── Upgrade endpoints ──

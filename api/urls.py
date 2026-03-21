@@ -43,6 +43,10 @@ urlpatterns = [
     path('notifications/read-all/', views.mark_all_read_view, name='api_notifications_read_all'),
     path('notifications/<int:pk>/read/', views.mark_read_view, name='api_notification_read'),
 
+    # Phase 9 — Snacks & Rebalancing
+    path('plans/<int:pk>/snacks/', views.snacks_view, name='plan_snacks'),
+    path('plans/<int:pk>/rebalance/', views.rebalance_view, name='plan_rebalance'),
+
     # Phase 8 — PDF & Share
     path('plans/<int:pk>/export-pdf/', views.export_pdf_view, name='export_pdf'),
     path('plans/<int:pk>/share/', views.share_plan_view, name='share_plan'),

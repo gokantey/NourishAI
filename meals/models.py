@@ -12,6 +12,7 @@ class MealPlan(models.Model):
     title = models.CharField(max_length=100, blank=True, default='')
     is_partial = models.BooleanField(default=False, help_text="True if this is a 3-day half plan for free tier")
     share_token = models.UUIDField(default=None, null=True, blank=True, unique=True, help_text="Public share token — generated on first share")
+    snacks = models.JSONField(default=None, null=True, blank=True, help_text="AI-generated snacks per day")
 
     def __str__(self):
         return f"{self.user_profile.user.username} - Week of {self.week_start_date}"

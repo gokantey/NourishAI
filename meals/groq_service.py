@@ -568,3 +568,171 @@ Respond ONLY with a valid JSON object, no extra text:
             clean = clean[4:]
     clean = clean.strip()
     return json.loads(clean)
+
+def generate_snacks(meal_plan, profile):
+    """Generate 3 snacks per day (morning, afternoon, evening) for the meal plan."""
+
+    days = list(meal_plan.meals.values_list('day', flat=True).distinct())
+    calorie_target = profile.daily_calorie_target or 2000
+    snack_budget = int(calorie_target * 0.15)  # ~15% of daily calories for snacks
+    dietary = profile.dietary_preference or 'none'
+    region = profile.region or 'greater_accra'
+    region_note = REGION_FOOD_NOTES.get(region, '')
+    allergy_summary = get_allergy_summary(
+        getattr(profile, 'allergies', []),
+        getattr(profile, 'other_allergy', '')
+    )
+
+    prompt = f"""You are a Ghanaian nutritionist creating LIGHT snack suggestions.
+
+IMPORTANT — A snack is NOT a meal. Snacks must be:
+- Small, light, and quick to eat
+- Under 200 calories each
+- NOT full meals (no fufu, banku, kenkey, jollof rice, rice dishes, or soups as snacks)
+
+User profile:
+- Daily calorie target: {calorie_target} kcal
+- Snack budget: ~{snack_budget} kcal total across 3 snacks per day
+- Dietary preference: {dietary}
+- Fitness goal: {getattr(profile, 'fitness_goal', 'general wellness')}
+- Region: {region}
+- Allergies (STRICTLY AVOID these in every snack): {allergy_summary}
+- Dietary preference must be respected at all times
+
+Ideal Ghanaian snacks to draw from:
+- Plantain chips (kelewele chips, fried or baked plantain slices)
+- Roasted groundnuts (peanuts)
+- Coconut chunks or coconut chips
+- Roasted corn (abele)
+- Boiled eggs
+- Sugarcane pieces
+- Chin chin (small portion)
+- Koose (bean fritters, 1-2 pieces)
+- Bofrot/puff puff (1 piece)
+- Fresh fruit (mango, pineapple, orange, pawpaw)
+- Sobolo (hibiscus drink)
+- Tiger nuts (atadwe)
+- Tom brown porridge (small cup)
+- Kontomire/garden egg dip with crackers
+- Yogurt (Fan Ice or fresh yogurt)
+- Continental options: granola bar, handful of mixed nuts, apple slices, yogurt
+
+Each snack should:
+- Support the user's fitness goal
+- Be genuinely light and snack-sized
+- Fit the dietary preference
+- Be practical and accessible in Ghana
+
+Return ONLY valid JSON in this exact format:
+{{
+  "monday": {{
+    "morning": {{"name": "snack name", "description": "brief description", "calories": 120, "protein": 5, "carbs": 15, "fats": 4, "portion": "serving size"}},
+    "afternoon": {{"name": "snack name", "description": "brief description", "calories": 150, "protein": 6, "carbs": 18, "fats": 5, "portion": "serving size"}},
+    "evening": {{"name": "snack name", "description": "brief description", "calories": 100, "protein": 4, "carbs": 12, "fats": 3, "portion": "serving size"}}
+  }},
+  "tuesday": {{ ... }},
+  ...
+}}
+
+Only include the days provided. Return ONLY the JSON, no other text."""
+
+    response = client.chat.completions.create(
+        model='llama-3.3-70b-versatile',
+        messages=[{'role': 'user', 'content': prompt}],
+        temperature=0.7,
+        max_tokens=3000,
+    )
+
+    text = response.choices[0].message.content.strip()
+    if text.startswith('```'):
+        text = text.split('```')[1]
+        if text.startswith('json'):
+            text = text[4:]
+    return json.loads(text.strip())
+
+
+def rebalance_meal_plan(meal_plan, profile):
+    """Rebalance a meal plan by adjusting portions and swapping similar meals to better hit macro targets."""
+
+    calorie_target = profile.daily_calorie_target or 2000
+    protein_target = round(calorie_target * 0.30 / 4)
+    carb_target    = round(calorie_target * 0.40 / 4)
+    fat_target     = round(calorie_target * 0.30 / 9)
+    dietary = profile.dietary_preference or 'none'
+    region = profile.region or 'greater_accra'
+    region_note = REGION_FOOD_NOTES.get(region, '')
+    allergy_summary = get_allergy_summary(
+        getattr(profile, 'allergies', []),
+        getattr(profile, 'other_allergy', '')
+    )
+
+    # Build current meal summary
+    meals = meal_plan.meals.all().order_by('day', 'meal_type')
+    current_meals = []
+    for m in meals:
+        current_meals.append({
+            'id': m.id,
+            'day': m.day,
+            'meal_type': m.meal_type,
+            'title': m.title,
+            'calories': m.calories,
+            'protein': m.protein,
+            'carbs': m.carbohydrates,
+            'fats': m.fats,
+        })
+
+    prompt = f"""You are a Ghanaian nutritionist rebalancing a meal plan.
+
+Daily targets:
+- Calories: {calorie_target} kcal
+- Protein: {protein_target}g
+- Carbs: {carb_target}g
+- Fats: {fat_target}g
+
+Dietary preference: {dietary}
+Allergies (NEVER include these in any meal — this is critical): {allergy_summary}
+Region: {region}
+{region_note}
+
+Current meals:
+{json.dumps(current_meals, indent=2)}
+
+Rebalance this plan by ONLY adjusting portions and swapping meals with SIMILAR alternatives.
+- Do NOT replace fufu with pizza
+- Keep Ghanaian food culture intact
+- Each meal should stay similar in type but adjust macros to better hit daily targets
+- Spread calories evenly: breakfast ~25%, lunch ~40%, dinner ~35% of daily target
+- For change_note: be SPECIFIC about what changed. Example: "Reduced fufu from 3 balls to 2, added extra fish for protein" or "Swapped palm oil for less oil, added more vegetables". NEVER write generic notes like "Increased portion size to meet daily calorie targets" — these are useless.
+
+Return ONLY valid JSON — a list of updated meals matching the original IDs:
+[
+  {{
+    "id": 123,
+    "title": "Updated meal title (or same if unchanged)",
+    "description": "Updated or same description",
+    "calories": 650,
+    "protein": 45.0,
+    "carbohydrates": 70.0,
+    "fats": 18.0,
+    "fibre": 6.0,
+    "portion_guide": "e.g. 2 medium balls of fufu, 1 cup soup",
+    "change_note": "Specific change e.g. 'Reduced rice from 300g to 200g, added more chicken for protein' or 'Swapped white bread for whole grain' — never generic phrases like increased portion size"
+  }},
+  ...
+]
+
+Return ONLY the JSON array, no other text."""
+
+    response = client.chat.completions.create(
+        model='llama-3.3-70b-versatile',
+        messages=[{'role': 'user', 'content': prompt}],
+        temperature=0.5,
+        max_tokens=4000,
+    )
+
+    text = response.choices[0].message.content.strip()
+    if text.startswith('```'):
+        text = text.split('```')[1]
+        if text.startswith('json'):
+            text = text[4:]
+    return json.loads(text.strip())

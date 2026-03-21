@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Bookmark, BookmarkCheck, Lock, RefreshCw, Crown, ShoppingCart, X, Clock, ChefHat, Flame, Download, Share2, Check } from 'lucide-react'
+import { Bookmark, BookmarkCheck, Lock, RefreshCw, Crown, ShoppingCart, X, Clock, ChefHat, Flame, Download, Share2, Check, Shuffle, Star } from 'lucide-react'
 import { mealsAPI } from '../api/client'
 import toast from 'react-hot-toast'
 
@@ -212,11 +212,16 @@ export default function MealPlanPage() {
   const [exporting, setExporting] = useState(false)
   const [sharing, setSharing] = useState(false)
   const [shareCopied, setShareCopied] = useState(false)
+  const [generatingSnacks, setGeneratingSnacks] = useState(false)
+  const [rebalancing, setRebalancing] = useState(false)
+  const [snacks, setSnacks] = useState(null)
+  const [rebalanceChanges, setRebalanceChanges] = useState(null)
 
   const fetchPlan = useCallback(async () => {
     try {
       const res = await mealsAPI.getPlan(pk)
       setPlan(res.data)
+      if (res.data.snacks) setSnacks(res.data.snacks)
     } catch {
       toast.error('Plan not found.')
       navigate('/history')
@@ -281,6 +286,29 @@ export default function MealPlanPage() {
     finally { setSharing(false) }
   }
 
+  const handleGenerateSnacks = async () => {
+    setGeneratingSnacks(true)
+    try {
+      const res = await mealsAPI.generateSnacks(pk)
+      setSnacks(res.data.snacks)
+      toast.success('Snacks generated!')
+    } catch(err) { toast.error(err.response?.data?.error || 'Failed to generate snacks.') }
+    finally { setGeneratingSnacks(false) }
+  }
+
+  const handleRebalance = async () => {
+    setRebalancing(true)
+    try {
+      const res = await mealsAPI.rebalancePlan(pk)
+      toast.success('Plan rebalanced!')
+      setRebalanceChanges(res.data.changes)
+      // Reload plan to get updated meals
+      const planRes = await mealsAPI.getPlan(pk)
+      setPlan(planRes.data)
+    } catch(err) { toast.error(err.response?.data?.error || 'Failed to rebalance.') }
+    finally { setRebalancing(false) }
+  }
+
   const handleUnsave = async () => {
     try {
       await mealsAPI.unsavePlan(pk)
@@ -323,7 +351,7 @@ export default function MealPlanPage() {
       {/* Header */}
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.75rem' }}>
         <div>
-          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.75rem', fontWeight: 700, color: 'var(--text)' }}>
+          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.25rem, 4vw, 1.75rem)', fontWeight: 700, color: 'var(--text)' }}>
             {plan.is_partial ? '3-Day Preview Plan' : 'Your 7-Day Plan'}
           </h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.2rem' }}>
@@ -332,6 +360,25 @@ export default function MealPlanPage() {
           </p>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+          {/* Snacks */}
+          <button onClick={handleGenerateSnacks} disabled={generatingSnacks}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '0.5rem 0.875rem', borderRadius: 100, background: 'var(--surface2)', border: '1px solid var(--border2)', color: 'var(--text-dim)', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.18s', fontFamily: 'var(--font-body)', opacity: generatingSnacks ? 0.6 : 1 }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--amber)'; e.currentTarget.style.color = 'var(--amber)' }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border2)'; e.currentTarget.style.color = 'var(--text-dim)' }}>
+            {generatingSnacks ? <span style={{ width: 12, height: 12, border: '2px solid rgba(245,166,35,0.3)', borderTopColor: 'var(--amber)', borderRadius: '50%', animation: 'spin 0.8s linear infinite', display: 'inline-block' }} /> : <Star size={13} />}
+            {generatingSnacks ? 'Generating...' : snacks ? 'Refresh Snacks' : 'Add Snacks'}
+          </button>
+
+          {/* Rebalance */}
+          <button onClick={handleRebalance} disabled={rebalancing}
+            title="Adjusts meal portions and swaps similar meals to better hit your macro targets. Best used when your plan is nutritionally imbalanced, not for missed meals."
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '0.5rem 0.875rem', borderRadius: 100, background: 'var(--surface2)', border: '1px solid var(--border2)', color: 'var(--text-dim)', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.18s', fontFamily: 'var(--font-body)', opacity: rebalancing ? 0.6 : 1 }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = '#A78BFA'; e.currentTarget.style.color = '#A78BFA' }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border2)'; e.currentTarget.style.color = 'var(--text-dim)' }}>
+            {rebalancing ? <span style={{ width: 12, height: 12, border: '2px solid rgba(167,139,250,0.3)', borderTopColor: '#A78BFA', borderRadius: '50%', animation: 'spin 0.8s linear infinite', display: 'inline-block' }} /> : <Shuffle size={13} />}
+            {rebalancing ? 'Rebalancing...' : 'Rebalance'}
+          </button>
+
           {/* Export PDF */}
           <button onClick={handleExportPdf} disabled={exporting}
             style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '0.5rem 0.875rem', borderRadius: 100, background: 'var(--surface2)', border: '1px solid var(--border2)', color: 'var(--text-dim)', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.18s', fontFamily: 'var(--font-body)', opacity: exporting ? 0.6 : 1 }}
@@ -438,6 +485,69 @@ export default function MealPlanPage() {
           )}
         </motion.div>
       </AnimatePresence>
+
+      {/* Snacks Section */}
+      {snacks && (
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+          style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 18, overflow: 'hidden' }}>
+          <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Star size={15} color="var(--amber)" />
+              <span style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', fontWeight: 700, color: 'var(--text)' }}>Daily Snacks</span>
+            </div>
+            <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontFamily: 'var(--font-body)' }}>AI-generated · 3 per day</span>
+          </div>
+          <div style={{ padding: '1rem 1.25rem' }}>
+            <div style={{ display: 'flex', gap: '0.375rem', overflowX: 'auto', paddingBottom: '0.75rem', marginBottom: '0.75rem' }}>
+              {['monday','tuesday','wednesday','thursday','friday','saturday','sunday'].filter(d => snacks[d]).map(day => (
+                <span key={day} onClick={() => setActiveDay(day)}
+                  style={{ padding: '3px 12px', borderRadius: 100, background: day === activeDay ? 'var(--amber-glow)' : 'var(--surface2)', border: `1px solid ${day === activeDay ? 'rgba(245,166,35,0.3)' : 'var(--border)'}`, color: day === activeDay ? 'var(--amber)' : 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 600, fontFamily: 'var(--font-body)', whiteSpace: 'nowrap', cursor: 'pointer' }}>
+                  {day.charAt(0).toUpperCase() + day.slice(1)}
+                </span>
+              ))}
+            </div>
+            {snacks[activeDay] && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.625rem' }}>
+                {Object.entries(snacks[activeDay]).map(([slot, snack]) => (
+                  <div key={slot} style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 12, padding: '0.875rem' }}>
+                    <div style={{ fontSize: '0.62rem', fontWeight: 700, color: 'var(--amber)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--font-body)', marginBottom: '0.375rem' }}>{slot}</div>
+                    <div style={{ fontFamily: 'var(--font-display)', fontSize: '0.875rem', fontWeight: 700, color: 'var(--text)', marginBottom: '0.2rem' }}>{snack.name}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontFamily: 'var(--font-body)', marginBottom: '0.5rem', lineHeight: 1.4 }}>{snack.description}</div>
+                    <div style={{ fontSize: '0.68rem', color: '#FF6B35', fontWeight: 600, fontFamily: 'var(--font-body)' }}>{snack.calories} kcal · <span style={{ color: 'var(--lime)' }}>{snack.protein}g protein</span></div>
+                    {snack.portion && <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '0.2rem', fontFamily: 'var(--font-body)' }}>{snack.portion}</div>}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </motion.div>
+      )}
+
+      {/* Rebalance changes */}
+      {rebalanceChanges && rebalanceChanges.length > 0 && (
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+          style={{ background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', borderRadius: 16, padding: '1rem 1.25rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.625rem' }}>
+            <Shuffle size={13} color="#A78BFA" />
+            <span style={{ fontFamily: 'var(--font-display)', fontSize: '0.875rem', fontWeight: 700, color: '#A78BFA' }}>Rebalance Summary</span>
+            <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontFamily: 'var(--font-body)', marginLeft: 'auto' }}>Portions &amp; similar meals adjusted to hit your macro targets</span>
+          </div>
+          {['monday','tuesday','wednesday','thursday','friday','saturday','sunday']
+            .map(day => {
+              const dayNotes = rebalanceChanges.filter(n => n.toLowerCase().startsWith(day))
+              if (!dayNotes.length) return null
+              return (
+                <div key={day} style={{ marginBottom: '0.5rem' }}>
+                  <div style={{ fontSize: '0.68rem', fontWeight: 700, color: '#A78BFA', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--font-body)', marginBottom: '0.2rem' }}>{day}</div>
+                  {dayNotes.map((note, i) => (
+                    <div key={i} style={{ fontSize: '0.78rem', color: 'var(--text-dim)', fontFamily: 'var(--font-body)', lineHeight: 1.6, paddingLeft: '0.75rem' }}>· {note.replace(new RegExp(`^${day} *`, 'i'), '')}</div>
+                  ))}
+                </div>
+              )
+            })}
+        </motion.div>
+      )}
+
 
       {/* Shopping list */}
       {plan.shopping_list?.items?.length > 0 && (
