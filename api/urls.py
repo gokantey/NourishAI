@@ -1,6 +1,6 @@
 from django.urls import path
 from rest_framework_simplejwt.views import TokenRefreshView
-from . import views
+from . import views, admin_views
 
 urlpatterns = [
     # Auth
@@ -57,4 +57,20 @@ urlpatterns = [
     path('progress/checkin/', views.checkin_view, name='api_checkin'),
     path('progress/freeze/', views.use_freeze_view, name='api_freeze'),
     path('progress/checklist-prefs/', views.update_checklist_prefs_view, name='api_checklist_prefs'),
+    # ── Admin Portal ──────────────────────────────────────────────────────────
+    path('admin-portal/login/',                      admin_views.admin_login_view,              name='admin_login'),
+    path('admin-portal/dashboard/',                  admin_views.admin_dashboard_view,          name='admin_dashboard'),
+    path('admin-portal/users/',                      admin_views.admin_users_view,              name='admin_users'),
+    path('admin-portal/users/<int:user_id>/',        admin_views.admin_user_detail_view,        name='admin_user_detail'),
+    path('admin-portal/users/<int:user_id>/action/', admin_views.admin_user_action_view,        name='admin_user_action'),
+    path('admin-portal/plans/',                      admin_views.admin_plans_view,              name='admin_plans'),
+    path('admin-portal/plans/<int:plan_id>/delete/', admin_views.admin_plan_delete_view,        name='admin_plan_delete'),
+    path('admin-portal/ai/',                         admin_views.admin_ai_monitor_view,         name='admin_ai'),
+    path('admin-portal/payments/',                   admin_views.admin_payments_view,           name='admin_payments'),
+    path('admin-portal/notifications/',              admin_views.admin_notifications_view,      name='admin_notifications'),
+    path('admin-portal/notifications/broadcast/',    admin_views.admin_broadcast_view,          name='admin_broadcast'),
+    path('admin-portal/achievements/',               admin_views.admin_achievements_view,       name='admin_achievements'),
+    path('admin-portal/achievements/create/',        admin_views.admin_achievement_create_view, name='admin_achievement_create'),
+    path('admin-portal/system/',                     admin_views.admin_system_view,             name='admin_system'),
+    path('admin-portal/system/run-command/',         admin_views.admin_run_command_view,        name='admin_run_command'),
 ]

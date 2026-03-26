@@ -107,7 +107,7 @@ export default function LoginPage() {
             </span>
           </div>
 
-          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.875rem', fontWeight: 700, color: 'var(--text)', marginBottom: '0.25rem', letterSpacing: '-0.02em' }}>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.875rem', fontWeight: 800, color: 'var(--text)', marginBottom: '0.25rem', letterSpacing: '-0.02em' }}>
             Welcome back
           </h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: '2rem', fontFamily: 'var(--font-body)' }}>
@@ -136,7 +136,7 @@ export default function LoginPage() {
                   placeholder="Your password" value={form.password}
                   onChange={e => setForm(f => ({ ...f, password: e.target.value }))} />
                 <button type="button" onClick={() => setShowPassword(!showPassword)}
-                  style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 0 }}>
+                  style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--surface3)', padding: 0, zIndex: 2 }}>
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
@@ -164,6 +164,9 @@ export default function LoginPage() {
       </div>
 
       <style>{`
+        input[type='password']::-ms-reveal,
+        input[type='password']::-webkit-credentials-auto-fill-button { display: none !important; }
+        input::-webkit-strong-password-auto-fill-button { display: none !important; }
         @media (min-width: 1024px) { .auth-left-panel { display: flex !important; } .auth-mobile-logo { display: none !important; } }
       `}</style>
     </div>

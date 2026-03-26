@@ -17,6 +17,13 @@ import ProfilePage from './pages/ProfilePage'
 import UpgradePage from './pages/UpgradePage'
 import UpgradeSuccessPage from './pages/UpgradeSuccessPage'
 import ProgressPage from './pages/ProgressPage'
+import SharedPlanPage from './pages/SharedPlanPage'
+import AdminLayout from './admin/AdminLayout'
+import AdminLoginPage from './admin/pages/AdminLoginPage'
+import AdminDashboard from './admin/pages/AdminDashboard'
+import AdminUsers from './admin/pages/AdminUsers'
+import AdminUserDetail from './admin/pages/AdminUserDetail'
+import { AdminPlans, AdminAI, AdminPayments, AdminNotifications, AdminAchievements, AdminSystem } from './admin/pages/AdminPages'
 
 // Layout
 import AppLayout from './components/layout/AppLayout'
@@ -74,6 +81,21 @@ export default function App() {
       />
       <Routes>
         {/* Public routes */}
+        <Route path="/shared/:token" element={<SharedPlanPage />} />
+
+        {/* ── Admin Portal ── */}
+        <Route path="/admin-portal/login" element={<AdminLoginPage />} />
+        <Route path="/admin-portal" element={<AdminLayout />}>
+          <Route path="dashboard"     element={<AdminDashboard />} />
+          <Route path="users"         element={<AdminUsers />} />
+          <Route path="users/:userId" element={<AdminUserDetail />} />
+          <Route path="plans"         element={<AdminPlans />} />
+          <Route path="ai"            element={<AdminAI />} />
+          <Route path="payments"      element={<AdminPayments />} />
+          <Route path="notifications" element={<AdminNotifications />} />
+          <Route path="achievements"  element={<AdminAchievements />} />
+          <Route path="system"        element={<AdminSystem />} />
+        </Route>
         <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
         <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
         <Route path="/verify-otp" element={<PublicRoute><VerifyOTPPage /></PublicRoute>} />

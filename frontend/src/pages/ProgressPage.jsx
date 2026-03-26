@@ -97,10 +97,22 @@ function WeeklyChart({ data }) {
 
 function CalHeatmap({ data }) {
   const STATUS = { green: 'var(--lime)', yellow: 'var(--amber)', empty: 'var(--border)' }
+  
+  // Calculate offset so first day in grid aligns to correct weekday
+  // getDay() returns 0=Sun,1=Mon...6=Sat. We want Mon=0 offset.
+  const firstDate = data?.[0]?.date
+  const offset = firstDate ? (() => {
+    const d = new Date(firstDate + 'T00:00:00')
+    return (d.getDay() + 6) % 7 // Mon=0, Tue=1 ... Sun=6
+  })() : 0
+
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
       {['M','T','W','T','F','S','S'].map((d, i) => (
         <div key={i} style={{ textAlign: 'center', fontSize: '0.58rem', color: 'var(--text-muted)', fontFamily: 'var(--font-body)', fontWeight: 700, marginBottom: 2 }}>{d}</div>
+      ))}
+      {Array.from({ length: offset }).map((_, i) => (
+        <div key={`pad-${i}`} />
       ))}
       {data?.map((day, i) => (
         <motion.div key={i} initial={{ opacity: 0, scale: 0.4 }} animate={{ opacity: 1, scale: 1 }}
