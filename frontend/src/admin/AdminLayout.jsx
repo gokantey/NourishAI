@@ -3,23 +3,24 @@ import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { LayoutDashboard, Users, FileText, Cpu, CreditCard, Bell, Trophy, Settings, LogOut, Menu, ChevronRight } from 'lucide-react'
 
 const NAV = [
-  { to: '/admin-portal/dashboard',      icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/admin-portal/users',          icon: Users,           label: 'Users' },
-  { to: '/admin-portal/plans',          icon: FileText,        label: 'Plans' },
-  { to: '/admin-portal/ai',             icon: Cpu,             label: 'AI Monitor' },
-  { to: '/admin-portal/payments',       icon: CreditCard,      label: 'Payments' },
-  { to: '/admin-portal/notifications',  icon: Bell,            label: 'Notifications' },
-  { to: '/admin-portal/achievements',   icon: Trophy,          label: 'Achievements' },
-  { to: '/admin-portal/system',         icon: Settings,        label: 'System' },
+  { to: '/admin-portal/dashboard',     icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/admin-portal/users',         icon: Users,           label: 'Users' },
+  { to: '/admin-portal/plans',         icon: FileText,        label: 'Plans' },
+  { to: '/admin-portal/ai',            icon: Cpu,             label: 'AI Monitor' },
+  { to: '/admin-portal/payments',      icon: CreditCard,      label: 'Payments' },
+  { to: '/admin-portal/notifications', icon: Bell,            label: 'Notifications' },
+  { to: '/admin-portal/achievements',  icon: Trophy,          label: 'Achievements' },
+  { to: '/admin-portal/system',        icon: Settings,        label: 'System' },
 ]
 
 const AMBER = '#F5A623'
 const AMBER_GLOW = 'rgba(245,166,35,0.15)'
 
-// ── Sidebar defined outside AdminLayout so React doesn't remount it on every render ──
+// ── Sidebar defined outside AdminLayout to prevent remount on every render ──
 function Sidebar({ adminUser, onClose, onLogout }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#0A1410', borderRight: '1px solid rgba(255,255,255,0.07)' }}>
+
       {/* Amber top strip */}
       <div style={{ height: 4, background: `linear-gradient(90deg, ${AMBER}, #D4841A, ${AMBER})` }} />
 
@@ -28,8 +29,8 @@ function Sidebar({ adminUser, onClose, onLogout }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
           <div style={{ width: 34, height: 34, borderRadius: 9, background: AMBER, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0A1410" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/>
-              <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
+              <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z" />
+              <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" />
             </svg>
           </div>
           <div>
@@ -45,27 +46,34 @@ function Sidebar({ adminUser, onClose, onLogout }) {
 
       {/* Nav */}
       <nav style={{ flex: 1, padding: '0.75rem', overflowY: 'auto' }}>
-        {NAV.map(({ to, icon: ItemIcon, label }) => (
-          <NavLink key={to} to={to} onClick={onClose}
-            style={({ isActive }) => ({
-              display: 'flex', alignItems: 'center', gap: '0.75rem',
-              padding: '0.625rem 0.75rem', borderRadius: 10, marginBottom: 2,
-              textDecoration: 'none', transition: 'all 0.15s',
-              background: isActive ? AMBER_GLOW : 'transparent',
-              color: isActive ? AMBER : 'rgba(240,245,240,0.45)',
-              fontFamily: 'var(--font-body)', fontSize: '0.875rem',
-              fontWeight: isActive ? 700 : 400,
-              borderLeft: `2px solid ${isActive ? AMBER : 'transparent'}`,
-            })}>
-            {({ isActive }) => (
-              <>
-                <ItemIcon size={14} color={isActive ? AMBER : 'rgba(240,245,240,0.35)'} style={{ flexShrink: 0 }} />
-                <span style={{ flex: 1 }}>{label}</span>
-                {isActive && <ChevronRight size={12} color={AMBER} />}
-              </>
-            )}
-          </NavLink>
-        ))}
+        {NAV.map((item) => {
+          const Icon = item.icon
+          return (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              onClick={onClose}
+              style={({ isActive }) => ({
+                display: 'flex', alignItems: 'center', gap: '0.75rem',
+                padding: '0.625rem 0.75rem', borderRadius: 10, marginBottom: 2,
+                textDecoration: 'none', transition: 'all 0.15s',
+                background: isActive ? AMBER_GLOW : 'transparent',
+                color: isActive ? AMBER : 'rgba(240,245,240,0.45)',
+                fontFamily: 'var(--font-body)', fontSize: '0.875rem',
+                fontWeight: isActive ? 700 : 400,
+                borderLeft: `2px solid ${isActive ? AMBER : 'transparent'}`,
+              })}
+            >
+              {({ isActive }) => (
+                <>
+                  <Icon size={14} color={isActive ? AMBER : 'rgba(240,245,240,0.35)'} style={{ flexShrink: 0 }} />
+                  <span style={{ flex: 1 }}>{item.label}</span>
+                  {isActive && <ChevronRight size={12} color={AMBER} />}
+                </>
+              )}
+            </NavLink>
+          )
+        })}
       </nav>
 
       {/* User */}
@@ -81,10 +89,12 @@ function Sidebar({ adminUser, onClose, onLogout }) {
             <div style={{ fontSize: '0.65rem', color: AMBER, fontFamily: 'var(--font-body)', fontWeight: 500 }}>Admin</div>
           </div>
         </div>
-        <button onClick={onLogout}
+        <button
+          onClick={onLogout}
           style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.75rem', borderRadius: 8, background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.8rem', color: 'rgba(240,245,240,0.3)', transition: 'all 0.15s', fontFamily: 'var(--font-body)' }}
           onMouseEnter={e => { e.currentTarget.style.color = '#F48A8A'; e.currentTarget.style.background = 'rgba(212,52,26,0.1)' }}
-          onMouseLeave={e => { e.currentTarget.style.color = 'rgba(240,245,240,0.3)'; e.currentTarget.style.background = 'none' }}>
+          onMouseLeave={e => { e.currentTarget.style.color = 'rgba(240,245,240,0.3)'; e.currentTarget.style.background = 'none' }}
+        >
           <LogOut size={13} /> Sign out
         </button>
       </div>
@@ -109,6 +119,7 @@ export default function AdminLayout() {
 
   return (
     <div style={{ display: 'flex', height: '100vh', background: '#0D1A14', overflow: 'hidden', fontFamily: 'var(--font-body)' }}>
+
       {/* Desktop sidebar */}
       <aside style={{ width: 220, flexShrink: 0, display: 'none' }} className="desktop-sidebar">
         <Sidebar adminUser={adminUser} onClose={() => setOpen(false)} onLogout={handleLogout} />
@@ -117,7 +128,10 @@ export default function AdminLayout() {
       {/* Mobile overlay */}
       {open && (
         <>
-          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 40 }} onClick={() => setOpen(false)} />
+          <div
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 40 }}
+            onClick={() => setOpen(false)}
+          />
           <aside style={{ position: 'fixed', left: 0, top: 0, bottom: 0, width: 240, zIndex: 50 }}>
             <Sidebar adminUser={adminUser} onClose={() => setOpen(false)} onLogout={handleLogout} />
           </aside>
@@ -127,8 +141,11 @@ export default function AdminLayout() {
       {/* Main */}
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0, overflow: 'hidden' }}>
         <header style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0 1.5rem', height: 52, background: 'rgba(10,20,16,0.9)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.06)', flexShrink: 0 }}>
-          <button onClick={() => setOpen(true)} className="mobile-menu-btn"
-            style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <button
+            onClick={() => setOpen(true)}
+            className="mobile-menu-btn"
+            style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          >
             <Menu size={14} color="rgba(240,245,240,0.6)" />
           </button>
           <div style={{ fontFamily: 'var(--font-display)', fontSize: '0.875rem', fontWeight: 700, color: '#F0F5F0' }}>
