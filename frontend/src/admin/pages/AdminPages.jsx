@@ -1,7 +1,8 @@
 // ── Admin Plans Page ──────────────────────────────────────────────────────────
 import { useEffect, useState } from 'react'
 import { adminAPI } from '../adminApi'
-import { Card, CardHeader, SectionHeader, SearchBar, Badge, ActionBtn, ConfirmModal, LoadingSpinner, TableRow, formatDate, AMBER, TEXT, TEXT_DIM, TEXT_MUTED, SURFACE2, td, th } from '../components/AdminComponents'
+import { Card, CardHeader, SectionHeader, SearchBar, Badge, ActionBtn, ConfirmModal, LoadingSpinner, TableRow } from '../components/AdminComponents'
+import { formatDate, AMBER, TEXT, TEXT_DIM, TEXT_MUTED, SURFACE2, td, th } from '../components/adminConstants'
 import toast from 'react-hot-toast'
 import { FileText, Cpu, CreditCard, Bell, Trophy, Settings, Play, Plus, Send } from 'lucide-react'
 import { motion } from 'framer-motion'

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom'
-import { LayoutDashboard, Users, FileText, Cpu, CreditCard, Bell, Trophy, Settings, LogOut, Menu, X, ChevronRight } from 'lucide-react'
+import { LayoutDashboard, Users, FileText, Cpu, CreditCard, Bell, Trophy, Settings, LogOut, Menu, ChevronRight } from 'lucide-react'
 
 const NAV = [
   { to: '/admin-portal/dashboard',      icon: LayoutDashboard, label: 'Dashboard' },
@@ -16,20 +16,9 @@ const NAV = [
 const AMBER = '#F5A623'
 const AMBER_GLOW = 'rgba(245,166,35,0.15)'
 
-export default function AdminLayout() {
-  const [open, setOpen] = useState(false)
-  const navigate = useNavigate()
-  const location = useLocation()
-  const adminUser = JSON.parse(localStorage.getItem('admin_user') || '{}')
-
-  const handleLogout = () => {
-    localStorage.removeItem('admin_access_token')
-    localStorage.removeItem('admin_refresh_token')
-    localStorage.removeItem('admin_user')
-    navigate('/admin-portal/login')
-  }
-
-  const Sidebar = () => (
+// ── Sidebar defined outside AdminLayout so React doesn't remount it on every render ──
+function Sidebar({ adminUser, onClose, onLogout }) {
+  return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#0A1410', borderRight: '1px solid rgba(255,255,255,0.07)' }}>
       {/* Amber top strip */}
       <div style={{ height: 4, background: `linear-gradient(90deg, ${AMBER}, #D4841A, ${AMBER})` }} />
@@ -56,8 +45,8 @@ export default function AdminLayout() {
 
       {/* Nav */}
       <nav style={{ flex: 1, padding: '0.75rem', overflowY: 'auto' }}>
-        {NAV.map(({ to, icon: Icon, label }) => (
-          <NavLink key={to} to={to} onClick={() => setOpen(false)}
+        {NAV.map(({ to, icon: ItemIcon, label }) => (
+          <NavLink key={to} to={to} onClick={onClose}
             style={({ isActive }) => ({
               display: 'flex', alignItems: 'center', gap: '0.75rem',
               padding: '0.625rem 0.75rem', borderRadius: 10, marginBottom: 2,
@@ -70,7 +59,7 @@ export default function AdminLayout() {
             })}>
             {({ isActive }) => (
               <>
-                <Icon size={14} color={isActive ? AMBER : 'rgba(240,245,240,0.35)'} style={{ flexShrink: 0 }} />
+                <ItemIcon size={14} color={isActive ? AMBER : 'rgba(240,245,240,0.35)'} style={{ flexShrink: 0 }} />
                 <span style={{ flex: 1 }}>{label}</span>
                 {isActive && <ChevronRight size={12} color={AMBER} />}
               </>
@@ -92,7 +81,7 @@ export default function AdminLayout() {
             <div style={{ fontSize: '0.65rem', color: AMBER, fontFamily: 'var(--font-body)', fontWeight: 500 }}>Admin</div>
           </div>
         </div>
-        <button onClick={handleLogout}
+        <button onClick={onLogout}
           style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.75rem', borderRadius: 8, background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.8rem', color: 'rgba(240,245,240,0.3)', transition: 'all 0.15s', fontFamily: 'var(--font-body)' }}
           onMouseEnter={e => { e.currentTarget.style.color = '#F48A8A'; e.currentTarget.style.background = 'rgba(212,52,26,0.1)' }}
           onMouseLeave={e => { e.currentTarget.style.color = 'rgba(240,245,240,0.3)'; e.currentTarget.style.background = 'none' }}>
@@ -101,6 +90,20 @@ export default function AdminLayout() {
       </div>
     </div>
   )
+}
+
+export default function AdminLayout() {
+  const [open, setOpen] = useState(false)
+  const navigate = useNavigate()
+  const location = useLocation()
+  const adminUser = JSON.parse(localStorage.getItem('admin_user') || '{}')
+
+  const handleLogout = () => {
+    localStorage.removeItem('admin_access_token')
+    localStorage.removeItem('admin_refresh_token')
+    localStorage.removeItem('admin_user')
+    navigate('/admin-portal/login')
+  }
 
   const pageLabel = NAV.find(n => location.pathname.startsWith(n.to))?.label || 'Admin'
 
@@ -108,7 +111,7 @@ export default function AdminLayout() {
     <div style={{ display: 'flex', height: '100vh', background: '#0D1A14', overflow: 'hidden', fontFamily: 'var(--font-body)' }}>
       {/* Desktop sidebar */}
       <aside style={{ width: 220, flexShrink: 0, display: 'none' }} className="desktop-sidebar">
-        <Sidebar />
+        <Sidebar adminUser={adminUser} onClose={() => setOpen(false)} onLogout={handleLogout} />
       </aside>
 
       {/* Mobile overlay */}
@@ -116,7 +119,7 @@ export default function AdminLayout() {
         <>
           <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 40 }} onClick={() => setOpen(false)} />
           <aside style={{ position: 'fixed', left: 0, top: 0, bottom: 0, width: 240, zIndex: 50 }}>
-            <Sidebar />
+            <Sidebar adminUser={adminUser} onClose={() => setOpen(false)} onLogout={handleLogout} />
           </aside>
         </>
       )}
@@ -137,6 +140,14 @@ export default function AdminLayout() {
           <Outlet />
         </main>
       </div>
+
+      <style>{`
+        @media (min-width: 1024px) {
+          .desktop-sidebar { display: flex !important; flex-direction: column; }
+          .mobile-menu-btn { display: none !important; }
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+      `}</style>
     </div>
   )
 }

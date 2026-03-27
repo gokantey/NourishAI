@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Users, Crown, ChevronRight } from 'lucide-react'
 import { adminAPI } from '../adminApi'
-import { Card, CardHeader, SectionHeader, SearchBar, Badge, ActionBtn, ConfirmModal, LoadingSpinner, TableRow, formatDate, AMBER, TEXT, TEXT_DIM, TEXT_MUTED, BORDER, SURFACE2, td, th } from '../components/AdminComponents'
+import { Card, CardHeader, SectionHeader, SearchBar, Badge, ActionBtn, LoadingSpinner, TableRow } from '../components/AdminComponents'
+import { formatDate, AMBER, TEXT, TEXT_DIM, TEXT_MUTED, BORDER, SURFACE2, td, th } from '../components/adminConstants'
 import toast from 'react-hot-toast'
 
 export default function AdminUsers() {
@@ -13,7 +14,6 @@ export default function AdminUsers() {
   const [q, setQ] = useState('')
   const [tier, setTier] = useState('')
   const [loading, setLoading] = useState(true)
-  const [confirm, setConfirm] = useState(null)
 
   const fetch = async () => {
     setLoading(true)
@@ -26,13 +26,8 @@ export default function AdminUsers() {
 
   useEffect(() => { fetch() }, [q, tier, page]) // eslint-disable-line
 
-  const handleAction = (userId, action, label, danger = false) => {
-    setConfirm({ userId, action, label, danger })
-  }
-
-  const executeAction = async () => {
-    const { userId, action } = confirm
-    setConfirm(null)
+  const handleAction = async (userId, action, label) => {
+    if (!window.confirm(`${label}?`)) return
     try {
       const res = await adminAPI.userAction(userId, action)
       toast.success(res.data.message)
@@ -90,9 +85,9 @@ export default function AdminUsers() {
                       <div style={{ display: 'flex', gap: '0.375rem', flexWrap: 'wrap' }}>
                         {u.subscription_tier === 'free'
                           ? <ActionBtn small onClick={() => handleAction(u.id, 'upgrade', `Upgrade ${u.username} to Premium`)} color={AMBER}>Upgrade</ActionBtn>
-                          : <ActionBtn small onClick={() => handleAction(u.id, 'downgrade', `Downgrade ${u.username}`, true)} color="#F87171">Downgrade</ActionBtn>}
+                          : <ActionBtn small onClick={() => handleAction(u.id, 'downgrade', `Downgrade ${u.username}`)} color="#F87171">Downgrade</ActionBtn>}
                         {u.is_active
-                          ? <ActionBtn small onClick={() => handleAction(u.id, 'suspend', `Suspend ${u.username}`, true)} color="#F87171">Suspend</ActionBtn>
+                          ? <ActionBtn small onClick={() => handleAction(u.id, 'suspend', `Suspend ${u.username}`)} color="#F87171">Suspend</ActionBtn>
                           : <ActionBtn small onClick={() => handleAction(u.id, 'activate', `Activate ${u.username}`)} color="#34D399">Activate</ActionBtn>}
                       </div>
                     </td>
@@ -105,15 +100,6 @@ export default function AdminUsers() {
       </Card>
 
       {/* Pagination */}
-      <ConfirmModal
-        open={!!confirm}
-        title={confirm?.label || 'Confirm Action'}
-        message="This action will take effect immediately."
-        danger={confirm?.danger}
-        onConfirm={executeAction}
-        onCancel={() => setConfirm(null)}
-      />
-
       {total > 20 && (
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
           <ActionBtn onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} small>← Prev</ActionBtn>

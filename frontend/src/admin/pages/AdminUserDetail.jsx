@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ChevronLeft, Crown, Target } from 'lucide-react'
 import { adminAPI } from '../adminApi'
-import { Card, CardHeader, Badge, ActionBtn, ConfirmModal, LoadingSpinner, MiniBar, formatDate, AMBER, TEXT, TEXT_DIM, TEXT_MUTED, SURFACE2 } from '../components/AdminComponents'
+import { Card, CardHeader, Badge, ActionBtn, ConfirmModal, LoadingSpinner, MiniBar } from '../components/AdminComponents'
+import { formatDate, AMBER, TEXT, TEXT_DIM, TEXT_MUTED, SURFACE2 } from '../components/adminConstants'
 import toast from 'react-hot-toast'
 
 export default function AdminUserDetail() {

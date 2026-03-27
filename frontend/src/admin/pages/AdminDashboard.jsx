@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Users, FileText, Crown, TrendingUp, DollarSign, Bookmark, UserPlus, BarChart2 } from 'lucide-react'
 import { adminAPI } from '../adminApi'
-import { StatCard, Card, CardHeader, SectionHeader, SparkLine, LoadingSpinner, Badge, formatDate, AMBER, TEXT, TEXT_DIM, TEXT_MUTED, BORDER, SURFACE2, td } from '../components/AdminComponents'
+import { StatCard, Card, CardHeader, SectionHeader, SparkLine, LoadingSpinner, Badge } from '../components/AdminComponents'
+import { formatDate, AMBER, TEXT, TEXT_DIM, TEXT_MUTED, BORDER, SURFACE2, td } from '../components/adminConstants'
 
 export default function AdminDashboard() {
   const [data, setData] = useState(null)
