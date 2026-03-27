@@ -11,9 +11,8 @@ class GeneratePlanAPITests(TestCase):
     """
     Tests for POST /api/plans/generate/
 
-    This is the most important API endpoint — it enforces the freemium
-    generation gate and calls Groq. We mock Groq so tests don't make
-    real API calls (slow, costs money, unreliable in CI).
+    Checks the freemium generation gate without making real Groq calls.
+    A blocked user (count >= 10) gets 403. Unauthenticated gets 401.
     """
 
     def setUp(self):
@@ -29,14 +28,15 @@ class GeneratePlanAPITests(TestCase):
         self.profile.fitness_goal = 'maintain'
         self.profile.budget = 50
         self.profile.region = 'greater_accra'
+        # Start an active window so count-based checks work
         self.profile.generation_reset_date = timezone.now().date()
         self.profile.save()
         self.client.force_authenticate(user=self.user)
 
     def test_blocked_user_gets_403(self):
         """
-        A free user who has hit the generation limit (count >= 10)
-        should receive a 403 Forbidden, not start a Groq call.
+        A free user at count=10 should receive 403 Forbidden
+        before any Groq call is made.
         """
         self.profile.plan_generations_count = 10
         self.profile.save()
@@ -45,7 +45,7 @@ class GeneratePlanAPITests(TestCase):
         self.assertTrue(response.data.get('upgrade_required'))
 
     def test_unauthenticated_cannot_generate(self):
-        """Unauthenticated requests should be rejected."""
+        """Unauthenticated requests should be rejected with 401."""
         self.client.force_authenticate(user=None)
         response = self.client.post('/api/plans/generate/')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -55,8 +55,8 @@ class MealPlanDetailAPITests(TestCase):
     """
     Tests for GET /api/plans/<pk>/
 
-    Checks that the show_lock and locked_days flags are returned
-    correctly based on is_partial and subscription tier.
+    Checks show_lock and locked_days flags based on is_partial
+    and subscription tier.
     """
 
     def setUp(self):
@@ -121,7 +121,7 @@ class SavePlanAPITests(TestCase):
     """
     Tests for POST /api/plans/<pk>/save/
 
-    Free users can save 1 plan. Second save attempt returns 403.
+    Free users can save up to 7 plans. The 8th save attempt returns 403.
     """
 
     def setUp(self):
@@ -158,7 +158,6 @@ class SavePlanAPITests(TestCase):
                 week_start_date=timezone.now().date(),
                 is_saved=True,
             )
-        # Try to save an 8th plan
         new_plan = MealPlan.objects.create(
             user_profile=self.profile,
             week_start_date=timezone.now().date(),
@@ -185,7 +184,7 @@ class SavePlanAPITests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         plan.refresh_from_db()
         self.assertTrue(plan.is_saved)
-        self.assertIn('Plan', plan.title)  # auto-generated title contains "Plan"
+        self.assertIn('Plan', plan.title)
 
 
 class RateMealAPITests(TestCase):

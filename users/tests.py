@@ -10,9 +10,13 @@ class GenerationStatusTests(TestCase):
     """
     Tests for UserProfile.get_generation_status().
 
-    This is the most critical business logic in NourishAI —
-    it controls what free users can and can't generate.
-    New tiers: gens 1-7 = full, 8-10 = partial, 11+ = blocked.
+    Free tier 30-day window logic:
+      - generation_reset_date = None  → no window started → full
+      - count < 7                     → full 7-day plan
+      - count 7–9                     → partial 3-day plan
+      - count >= 10                   → blocked
+      - today >= reset_date + 30 days → window expired, count resets to 0,
+                                        generation_reset_date set to None
     """
 
     def setUp(self):
@@ -23,12 +27,24 @@ class GenerationStatusTests(TestCase):
             password='testpass123'
         )
         self.profile = self.user.profile
-        # Set generation_reset_date to today so the 30-day window is active but not expired
+
+    def _start_window(self):
+        """Helper: start a fresh 30-day window as of today."""
         self.profile.generation_reset_date = timezone.now().date()
         self.profile.save()
 
+    def test_no_window_is_full(self):
+        """No window started (reset_date=None, count=0) → full."""
+        self.profile.plan_generations_count = 0
+        self.profile.generation_reset_date = None
+        self.profile.save()
+        status = self.profile.get_generation_status()
+        self.assertEqual(status['type'], 'full')
+        self.assertTrue(status['allowed'])
+
     def test_first_generation_is_full(self):
-        """A brand new user (count=0) should get a full 7-day plan."""
+        """Within an active window, count=0 → full."""
+        self._start_window()
         self.profile.plan_generations_count = 0
         self.profile.save()
         status = self.profile.get_generation_status()
@@ -36,7 +52,8 @@ class GenerationStatusTests(TestCase):
         self.assertTrue(status['allowed'])
 
     def test_generation_7_is_still_full(self):
-        """The 7th generation (count=6) should still be a full plan."""
+        """count=6 (7th generation) → still full."""
+        self._start_window()
         self.profile.plan_generations_count = 6
         self.profile.save()
         status = self.profile.get_generation_status()
@@ -44,7 +61,8 @@ class GenerationStatusTests(TestCase):
         self.assertTrue(status['allowed'])
 
     def test_generation_8_becomes_partial(self):
-        """The 8th generation (count=7) should switch to partial."""
+        """count=7 (8th generation) → partial."""
+        self._start_window()
         self.profile.plan_generations_count = 7
         self.profile.save()
         status = self.profile.get_generation_status()
@@ -52,7 +70,8 @@ class GenerationStatusTests(TestCase):
         self.assertTrue(status['allowed'])
 
     def test_generation_10_is_still_partial(self):
-        """The 10th generation (count=9) should still be partial."""
+        """count=9 (10th generation) → still partial."""
+        self._start_window()
         self.profile.plan_generations_count = 9
         self.profile.save()
         status = self.profile.get_generation_status()
@@ -60,7 +79,8 @@ class GenerationStatusTests(TestCase):
         self.assertTrue(status['allowed'])
 
     def test_generation_11_is_blocked(self):
-        """The 11th generation (count=10) should be blocked."""
+        """count=10 (11th generation) → blocked."""
+        self._start_window()
         self.profile.plan_generations_count = 10
         self.profile.save()
         status = self.profile.get_generation_status()
@@ -68,7 +88,8 @@ class GenerationStatusTests(TestCase):
         self.assertFalse(status['allowed'])
 
     def test_generation_100_is_still_blocked(self):
-        """Any count >= 10 should remain blocked."""
+        """count >= 10 → remains blocked."""
+        self._start_window()
         self.profile.plan_generations_count = 100
         self.profile.save()
         status = self.profile.get_generation_status()
@@ -96,26 +117,28 @@ class GenerationStatusTests(TestCase):
 
     def test_30_day_reset_resets_count(self):
         """
-        If generation_reset_date was set more than 30 days ago,
-        the count should reset to 0 and the user gets a full plan.
+        When today >= generation_reset_date + 30 days the window expires.
+        Count resets to 0 and generation_reset_date is set to None.
+        A previously blocked user gets a full plan again.
         """
         self.profile.plan_generations_count = 10  # would normally be blocked
         self.profile.generation_reset_date = (
-            timezone.now().date() - timedelta(days=31)  # 31 days ago — window expired
+            timezone.now().date() - timedelta(days=31)  # 31 days ago — expired
         )
         self.profile.save()
         status = self.profile.get_generation_status()
-        # After reset, count is 0 — should be full
+        # Window expired → reset → no active window → full
         self.assertEqual(status['type'], 'full')
         self.assertTrue(status['allowed'])
-        # And the count should have been reset in the database
+        # Count should have been reset to 0 in the database
         self.profile.refresh_from_db()
         self.assertEqual(self.profile.plan_generations_count, 0)
+        self.assertIsNone(self.profile.generation_reset_date)
 
     def test_29_day_window_not_reset(self):
         """
-        If generation_reset_date was set 29 days ago, the window
-        is still active and a blocked user should remain blocked.
+        29 days in — window still active.
+        A blocked user remains blocked.
         """
         self.profile.plan_generations_count = 10
         self.profile.generation_reset_date = (
@@ -126,11 +149,24 @@ class GenerationStatusTests(TestCase):
         self.assertEqual(status['type'], 'blocked')
         self.assertFalse(status['allowed'])
 
+    def test_exactly_30_days_triggers_reset(self):
+        """
+        Exactly 30 days later (today == reset_date + 30) the window expires.
+        """
+        self.profile.plan_generations_count = 10
+        self.profile.generation_reset_date = (
+            timezone.now().date() - timedelta(days=30)
+        )
+        self.profile.save()
+        status = self.profile.get_generation_status()
+        self.assertEqual(status['type'], 'full')
+        self.assertTrue(status['allowed'])
+
 
 class SavePlanTests(TestCase):
     """
     Tests for UserProfile.can_save_plan().
-    Free users can save 7 plans. Premium unlimited.
+    Free users can save up to 7 plans. Premium unlimited.
     """
 
     def setUp(self):
