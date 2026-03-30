@@ -8,90 +8,113 @@ A full-stack AI-powered meal planning web application built for Ghanaian users. 
 
 | Layer | Technology |
 |---|---|
-| **Backend** | Django (REST API) + Django REST Framework |
+| **Backend** | Django 6 + Django REST Framework |
 | **Auth** | JWT via djangorestframework-simplejwt |
 | **Database** | PostgreSQL |
 | **AI Engine** | Groq API (LLaMA 3.3 70B Versatile) |
 | **Frontend** | React 19 + Vite + TailwindCSS 4 |
 | **State** | Zustand (persisted to localStorage) |
-| **HTTP Client** | Axios (JWT interceptors + auto-refresh) |
+| **HTTP Client** | Axios (JWT interceptors + auto-refresh + suspended account detection) |
 | **Animations** | Framer Motion |
+| **Charts** | Recharts (admin dashboard) |
 | **Payments** | Paystack (GHS 20/month) |
 | **Email** | Gmail SMTP |
+| **PDF Export** | ReportLab |
+| **Deployment** | Railway |
 
 ---
 
 ## Features
 
 ### Free Tier
-- 1 full 7-day AI-generated Ghanaian meal plan
-- 1 3-day preview plan (days 4-7 blurred)
-- Save 1 meal plan
-- Meal ratings (1-5 stars)
+- 7 full 7-day AI-generated Ghanaian meal plans per 30-day window
+- 3 partial 3-day plans per 30-day window (days 4–7 blurred with upgrade prompt)
+- After 10 total generations — blocked until the 30-day window resets
+- Save up to 7 plans
+- Meal ratings (1–5 stars)
+- Snack suggestions per plan
 - Goal estimate (weeks/months to target weight)
 - BMI calculator + daily calorie and water targets
-- In-app notification bell
+- In-app notification bell (polls every 30s)
+- Shopping list
 
-### Premium Tier (GHS 20/month)
-- Unlimited 7-day plan generations
-- AI taste learning (ratings shape future Groq prompts)
+### Premium Tier (GHS 20/month via Paystack)
+- Unlimited 7-day plan generations (always full, never partial)
+- AI taste learning — ratings shape future Groq prompts
 - Unlimited saved plans
 - Weekly nutrition summary email (every Sunday)
-- All upcoming features: health streaks, PDF export, snack suggestions
+- Health streak tracking + daily check-in
+- Achievement system
+- PDF export
+- Public plan sharing via link
+- Plan rebalancing (regenerates all meals respecting ratings)
+- Priority support
+
+### Admin Portal (`/admin-portal/`)
+- Separate dark-themed admin interface (staff only)
+- Dashboard with recharts area charts (signups + plan generations over 14 days)
+- User management: upgrade, downgrade, suspend, activate, delete
+- Plan management with search and pagination
+- AI usage monitor (Groq token usage)
+- Payment history
+- Broadcast notifications
+- Achievement management
+- System health + management command runner
 
 ---
 
 ## Project Structure
 
 ```
-NourishAI/
-  NourishAI/                      Django project root (manage.py lives here)
-    api/                          DRF app: all REST endpoints
-      views.py                    All API view functions
-      serializers.py              DRF serializers
-      urls.py                     URL patterns for /api/
-    users/                        UserProfile model + forms
-      models.py
-      migrations/                 0001-0008
-    meals/                        MealPlan, Meal, ShoppingList, Notification models
-      models.py
-      groq_service.py             Groq prompt builder + JSON parser
-      unsplash_service.py         Dormant image fetcher
-      management/commands/
-        send_weekly_summary.py    Management command for weekly emails
-      migrations/                 0001-0009
-    emails.py                     All outgoing email functions
-    notifications.py              In-app notification helpers
-    frontend/                     React SPA (Vite)
-      src/
-        App.jsx                   Router + PrivateRoute / PublicRoute / OnboardingRoute guards
-        main.jsx
-        index.css                 Global CSS + utility classes (.card, .btn-primary, .input etc.)
-        api/client.js             Axios instance + authAPI / profileAPI / mealsAPI / upgradeAPI
-        store/authStore.js        Zustand: user, isAuthenticated, onboardingComplete, subscriptionTier
-        pages/
-          LoginPage.jsx
-          RegisterPage.jsx
-          VerifyOTPPage.jsx       6-box OTP input, countdown timer, resend button
-          ForgotPasswordPage.jsx
-          ResetPasswordPage.jsx
-          OnboardingPage.jsx      3-step flow with live BMI preview
-          DashboardPage.jsx
-          GeneratePlanPage.jsx
-          MealPlanPage.jsx
-          HistoryPage.jsx
-          ProfilePage.jsx
-          UpgradePage.jsx
-          UpgradeSuccessPage.jsx
-        components/
-          layout/AppLayout.jsx    Sidebar + topbar shell (responsive, mobile hamburger)
-          ui/NotificationBell.jsx Bell + dropdown, polls /api/notifications/ every 30s
-          ui/ConfirmModal.jsx     Reusable confirm dialog
-      vite.config.js              Dev proxy: /api -> http://localhost:8000
-      package.json
-    requirements.txt
-    manage.py
-    README.md
+NourishAI/                          ← project root (manage.py lives here)
+├── api/
+│   ├── views.py                    ← all user-facing API views
+│   ├── admin_views.py              ← admin portal API views
+│   ├── serializers.py
+│   └── urls.py
+├── users/
+│   ├── models.py                   ← UserProfile + generation logic
+│   └── tests.py
+├── meals/
+│   ├── models.py                   ← MealPlan, Meal, ShoppingList, Notification,
+│   │                                  DailyCheckin, StreakRecord, Achievement
+│   ├── groq_service.py
+│   └── management/commands/
+│       ├── send_weekly_summary.py
+│       ├── send_checkin_reminders.py
+│       └── send_birthday_wishes.py
+├── nourishai/
+│   ├── settings.py
+│   ├── settings_test.py            ← test settings (PostgreSQL, locmem email, MD5 passwords)
+│   └── urls.py
+├── emails.py
+├── notifications.py
+├── progress_service.py             ← streak + achievement logic
+├── pdf_service.py                  ← PDF export (ReportLab)
+├── requirements.txt
+└── frontend/
+    └── src/
+        ├── App.jsx                 ← all routes + PrivateRoute / PublicRoute guards
+        ├── api/client.js           ← Axios instance + all API endpoint functions
+        ├── store/authStore.js      ← Zustand auth store
+        ├── components/
+        │   ├── layout/AppLayout.jsx
+        │   └── ui/
+        │       ├── ConfirmModal.jsx
+        │       └── NotificationBell.jsx
+        ├── pages/                  ← all user-facing pages
+        └── admin/
+            ├── AdminLayout.jsx
+            ├── adminApi.js
+            ├── components/
+            │   ├── AdminComponents.jsx
+            │   └── adminConstants.js
+            └── pages/
+                ├── AdminLoginPage.jsx
+                ├── AdminDashboard.jsx
+                ├── AdminUsers.jsx
+                ├── AdminUserDetail.jsx
+                └── AdminPages.jsx
 ```
 
 ---
@@ -99,8 +122,8 @@ NourishAI/
 ## Getting Started
 
 ### Prerequisites
-- Python 3.10+
-- Node.js 18+
+- Python 3.12+
+- Node.js 20+
 - PostgreSQL
 - Groq API key (free at console.groq.com)
 - Paystack account (test keys from paystack.com)
@@ -109,12 +132,14 @@ NourishAI/
 ### Backend
 
 ```bash
-# From NourishAI/ (where manage.py is)
-python -m venv venv && source venv/bin/activate   # or venv\Scripts\activate on Windows
+# From the project root (where manage.py is)
+python -m venv venv
+source venv/bin/activate        # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
 Create a `.env` file in the same directory as `manage.py`:
+
 ```env
 SECRET_KEY=your-django-secret-key
 DEBUG=True
@@ -125,15 +150,15 @@ DB_HOST=localhost
 DB_PORT=5432
 GROQ_API_KEY=your-groq-api-key
 PAYSTACK_SECRET_KEY=sk_test_your_key
-EMAIL_HOST_USER=youremail@gmail.com
-EMAIL_HOST_PASSWORD=your-app-password
-UNSPLASH_ACCESS_KEY=optional
+PAYSTACK_PUBLIC_KEY=pk_test_your_key
+EMAIL_HOST_USER=team.nourishai@gmail.com
+EMAIL_HOST_PASSWORD=your-gmail-app-password
 ```
 
 ```bash
 python manage.py migrate
-python manage.py createsuperuser
-python manage.py runserver        # runs at http://localhost:8000
+python manage.py createsuperuser   # required for admin portal access
+python manage.py runserver         # runs at http://localhost:8000
 ```
 
 ### Frontend
@@ -141,82 +166,131 @@ python manage.py runserver        # runs at http://localhost:8000
 ```bash
 cd frontend
 npm install
-npm run dev                       # runs at http://localhost:5173
+npm run dev                        # runs at http://localhost:5173
 ```
 
 Vite proxies all `/api/*` requests to Django automatically.
 
 ---
 
+## Running Tests
+
+```bash
+python manage.py test --settings=nourishai.settings_test --verbosity=2
+```
+
+Tests cover: generation window logic (7 full / 3 partial / blocked at 10 / 30-day reset), save limits, BMI calculation, calorie targets, and API endpoint auth/ownership checks.
+
+---
+
+## CI/CD
+
+GitHub Actions runs on every push:
+
+**Backend job:** system check → migrate → run tests
+**Frontend job:** `npm ci` → ESLint (0 errors required) → Vite build
+
+---
+
+## Generation Logic
+
+Defined in `users/models.py → get_generation_status()`:
+
+| Condition | Result |
+|---|---|
+| No window started (`reset_date = None`) | `full` |
+| `count < 7` | `full` |
+| `count` 7–9 | `partial` (days 4–7 blurred) |
+| `count >= 10` | `blocked` |
+| `today >= reset_date + 30 days` | Reset to 0, `full` (fresh window) |
+
+Premium/staff/superuser always get `full` regardless of count.
+
+---
+
 ## API Reference
 
-All endpoints under `/api/`. JWT Bearer token required where marked.
+All endpoints under `/api/`. JWT Bearer token required unless marked as public.
 
 ### Auth
-| Method | Endpoint | Auth | Notes |
-|---|---|---|---|
-| POST | `/auth/register/` | No | Validates data, stores in session, sends OTP email |
-| POST | `/auth/verify-otp/` | No | Confirms OTP, creates User + UserProfile, returns JWT |
-| POST | `/auth/resend-otp/` | No | Re-generates OTP, updates session, resends email |
-| POST | `/auth/login/` | No | Returns JWT tokens + onboarding_complete + subscription_tier |
-| POST | `/auth/token/refresh/` | No | Refresh JWT access token |
-| POST | `/auth/forgot-password/` | No | Sends reset link to email |
-| POST | `/auth/reset-password/` | No | Accepts uid + token + new_password |
-
-### Profile & Onboarding
-| Method | Endpoint | Auth | Notes |
-|---|---|---|---|
-| GET | `/profile/` | Yes | Full profile + generation_status + can_save |
-| PATCH | `/profile/update/` | Yes | Partial update any profile field |
-| POST | `/onboarding/step1/` | Yes | age, height, weight |
-| POST | `/onboarding/step2/` | Yes | dietary_preference, allergies, health_conditions |
-| POST | `/onboarding/step3/` | Yes | region, fitness_goal, budget. Sets onboarding_complete=True |
+| Method | Endpoint | Notes |
+|---|---|---|
+| POST | `/auth/register/` | Validates, stores in session, sends OTP |
+| POST | `/auth/verify-otp/` | Confirms OTP, creates user, returns JWT |
+| POST | `/auth/resend-otp/` | Resends OTP |
+| POST | `/auth/login/` | Returns JWT + `onboarding_complete` + `subscription_tier`. Returns `error_code: account_suspended` (403) for suspended accounts |
+| POST | `/auth/token/refresh/` | Refresh access token |
+| POST | `/auth/forgot-password/` | Sends reset link |
+| POST | `/auth/reset-password/` | Accepts uid + token + new_password |
 
 ### Meal Plans
-| Method | Endpoint | Auth | Notes |
-|---|---|---|---|
-| GET | `/dashboard/` | Yes | profile, latest_plan, saved_plans, goal_estimate |
-| POST | `/plans/generate/` | Yes | AI generation; returns 403 if blocked |
-| GET | `/plans/` | Yes | History: saved OR created within 7 days |
-| GET | `/plans/<pk>/` | Yes | Full plan: meals + shopping_list + show_lock + can_save |
-| DELETE | `/plans/<pk>/delete/` | Yes | Hard delete |
-| POST | `/plans/<pk>/save/` | Yes | { title? }. Sends save-limit email + notification if blocked |
-| POST | `/plans/<pk>/unsave/` | Yes | Sets is_saved=False |
-| POST | `/meals/<pk>/regenerate/` | Yes | Calls Groq for 1 replacement meal |
-| POST | `/meals/<pk>/rate/` | Yes | { rating: 1-5 } |
+| Method | Endpoint | Notes |
+|---|---|---|
+| GET | `/dashboard/` | Profile + latest plan + saved plans + goal estimate |
+| POST | `/plans/generate/` | Calls Groq; returns 403 if blocked |
+| GET | `/plans/` | History |
+| GET | `/plans/<pk>/` | Full plan with meals, snacks, shopping list, show_lock, can_save |
+| DELETE | `/plans/<pk>/delete/` | Hard delete |
+| POST | `/plans/<pk>/save/` | `{ title? }` |
+| POST | `/plans/<pk>/unsave/` | |
+| POST | `/plans/<pk>/snacks/` | AI snack generation (saved to plan) |
+| POST | `/plans/<pk>/rebalance/` | Regenerate meals respecting ratings |
+| GET | `/plans/<pk>/export-pdf/` | Returns PDF blob (Premium) |
+| POST | `/plans/<pk>/share/` | Returns public share URL (Premium) |
+| GET | `/shared/<uuid:token>/` | Public — no auth required |
+| POST | `/meals/<pk>/regenerate/` | Regenerate single meal |
+| POST | `/meals/<pk>/rate/` | `{ rating: 1–5 }` |
 
 ### Upgrade / Paystack
-| Method | Endpoint | Auth | Notes |
-|---|---|---|---|
-| POST | `/upgrade/checkout/` | Yes | Returns Paystack authorization_url |
-| GET | `/upgrade/success/?reference=...` | Yes | Verifies payment, sets premium, sends upgrade email |
-| POST | `/upgrade/cancel/` | Yes | Disables Paystack subscription, reverts to free |
-| POST | `/webhook/paystack/` | No | HMAC-verified. Handles charge.success, subscription events, invoice.payment_failed |
+| Method | Endpoint | Notes |
+|---|---|---|
+| POST | `/upgrade/checkout/` | Returns Paystack `authorization_url` |
+| GET | `/upgrade/success/?reference=...` | Verifies payment, upgrades user |
+| POST | `/upgrade/cancel/` | Reverts to free |
+| POST | `/webhook/paystack/` | HMAC-verified webhook (public) |
+
+### Progress (Premium)
+| Method | Endpoint | Notes |
+|---|---|---|
+| GET | `/progress/` | Streak, achievements, checkin status |
+| POST | `/progress/checkin/` | `{ completed_items: [...] }` |
+| POST | `/progress/freeze/` | Use a streak freeze |
+| POST | `/progress/checklist-prefs/` | Save checklist preferences |
 
 ### Notifications
-| Method | Endpoint | Auth | Notes |
-|---|---|---|---|
-| GET | `/notifications/` | Yes | Last 30, includes unread_count |
-| POST | `/notifications/read-all/` | Yes | Bulk mark read |
-| POST | `/notifications/<pk>/read/` | Yes | Single mark read |
+| Method | Endpoint | Notes |
+|---|---|---|
+| GET | `/notifications/` | Last 30, includes `unread_count` |
+| POST | `/notifications/read-all/` | Bulk mark read |
+| POST | `/notifications/<pk>/read/` | Single mark read |
 
 ---
 
 ## Management Commands
 
 ```bash
-# Send weekly nutrition summary emails to all active Premium users
-# Schedule with cron: every Sunday at 7 PM
+# Weekly nutrition summary email — schedule every Sunday at 7 PM
 python manage.py send_weekly_summary
+
+# Daily check-in reminders for Premium users
+python manage.py send_checkin_reminders
+
+# Birthday wishes
+python manage.py send_birthday_wishes
+
+# Activate cron jobs (Linux/Railway only)
+python manage.py crontab add
 ```
 
 ---
 
-## Production Checklist
+## Production Checklist (Railway)
 
-- [ ] Set `ALLOWED_HOSTS` in settings
-- [ ] Update hardcoded `localhost:5173` in `api/views.py` (Paystack callback URL + password reset link)
-- [ ] Run `npm run build` in `frontend/` and serve `dist/` via Django or a CDN
+- [ ] Update `CORS_ALLOWED_ORIGINS` in `settings.py` with production domain
+- [ ] Update `frontend_url` in `api/views.py` (Paystack callback + password reset links)
+- [ ] `npm run build` in `frontend/` — Django serves `dist/index.html` for all non-API routes
 - [ ] Set `DEBUG=False` and configure `STATIC_ROOT`
+- [ ] Add all env vars to Railway dashboard
 - [ ] Register Paystack webhook URL: `https://yourdomain.com/api/webhook/paystack/`
-- [ ] Set up cron job for `send_weekly_summary`
+- [ ] `python manage.py crontab add` for scheduled commands (Linux only)
+- [ ] Regenerate `requirements.txt` on Unix: `pip freeze > requirements.txt`
