@@ -7,7 +7,7 @@ import { adminAPI } from '../adminApi'
 export default function AdminLoginPage() {
   const navigate = useNavigate()
   const [form, setForm] = useState({ username: '', password: '' })
-  const [showPw, setShowPw] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -75,13 +75,13 @@ export default function AdminLoginPage() {
                 Password
               </label>
               <div style={{ position: 'relative' }}>
-                <input type={showPw ? 'text' : 'password'} value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+                <input type={showPassword ? 'text' : 'password'} value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
                   placeholder="Password" style={{ width: '100%', padding: '0.75rem 3rem 0.75rem 1rem', background: '#1C2B22', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, color: '#F0F5F0', fontSize: '0.9375rem', fontFamily: 'var(--font-body)', outline: 'none', boxSizing: 'border-box' }}
                   onFocus={e => { e.target.style.borderColor = '#F5A623'; e.target.style.boxShadow = '0 0 0 3px rgba(245,166,35,0.12)' }}
                   onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.1)'; e.target.style.boxShadow = 'none' }} />
-                <button type="button" onClick={() => setShowPw(!showPw)}
-                  style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(240,245,240,0.35)', padding: 0 }}>
-                  {showPw ? <EyeOff size={15} /> : <Eye size={15} />}
+                <button type="button" onClick={() => setShowPassword(!showPassword)}
+                  style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--surface3)', padding: 0, zIndex: 2, mixBlendMode: 'difference' }}>
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
             </div>

@@ -76,7 +76,7 @@ export function MiniBar({ value, max, color = AMBER }) {
   )
 }
 
-function SparkTooltip({ active, payload, labelKey = 'date' }) {
+function SparkTooltip({ active, payload }) {
   if (!active || !payload?.length) return null
   const item = payload[0]
   return (
