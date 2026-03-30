@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Users, Crown, ChevronRight } from 'lucide-react'
 import { adminAPI } from '../adminApi'
-import { Card, CardHeader, SectionHeader, SearchBar, Badge, ActionBtn, LoadingSpinner, TableRow } from '../components/AdminComponents'
+import { Card, CardHeader, SectionHeader, SearchBar, Badge, ActionBtn, ConfirmModal, LoadingSpinner, TableRow } from '../components/AdminComponents'
 import { formatDate, AMBER, TEXT, TEXT_DIM, TEXT_MUTED, BORDER, SURFACE2, td, th } from '../components/adminConstants'
 import toast from 'react-hot-toast'
 
@@ -14,6 +14,7 @@ export default function AdminUsers() {
   const [q, setQ] = useState('')
   const [tier, setTier] = useState('')
   const [loading, setLoading] = useState(true)
+  const [confirmAction, setConfirmAction] = useState(null) // { userId, action, label, danger }
 
   const fetch = async () => {
     setLoading(true)
@@ -26,14 +27,19 @@ export default function AdminUsers() {
 
   useEffect(() => { fetch() }, [q, tier, page]) // eslint-disable-line
 
-  const handleAction = async (userId, action, label) => {
-    if (!window.confirm(`${label}?`)) return
+  const handleAction = async () => {
+    if (!confirmAction) return
+    const { userId, action } = confirmAction
+    setConfirmAction(null)
     try {
       const res = await adminAPI.userAction(userId, action)
       toast.success(res.data.message)
       fetch()
     } catch (err) { toast.error(err.response?.data?.error || 'Action failed.') }
   }
+
+  const promptAction = (userId, action, label, danger = false) =>
+    setConfirmAction({ userId, action, label, danger })
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -84,11 +90,11 @@ export default function AdminUsers() {
                     <td style={td} onClick={e => e.stopPropagation()}>
                       <div style={{ display: 'flex', gap: '0.375rem', flexWrap: 'wrap' }}>
                         {u.subscription_tier === 'free'
-                          ? <ActionBtn small onClick={() => handleAction(u.id, 'upgrade', `Upgrade ${u.username} to Premium`)} color={AMBER}>Upgrade</ActionBtn>
-                          : <ActionBtn small onClick={() => handleAction(u.id, 'downgrade', `Downgrade ${u.username}`)} color="#F87171">Downgrade</ActionBtn>}
+                          ? <ActionBtn small onClick={() => promptAction(u.id, 'upgrade', `Upgrade ${u.username} to Premium`)} color={AMBER}>Upgrade</ActionBtn>
+                          : <ActionBtn small onClick={() => promptAction(u.id, 'downgrade', `Downgrade ${u.username} to Free`, true)} color="#F87171">Downgrade</ActionBtn>}
                         {u.is_active
-                          ? <ActionBtn small onClick={() => handleAction(u.id, 'suspend', `Suspend ${u.username}`)} color="#F87171">Suspend</ActionBtn>
-                          : <ActionBtn small onClick={() => handleAction(u.id, 'activate', `Activate ${u.username}`)} color="#34D399">Activate</ActionBtn>}
+                          ? <ActionBtn small onClick={() => promptAction(u.id, 'suspend', `Suspend ${u.username}`, true)} color="#F87171">Suspend</ActionBtn>
+                          : <ActionBtn small onClick={() => promptAction(u.id, 'activate', `Activate ${u.username}`)} color="#34D399">Activate</ActionBtn>}
                       </div>
                     </td>
                   </TableRow>
@@ -107,6 +113,14 @@ export default function AdminUsers() {
           <ActionBtn onClick={() => setPage(p => p + 1)} disabled={page >= Math.ceil(total / 20)} small>Next →</ActionBtn>
         </div>
       )}
+      <ConfirmModal
+        open={!!confirmAction}
+        title="Confirm Action"
+        message={`${confirmAction?.label}?`}
+        onConfirm={handleAction}
+        onCancel={() => setConfirmAction(null)}
+        danger={confirmAction?.danger}
+      />
     </div>
   )
 }

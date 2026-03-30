@@ -11,6 +11,7 @@ export default function AdminUserDetail() {
   const navigate = useNavigate()
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [confirmAction, setConfirmAction] = useState(null) // { action, label, danger }
 
   const fetch = () => {
     adminAPI.userDetail(userId).then(r => setData(r.data)).finally(() => setLoading(false))
@@ -18,8 +19,10 @@ export default function AdminUserDetail() {
 
   useEffect(() => { fetch() }, []) // eslint-disable-line
 
-  const handleAction = async (action, label) => {
-    if (!window.confirm(`${label}?`)) return
+  const handleAction = async () => {
+    if (!confirmAction) return
+    const { action } = confirmAction
+    setConfirmAction(null)
     try {
       const res = await adminAPI.userAction(userId, action)
       toast.success(res.data.message)
@@ -27,6 +30,8 @@ export default function AdminUserDetail() {
       else fetch()
     } catch (err) { toast.error(err.response?.data?.error || 'Action failed.') }
   }
+
+  const promptAction = (action, label, danger = false) => setConfirmAction({ action, label, danger })
 
   if (loading) return <LoadingSpinner />
   if (!data) return null
@@ -68,12 +73,12 @@ export default function AdminUserDetail() {
           </div>
           <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
             {profile.subscription_tier === 'free'
-              ? <ActionBtn onClick={() => handleAction('upgrade', `Upgrade ${user.username} to Premium`)} color={AMBER}>Upgrade to Premium</ActionBtn>
-              : <ActionBtn onClick={() => handleAction('downgrade', `Downgrade ${user.username}`)} color="#F87171">Downgrade to Free</ActionBtn>}
+              ? <ActionBtn onClick={() => promptAction('upgrade', `Upgrade ${user.username} to Premium`)} color={AMBER}>Upgrade to Premium</ActionBtn>
+              : <ActionBtn onClick={() => promptAction('downgrade', `Downgrade ${user.username} to Free`, true)} color="#F87171">Downgrade to Free</ActionBtn>}
             {user.is_active
-              ? <ActionBtn onClick={() => handleAction('suspend', `Suspend ${user.username}`)} color="#F87171">Suspend</ActionBtn>
-              : <ActionBtn onClick={() => handleAction('activate', `Activate ${user.username}`)} color="#34D399">Activate</ActionBtn>}
-            <ActionBtn onClick={() => handleAction('delete', `Permanently delete ${user.username} — this cannot be undone`)} color="#F87171">Delete User</ActionBtn>
+              ? <ActionBtn onClick={() => promptAction('suspend', `Suspend ${user.username}`, true)} color="#F87171">Suspend</ActionBtn>
+              : <ActionBtn onClick={() => promptAction('activate', `Activate ${user.username}`)} color="#34D399">Activate</ActionBtn>}
+            <ActionBtn onClick={() => promptAction('delete', `Permanently delete ${user.username} — this cannot be undone`, true)} color="#F87171">Delete User</ActionBtn>
           </div>
         </div>
       </Card>
@@ -142,6 +147,14 @@ export default function AdminUserDetail() {
           </Card>
         </div>
       </div>
+      <ConfirmModal
+        open={!!confirmAction}
+        title={confirmAction?.action === 'delete' ? 'Delete User' : 'Confirm Action'}
+        message={`${confirmAction?.label}?`}
+        onConfirm={handleAction}
+        onCancel={() => setConfirmAction(null)}
+        danger={confirmAction?.danger}
+      />
     </div>
   )
 }

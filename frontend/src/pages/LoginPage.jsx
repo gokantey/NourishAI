@@ -21,7 +21,7 @@ export default function LoginPage() {
     const params = new URLSearchParams(location.search)
     const reason = params.get('reason')
     if (reason === 'account_suspended') setError('suspended')
-    else if (reason === 'account_deleted') setError('deleted')
+    else if (reason === 'session_expired') setError('session_expired')
   }, [location.search])
 
   const handleSubmit = async (e) => {
@@ -130,7 +130,7 @@ export default function LoginPage() {
           <AnimatePresence>
             {error && (
               <motion.div initial={{ opacity: 0, y: -8, height: 0 }} animate={{ opacity: 1, y: 0, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
-                style={{ background: (error === 'suspended' || error === 'deleted') ? 'rgba(245,166,35,0.1)' : 'rgba(212,52,26,0.1)', border: `1px solid ${(error === 'suspended' || error === 'deleted') ? 'rgba(245,166,35,0.35)' : 'rgba(212,52,26,0.25)'}`, borderRadius: 10, padding: '0.875rem 1rem', marginBottom: '1.25rem', fontFamily: 'var(--font-body)' }}>
+                style={{ background: (error === 'suspended' || error === 'session_expired') ? 'rgba(245,166,35,0.1)' : 'rgba(212,52,26,0.1)', border: `1px solid ${(error === 'suspended' || error === 'session_expired') ? 'rgba(245,166,35,0.35)' : 'rgba(212,52,26,0.25)'}`, borderRadius: 10, padding: '0.875rem 1rem', marginBottom: '1.25rem', fontFamily: 'var(--font-body)' }}>
                 {error === 'suspended' ? (
                   <>
                     <div style={{ fontSize: '0.875rem', fontWeight: 700, color: '#F5A623', marginBottom: '0.2rem' }}>Account Suspended</div>
@@ -140,13 +140,11 @@ export default function LoginPage() {
                       if you believe this is a mistake.
                     </div>
                   </>
-                ) : error === 'deleted' ? (
+                ) : error === 'session_expired' ? (
                   <>
-                    <div style={{ fontSize: '0.875rem', fontWeight: 700, color: '#F5A623', marginBottom: '0.2rem' }}>Account Not Found</div>
+                    <div style={{ fontSize: '0.875rem', fontWeight: 700, color: '#F5A623', marginBottom: '0.2rem' }}>Session Ended</div>
                     <div style={{ fontSize: '0.82rem', color: '#F5A623', opacity: 0.85, lineHeight: 1.5 }}>
-                      Your account no longer exists. Please contact{' '}
-                      <a href="mailto:team.nourishai@gmail.com" style={{ color: '#F5A623', textDecoration: 'underline' }}>team.nourishai@gmail.com</a>{' '}
-                      if you think this is an error.
+                      Your session has ended. Please sign in again to continue.
                     </div>
                   </>
                 ) : (

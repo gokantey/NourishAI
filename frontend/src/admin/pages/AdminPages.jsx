@@ -13,6 +13,7 @@ export function AdminPlans() {
   const [page, setPage] = useState(1)
   const [q, setQ] = useState('')
   const [loading, setLoading] = useState(true)
+  const [confirmPlan, setConfirmPlan] = useState(null) // { id, title }
 
   const fetch = async () => {
     setLoading(true)
@@ -24,11 +25,12 @@ export function AdminPlans() {
 
   useEffect(() => { fetch() }, [q, page]) // eslint-disable-line
 
-  const handleDelete = async (id, title) => {
-    if (!window.confirm(`Delete "${title}"? This cannot be undone.`)) return
+  const handleDelete = async () => {
+    if (!confirmPlan) return
     try {
-      await adminAPI.deletePlan(id)
+      await adminAPI.deletePlan(confirmPlan.id)
       toast.success('Plan deleted.')
+      setConfirmPlan(null)
       fetch()
     } catch { toast.error('Failed to delete plan.') }
   }
@@ -51,7 +53,7 @@ export function AdminPlans() {
                     <td style={{ ...td, textAlign: 'center' }}>{p.meal_count}</td>
                     <td style={td}>{p.is_saved ? <Badge color={AMBER}>Saved</Badge> : <span style={{ color: TEXT_MUTED, fontSize: '0.78rem' }}>—</span>}</td>
                     <td style={{ ...td, whiteSpace: 'nowrap' }}>{formatDate(p.created_at)}</td>
-                    <td style={td}><ActionBtn small color="#F87171" onClick={() => handleDelete(p.id, p.title)}>Delete</ActionBtn></td>
+                    <td style={td}><ActionBtn small color="#F87171" onClick={() => setConfirmPlan({ id: p.id, title: p.title })}>Delete</ActionBtn></td>
                   </TableRow>
                 ))}
               </tbody>
@@ -66,6 +68,14 @@ export function AdminPlans() {
           <ActionBtn small onClick={() => setPage(p => p + 1)} disabled={page >= Math.ceil(total / 20)}>Next →</ActionBtn>
         </div>
       )}
+      <ConfirmModal
+        open={!!confirmPlan}
+        title="Delete Plan"
+        message={`Delete "${confirmPlan?.title}"? This cannot be undone.`}
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmPlan(null)}
+        danger
+      />
     </div>
   )
 }
@@ -349,11 +359,14 @@ export function AdminSystem() {
   const [loading, setLoading] = useState(true)
   const [running, setRunning] = useState(null)
   const [output, setOutput] = useState({})
+  const [confirmCmd, setConfirmCmd] = useState(null) // command name string
 
   useEffect(() => { adminAPI.system().then(r => setData(r.data)).finally(() => setLoading(false)) }, [])
 
-  const handleRun = async (command) => {
-    if (!window.confirm(`Run "${command}"?`)) return
+  const handleRun = async () => {
+    if (!confirmCmd) return
+    const command = confirmCmd
+    setConfirmCmd(null)
     setRunning(command)
     try {
       const res = await adminAPI.runCommand(command)
@@ -408,13 +421,20 @@ export function AdminSystem() {
                   </div>
                 )}
               </div>
-              <ActionBtn onClick={() => handleRun(cmd.name)} disabled={running === cmd.name} color={AMBER}>
+              <ActionBtn onClick={() => setConfirmCmd(cmd.name)} disabled={running === cmd.name} color={AMBER}>
                 <Play size={12} /> {running === cmd.name ? 'Running...' : 'Run Now'}
               </ActionBtn>
             </div>
           ))}
         </div>
       </Card>
+      <ConfirmModal
+        open={!!confirmCmd}
+        title="Run Command"
+        message={`Run "${confirmCmd}"? This will execute immediately on the server.`}
+        onConfirm={handleRun}
+        onCancel={() => setConfirmCmd(null)}
+      />
     </div>
   )
 }

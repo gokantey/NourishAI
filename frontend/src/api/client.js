@@ -19,17 +19,14 @@ api.interceptors.response.use(
   async (error) => {
     const original = error.config
 
-    // Suspended or deleted account mid-session — hard logout immediately
+    // Suspended account — backend explicitly returns 403 + error_code
     if (error.response?.status === 403) {
       const code = error.response?.data?.error_code
-      if (code === 'account_suspended' || code === 'account_deleted') {
+      if (code === 'account_suspended') {
         localStorage.removeItem('access_token')
         localStorage.removeItem('refresh_token')
         localStorage.removeItem('auth-storage')
-        const msg = code === 'account_suspended'
-          ? 'Your account has been suspended.'
-          : 'Your account no longer exists.'
-        window.location.href = `/login?reason=${code}`
+        window.location.href = '/login?reason=account_suspended'
         return Promise.reject(error)
       }
     }
@@ -45,10 +42,11 @@ api.interceptors.response.use(
           original.headers.Authorization = `Bearer ${newAccess}`
           return api(original)
         } catch {
-          // Refresh failed — clear tokens and redirect to login
+          // Refresh failed — token expired, user deleted, or any other termination
           localStorage.removeItem('access_token')
           localStorage.removeItem('refresh_token')
-          window.location.href = '/login'
+          localStorage.removeItem('auth-storage')
+          window.location.href = '/login?reason=session_expired'
         }
       } else {
         window.location.href = '/login'
