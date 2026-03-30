@@ -142,7 +142,7 @@ class MealPlanSerializer(serializers.ModelSerializer):
         model = MealPlan
         fields = [
             'id', 'week_start_date', 'created_at', 'is_saved', 'title',
-            'is_partial', 'meals', 'shopping_list', 'nutrition_totals',
+            'is_partial', 'meals', 'shopping_list', 'nutrition_totals', 'snacks',
         ]
 
     def get_nutrition_totals(self, obj):

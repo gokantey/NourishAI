@@ -207,6 +207,18 @@ def login_view(request):
 
     user = authenticate(username=username, password=password)
     if not user:
+        # Check if credentials are correct but account is suspended (is_active=False)
+        from django.contrib.auth import get_user_model as _get_user_model
+        _User = _get_user_model()
+        try:
+            _u = _User.objects.get(username=username)
+            if not _u.is_active and _u.check_password(password):
+                return Response(
+                    {'error': 'Your account has been suspended. Please contact support.', 'error_code': 'account_suspended'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+        except _User.DoesNotExist:
+            pass
         return Response({'error': 'Invalid username or password.'}, status=status.HTTP_401_UNAUTHORIZED)
 
     profile, _ = UserProfile.objects.get_or_create(user=user)

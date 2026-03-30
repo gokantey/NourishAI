@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import {
   AMBER, AMBER_GLOW, SURFACE, SURFACE2, BORDER, BORDER2,
   TEXT, TEXT_DIM, TEXT_MUTED,
@@ -75,20 +76,45 @@ export function MiniBar({ value, max, color = AMBER }) {
   )
 }
 
-export function SparkLine({ data = [], color = AMBER, height = 40 }) {
-  if (!data.length) return null
-  const max = Math.max(...data.map(d => d.count), 1)
-  const w = 200
-  const h = height
-  const points = data.map((d, i) => {
-    const x = (i / (data.length - 1)) * w
-    const y = h - (d.count / max) * h
-    return `${x},${y}`
-  }).join(' ')
+function SparkTooltip({ active, payload, labelKey = 'date' }) {
+  if (!active || !payload?.length) return null
+  const item = payload[0]
   return (
-    <svg width="100%" height={h} viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none">
-      <polyline points={points} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.8" />
-    </svg>
+    <div style={{ background: '#0e1c14', border: `1px solid ${BORDER2}`, borderRadius: 8, padding: '6px 10px', fontSize: '0.72rem', fontFamily: 'var(--font-body)', color: TEXT }}>
+      <div style={{ color: TEXT_MUTED, marginBottom: 2 }}>{item.payload?.date || ''}</div>
+      <div style={{ color: item.stroke, fontWeight: 700 }}>{item.value}</div>
+    </div>
+  )
+}
+
+export function SparkLine({ data = [], color = AMBER, height = 60 }) {
+  if (!data.length) return null
+  return (
+    <ResponsiveContainer width="100%" height={height}>
+      <AreaChart data={data} margin={{ top: 4, right: 4, left: -32, bottom: 0 }}>
+        <defs>
+          <linearGradient id={`grad-${color.replace('#', '')}`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor={color} stopOpacity={0.25} />
+            <stop offset="95%" stopColor={color} stopOpacity={0} />
+          </linearGradient>
+        </defs>
+        <XAxis dataKey="date" hide />
+        <YAxis hide />
+        <Tooltip content={<SparkTooltip />} cursor={{ stroke: color, strokeWidth: 1, strokeDasharray: '4 2', opacity: 0.4 }} />
+        <Area
+          type="monotone"
+          dataKey="count"
+          stroke={color}
+          strokeWidth={1.5}
+          fill={`url(#grad-${color.replace('#', '')})`}
+          dot={false}
+          activeDot={{ r: 3, fill: color, strokeWidth: 0 }}
+          isAnimationActive={true}
+          animationDuration={600}
+          animationEasing="ease-out"
+        />
+      </AreaChart>
+    </ResponsiveContainer>
   )
 }
 

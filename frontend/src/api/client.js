@@ -13,11 +13,27 @@ api.interceptors.request.use((config) => {
   return config
 })
 
-// ── Auto-refresh on 401 ──
+// ── Auto-refresh on 401, auto-logout on suspended/deleted ──
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const original = error.config
+
+    // Suspended or deleted account mid-session — hard logout immediately
+    if (error.response?.status === 403) {
+      const code = error.response?.data?.error_code
+      if (code === 'account_suspended' || code === 'account_deleted') {
+        localStorage.removeItem('access_token')
+        localStorage.removeItem('refresh_token')
+        localStorage.removeItem('auth-storage')
+        const msg = code === 'account_suspended'
+          ? 'Your account has been suspended.'
+          : 'Your account no longer exists.'
+        window.location.href = `/login?reason=${code}`
+        return Promise.reject(error)
+      }
+    }
+
     if (error.response?.status === 401 && !original._retry) {
       original._retry = true
       const refresh = localStorage.getItem('refresh_token')

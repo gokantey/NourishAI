@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { Eye, EyeOff, ArrowRight } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { authAPI } from '../api/client'
@@ -10,11 +10,19 @@ const STATS = [['7', 'Day Plans'], ['21', 'Meals/Week'], ['16', 'Regions']]
 
 export default function LoginPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { setAuth } = useAuthStore()
   const [form, setForm] = useState({ username: '', password: '' })
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    const reason = params.get('reason')
+    if (reason === 'account_suspended') setError('suspended')
+    else if (reason === 'account_deleted') setError('deleted')
+  }, [location.search])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -27,7 +35,12 @@ export default function LoginPage() {
       toast.success(`Welcome back, ${user.first_name}!`)
       navigate(onboarding_complete ? '/dashboard' : '/onboarding')
     } catch (err) {
-      setError(err.response?.data?.error || 'Invalid username or password.')
+      const errorCode = err.response?.data?.error_code
+      if (errorCode === 'account_suspended') {
+        setError('suspended')
+      } else {
+        setError(err.response?.data?.error || 'Invalid username or password.')
+      }
     } finally { setLoading(false) }
   }
 
@@ -117,8 +130,28 @@ export default function LoginPage() {
           <AnimatePresence>
             {error && (
               <motion.div initial={{ opacity: 0, y: -8, height: 0 }} animate={{ opacity: 1, y: 0, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
-                style={{ background: 'rgba(212,52,26,0.1)', border: '1px solid rgba(212,52,26,0.25)', borderRadius: 10, padding: '0.75rem 1rem', marginBottom: '1.25rem', fontSize: '0.875rem', color: '#FF6B6B', fontFamily: 'var(--font-body)' }}>
-                {error}
+                style={{ background: (error === 'suspended' || error === 'deleted') ? 'rgba(245,166,35,0.1)' : 'rgba(212,52,26,0.1)', border: `1px solid ${(error === 'suspended' || error === 'deleted') ? 'rgba(245,166,35,0.35)' : 'rgba(212,52,26,0.25)'}`, borderRadius: 10, padding: '0.875rem 1rem', marginBottom: '1.25rem', fontFamily: 'var(--font-body)' }}>
+                {error === 'suspended' ? (
+                  <>
+                    <div style={{ fontSize: '0.875rem', fontWeight: 700, color: '#F5A623', marginBottom: '0.2rem' }}>Account Suspended</div>
+                    <div style={{ fontSize: '0.82rem', color: '#F5A623', opacity: 0.85, lineHeight: 1.5 }}>
+                      Your account has been suspended. Please contact us at{' '}
+                      <a href="mailto:team.nourishai@gmail.com" style={{ color: '#F5A623', textDecoration: 'underline' }}>team.nourishai@gmail.com</a>{' '}
+                      if you believe this is a mistake.
+                    </div>
+                  </>
+                ) : error === 'deleted' ? (
+                  <>
+                    <div style={{ fontSize: '0.875rem', fontWeight: 700, color: '#F5A623', marginBottom: '0.2rem' }}>Account Not Found</div>
+                    <div style={{ fontSize: '0.82rem', color: '#F5A623', opacity: 0.85, lineHeight: 1.5 }}>
+                      Your account no longer exists. Please contact{' '}
+                      <a href="mailto:team.nourishai@gmail.com" style={{ color: '#F5A623', textDecoration: 'underline' }}>team.nourishai@gmail.com</a>{' '}
+                      if you think this is an error.
+                    </div>
+                  </>
+                ) : (
+                  <div style={{ fontSize: '0.875rem', color: '#FF6B6B' }}>{error}</div>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
@@ -136,7 +169,7 @@ export default function LoginPage() {
                   placeholder="Your password" value={form.password}
                   onChange={e => setForm(f => ({ ...f, password: e.target.value }))} />
                 <button type="button" onClick={() => setShowPassword(!showPassword)}
-                  style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--surface3)', padding: 0, zIndex: 2 }}>
+                  style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--surface3)', padding: 0, zIndex: 2, mixBlendMode: 'difference' }}>
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>

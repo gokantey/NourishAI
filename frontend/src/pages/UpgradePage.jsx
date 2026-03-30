@@ -87,8 +87,16 @@ export function UpgradePage() {
 
       <div className="upgrade-cards-grid">
         {/* Free card */}
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="card" style={{ padding: '1.75rem' }}>
-          <span className="badge-green" style={{ marginBottom: '1rem', display: 'inline-flex' }}>Free</span>
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+          style={{
+            padding: '1.75rem', borderRadius: 20, position: 'relative', overflow: 'hidden',
+            background: 'linear-gradient(145deg, rgba(200,241,53,0.06) 0%, var(--surface) 60%)',
+            border: isPremium ? '1px solid var(--border)' : '1.5px solid rgba(200,241,53,0.35)',
+            boxShadow: isPremium ? 'none' : '0 0 24px rgba(200,241,53,0.07)',
+          }}>
+          {/* subtle glow blob */}
+          <div style={{ position: 'absolute', width: 180, height: 180, borderRadius: '50%', background: 'rgba(200,241,53,0.07)', top: -60, right: -60, pointerEvents: 'none' }} />
+          <span className="badge badge-green" style={{ marginBottom: '1rem', display: 'inline-flex' }}>Free</span>
           <div style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.75rem, 6vw, 2.5rem)', fontWeight: 700, color: 'var(--text)', marginBottom: '0.25rem' }}>GHS 0</div>
           <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: '1.5rem' }}>Forever free</div>
           <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -99,7 +107,7 @@ export function UpgradePage() {
             ))}
           </ul>
           {!isPremium && (
-            <div style={{ marginTop: '1.5rem', padding: '0.75rem', background: 'var(--lime-glow)', border: '1px solid rgba(200,241,53,0.2)', borderRadius: 12, textAlign: 'center', fontSize: '0.875rem', fontWeight: 600, color: 'var(--lime)' }}>
+            <div style={{ marginTop: '1.5rem', padding: '0.75rem', background: 'rgba(200,241,53,0.1)', border: '1px solid rgba(200,241,53,0.25)', borderRadius: 12, textAlign: 'center', fontSize: '0.875rem', fontWeight: 600, color: 'var(--lime)' }}>
               Your current plan
             </div>
           )}
@@ -110,13 +118,19 @@ export function UpgradePage() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.08 }}
-          className="card"
-          style={{ padding: '1.75rem', border: '2px solid #F4845F', position: 'relative', overflow: 'hidden' }}
+          style={{
+            padding: '1.75rem', borderRadius: 20, position: 'relative', overflow: 'hidden',
+            background: 'linear-gradient(145deg, rgba(244,132,95,0.09) 0%, var(--surface) 60%)',
+            border: isPremium ? '1.5px solid rgba(244,132,95,0.5)' : '1.5px solid rgba(244,132,95,0.35)',
+            boxShadow: isPremium ? '0 0 32px rgba(244,132,95,0.12)' : '0 0 24px rgba(244,132,95,0.07)',
+          }}
         >
-          <div style={{ position: 'absolute', top: '1rem', right: '1rem', background: '#F4845F', color: 'white', fontSize: '0.7rem', fontWeight: 700, padding: '0.25rem 0.625rem', borderRadius: 9999 }}>
+          {/* subtle glow blob */}
+          <div style={{ position: 'absolute', width: 200, height: 200, borderRadius: '50%', background: 'rgba(244,132,95,0.07)', top: -70, right: -70, pointerEvents: 'none' }} />
+          <div style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'rgba(244,132,95,0.15)', border: '1px solid rgba(244,132,95,0.3)', color: '#F4845F', fontSize: '0.7rem', fontWeight: 700, padding: '0.25rem 0.625rem', borderRadius: 9999 }}>
             Most Popular
           </div>
-          <span className="badge-orange" style={{ marginBottom: '1rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+          <span className="badge badge-orange" style={{ marginBottom: '1rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
             <Crown size={11} /> Premium
           </span>
           <div style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.75rem, 6vw, 2.5rem)', fontWeight: 700, color: 'var(--text)', marginBottom: '0.25rem' }}>GHS 20</div>

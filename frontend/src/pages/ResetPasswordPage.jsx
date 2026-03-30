@@ -8,6 +8,7 @@ export default function ResetPasswordPage() {
   const { uid, token } = useParams()
   const [form, setForm] = useState({ new_password: '', new_password2: '' })
   const [showPass, setShowPass] = useState(false)
+  const [showPass2, setShowPass2] = useState(false)
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState({})
   const [done, setDone] = useState(false)
@@ -78,7 +79,7 @@ export default function ResetPasswordPage() {
                     autoFocus
                   />
                   <button type="button" onClick={() => setShowPass(!showPass)}
-                    style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 0 }}>
+                    style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 0, mixBlendMode: 'difference' }}>
                     {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
@@ -87,13 +88,20 @@ export default function ResetPasswordPage() {
 
               <div style={{ marginBottom: '1.5rem' }}>
                 <label className="label">Confirm New Password</label>
-                <input
-                  type="password"
-                  className={`input${errors.new_password2 ? ' input-error' : ''}`}
-                  placeholder="Repeat your new password"
-                  value={form.new_password2}
-                  onChange={(e) => setForm((f) => ({ ...f, new_password2: e.target.value }))}
-                />
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type={showPass2 ? 'text' : 'password'}
+                    className={`input${errors.new_password2 ? ' input-error' : ''}`}
+                    style={{ paddingRight: '3rem' }}
+                    placeholder="Repeat your new password"
+                    value={form.new_password2}
+                    onChange={(e) => setForm((f) => ({ ...f, new_password2: e.target.value }))}
+                  />
+                  <button type="button" onClick={() => setShowPass2(!showPass2)}
+                    style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 0, mixBlendMode: 'difference' }}>
+                    {showPass2 ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
                 {errors.new_password2 && <p className="error-text">{errors.new_password2}</p>}
               </div>
 
