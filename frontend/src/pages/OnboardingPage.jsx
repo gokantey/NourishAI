@@ -181,7 +181,7 @@ export default function OnboardingPage() {
             </span>
           </div>
           <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.6rem', fontWeight: 700, color: 'var(--text)', marginBottom: '0.25rem' }}>
-            Let's set up your profile, {user?.first_name} 👋
+            Let's set up your profile, {user?.first_name} 
           </h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Step {step + 1} of 3 — {STEPS[step]}</p>
         </div>

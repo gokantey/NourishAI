@@ -48,6 +48,20 @@ def get_or_create_streak(user):
     return streak
 
 
+def get_freeze_status(streak):
+    """
+    Same rolling-window pattern as generation_reset_date.
+    3 freezes per 30-day window. Window starts on first use.
+    Returns the streak record after applying any reset, plus remaining count.
+    """
+    today = date.today()
+    if streak.freeze_reset_date and today >= streak.freeze_reset_date + timedelta(days=30):
+        streak.freeze_tokens = 3
+        streak.freeze_reset_date = None
+        streak.save(update_fields=['freeze_tokens', 'freeze_reset_date'])
+    return streak
+
+
 def get_active_items(user):
     """Returns the user's active checklist item keys, defaulting to all items."""
     prefs = user.profile.checklist_items
@@ -323,6 +337,7 @@ def get_full_progress_data(user):
 
     profile = user.profile
     streak = get_or_create_streak(user)
+    streak = get_freeze_status(streak)  # apply 30-day reset if due
     today = timezone.now().date()
 
     # Milestone
@@ -374,7 +389,9 @@ def get_full_progress_data(user):
             'current': streak.current_streak, 'longest': streak.longest_streak,
             'total_active_days': streak.total_active_days,
             'last_active': streak.last_active_date.isoformat() if streak.last_active_date else None,
-            'freeze_tokens': streak.freeze_tokens, 'milestone': milestone,
+            'freeze_tokens': streak.freeze_tokens,
+            'freeze_reset_date': streak.freeze_reset_date.isoformat() if streak.freeze_reset_date else None,
+            'milestone': milestone,
             'next_milestone': next_milestone[1] if next_milestone else None,
             'next_milestone_days': next_milestone[0] if next_milestone else None,
         },

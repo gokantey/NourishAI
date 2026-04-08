@@ -842,6 +842,8 @@ def update_checklist_prefs_view(request):
 @permission_classes([IsAuthenticated])
 def use_freeze_view(request):
     from meals.models import StreakRecord
+    from progress_service import get_freeze_status
+    from datetime import date
     profile = request.user.profile
     if profile.subscription_tier != 'premium' and not request.user.is_staff:
         return Response({'error': 'Streak freeze is a Premium feature.'}, status=status.HTTP_403_FORBIDDEN)
@@ -849,11 +851,28 @@ def use_freeze_view(request):
         streak = request.user.streak
     except StreakRecord.DoesNotExist:
         return Response({'error': 'No streak record found.'}, status=status.HTTP_404_NOT_FOUND)
+
+    # Apply 30-day reset if the window has expired
+    streak = get_freeze_status(streak)
+
     if streak.freeze_tokens <= 0:
-        return Response({'error': 'No freeze tokens remaining.'}, status=status.HTTP_400_BAD_REQUEST)
+        reset_on = streak.freeze_reset_date
+        return Response({
+            'error': 'No freeze tokens remaining.',
+            'freeze_reset_date': reset_on.isoformat() if reset_on else None,
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    # Start the window on first use
+    if streak.freeze_reset_date is None:
+        streak.freeze_reset_date = date.today()
+
     streak.freeze_tokens -= 1
-    streak.save()
-    return Response({'message': 'Freeze token used.', 'freeze_tokens': streak.freeze_tokens})
+    streak.save(update_fields=['freeze_tokens', 'freeze_reset_date'])
+    return Response({
+        'message': 'Freeze token used.',
+        'freeze_tokens': streak.freeze_tokens,
+        'freeze_reset_date': streak.freeze_reset_date.isoformat(),
+    })
 
 
 # ── Phase 8: PDF Export & Share Link ─────────────────────────────────────────

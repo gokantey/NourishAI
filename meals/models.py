@@ -154,7 +154,8 @@ class StreakRecord(models.Model):
     current_streak = models.IntegerField(default=0)
     longest_streak = models.IntegerField(default=0)
     last_active_date = models.DateField(null=True, blank=True)
-    freeze_tokens = models.IntegerField(default=1)
+    freeze_tokens = models.IntegerField(default=3)
+    freeze_reset_date = models.DateField(null=True, blank=True)
     total_active_days = models.IntegerField(default=0)
 
     def __str__(self):
