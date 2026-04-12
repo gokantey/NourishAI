@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Users, FileText, Crown, TrendingUp, DollarSign, Bookmark, UserPlus, BarChart2 } from 'lucide-react'
+import { Users, FileText, Crown, TrendingUp, Bookmark, UserPlus, BarChart2 } from 'lucide-react'
 import { adminAPI } from '../adminApi'
 import { StatCard, Card, CardHeader, SectionHeader, SparkLine, LoadingSpinner, Badge } from '../components/AdminComponents'
 import { formatDate, AMBER, TEXT, TEXT_DIM, TEXT_MUTED, BORDER, SURFACE2, td } from '../components/adminConstants'
@@ -25,7 +25,7 @@ export default function AdminDashboard() {
         <StatCard label="Premium"         value={s.premium_count}    sub={`${s.free_count} free`}             icon={Crown}     color={AMBER}   delay={0.04} />
         <StatCard label="Plans Today"     value={s.plans_today}      sub={`${s.plans_week} this week`}        icon={FileText}  color="#A78BFA" delay={0.08} />
         <StatCard label="Total Plans"     value={s.plans_total}      sub={`${s.saved_plans} saved`}           icon={Bookmark}  color="#34D399" delay={0.12} />
-        <StatCard label="Est. Revenue"    value={`GHS ${s.revenue_estimate}`} sub="monthly estimate"          icon={DollarSign} color={AMBER}  delay={0.16} />
+        <StatCard label="Est. Revenue"    value={`₵${s.revenue_estimate}`}   sub="monthly estimate"          icon={() => <span style={{ fontSize: 13, fontWeight: 700, color: AMBER }}>₵</span>} color={AMBER}  delay={0.16} />
         <StatCard label="New This Week"   value={s.new_users_week}   sub="new signups"                        icon={UserPlus}  color="#F87171" delay={0.20} />
       </div>
 
