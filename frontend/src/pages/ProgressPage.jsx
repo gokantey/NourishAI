@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Sparkles, Crown, Trophy, TrendingUp, Calendar, ChevronRight, Settings, Check, X } from 'lucide-react'
-import { AreaChart, Area, BarChart, Bar as RechartsBar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
+import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import { progressAPI } from '../api/client'
 import useAuthStore from '../store/authStore'
 import toast from 'react-hot-toast'
@@ -58,7 +58,7 @@ function ScoreRing({ score }) {
   )
 }
 
-function Bar({ label, value, max, color, unit = '', icon = '' }) {
+function StatBar({ label, value, max, color, unit = '', icon = '' }) {
   const pct = max > 0 ? Math.min((value / max) * 100, 100) : 0
   return (
     <div style={{ marginBottom: '0.75rem' }}>
@@ -76,28 +76,29 @@ function Bar({ label, value, max, color, unit = '', icon = '' }) {
   )
 }
 
+const METRICS = [
+  { key: 'calories', label: 'Calories', color: 'var(--lime)', unit: 'kcal' },
+  { key: 'protein',  label: 'Protein',  color: '#60A5FA', unit: 'g' },
+  { key: 'carbs',    label: 'Carbs',    color: 'var(--amber)', unit: 'g' },
+  { key: 'fats',     label: 'Fats',     color: '#F87171', unit: 'g' },
+]
+
+function WeeklyChartTooltip({ active: a, payload, color, unit }) {
+  if (!a || !payload?.length) return null
+  return (
+    <div style={{ background: 'var(--surface)', border: '1px solid var(--border2)', borderRadius: 10, padding: '8px 12px', fontSize: '0.78rem', fontFamily: 'var(--font-body)' }}>
+      <div style={{ color: 'var(--text-muted)', marginBottom: 2 }}>{payload[0]?.payload?.label}</div>
+      <div style={{ color, fontWeight: 700 }}>{payload[0]?.value} {unit}</div>
+    </div>
+  )
+}
+
 function WeeklyChart({ data }) {
-  if (!data?.length) return null
   const [activeKey, setActiveKey] = useState('calories')
 
-  const METRICS = [
-    { key: 'calories', label: 'Calories', color: 'var(--lime)', unit: 'kcal' },
-    { key: 'protein',  label: 'Protein',  color: '#60A5FA', unit: 'g' },
-    { key: 'carbs',    label: 'Carbs',    color: 'var(--amber)', unit: 'g' },
-    { key: 'fats',     label: 'Fats',     color: '#F87171', unit: 'g' },
-  ]
+  if (!data?.length) return null
 
   const active = METRICS.find(m => m.key === activeKey)
-
-  const CustomTooltip = ({ active: a, payload }) => {
-    if (!a || !payload?.length) return null
-    return (
-      <div style={{ background: 'var(--surface)', border: '1px solid var(--border2)', borderRadius: 10, padding: '8px 12px', fontSize: '0.78rem', fontFamily: 'var(--font-body)' }}>
-        <div style={{ color: 'var(--text-muted)', marginBottom: 2 }}>{payload[0]?.payload?.label}</div>
-        <div style={{ color: active.color, fontWeight: 700 }}>{payload[0]?.value} {active.unit}</div>
-      </div>
-    )
-  }
 
   return (
     <div>
@@ -113,8 +114,8 @@ function WeeklyChart({ data }) {
         <BarChart data={data} margin={{ top: 4, right: 4, left: -28, bottom: 0 }}>
           <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'var(--text-muted)', fontFamily: 'var(--font-body)' }} axisLine={false} tickLine={false} />
           <YAxis hide />
-          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
-          <RechartsBar dataKey={activeKey} fill={active.color} radius={[4, 4, 2, 2]} opacity={0.85}
+          <Tooltip content={<WeeklyChartTooltip color={active.color} unit={active.unit} />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
+          <Bar dataKey={activeKey} fill={active.color} radius={[4, 4, 2, 2]} opacity={0.85}
             isAnimationActive={true} animationDuration={400} animationEasing="ease-out" />
         </BarChart>
       </ResponsiveContainer>
@@ -593,10 +594,10 @@ export default function ProgressPage() {
               </div>
               {snap ? (
                 <>
-                  <Bar label="Calories" value={snap.calories} max={snap.calorie_target} color="var(--amber)" unit=" kcal" icon="🔥" />
-                  <Bar label="Protein"  value={snap.protein}  max={Math.round(snap.calorie_target * 0.03)}  color="var(--lime)"  unit="g" icon="💪" />
-                  <Bar label="Carbs"    value={snap.carbs}    max={Math.round(snap.calorie_target * 0.075)} color="var(--spice)"  unit="g" icon="🌾" />
-                  <Bar label="Fats"     value={snap.fats}     max={Math.round(snap.calorie_target * 0.025)} color="#8B5CF6"      unit="g" icon="🫙" />
+                  <StatBar label="Calories" value={snap.calories} max={snap.calorie_target} color="var(--amber)" unit=" kcal" icon="🔥" />
+                  <StatBar label="Protein"  value={snap.protein}  max={Math.round(snap.calorie_target * 0.03)}  color="var(--lime)"  unit="g" icon="💪" />
+                  <StatBar label="Carbs"    value={snap.carbs}    max={Math.round(snap.calorie_target * 0.075)} color="var(--spice)"  unit="g" icon="🌾" />
+                  <StatBar label="Fats"     value={snap.fats}     max={Math.round(snap.calorie_target * 0.025)} color="#8B5CF6"      unit="g" icon="🫙" />
                 </>
               ) : (
                 <div style={{ padding: '1.5rem 0', textAlign: 'center' }}>

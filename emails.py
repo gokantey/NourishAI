@@ -45,8 +45,8 @@ def send_premium_upgrade_email(user):
                 f'  • AI taste learning — your ratings now shape every plan\n'
                 f'  • Unlimited saved plans\n'
                 f'  • Weekly meal plan summary emails (every Sunday evening)\n'
-                f'  • Export & sharing features\n'
-                f'  • Health streak & progress tracking\n\n'
+                f'  • Export & sharing features (coming soon)\n'
+                f'  • Health streak & progress tracking (coming soon)\n\n'
                 f'Go generate your first Premium plan now — the AI is ready to learn your taste.\n\n'
                 f'Thank you for supporting NourishAI.\n\n'
                 f'— The NourishAI Team'
@@ -182,16 +182,21 @@ def send_weekly_summary_email(user, meal_plan):
 
 def send_birthday_email(user):
     """Sent on the user's birthday."""
-    _send(
-        subject=f'Happy Birthday from NourishAI, {user.first_name}! 🎂',
-        message=(
-            f'Hi {user.first_name},\n\n'
-            f'The whole NourishAI team wishes you a wonderful birthday! 🎉🎂\n\n'
-            f'Today is your day — eat well, feel great, and celebrate.\n\n'
-            f'As you start this new year of your life, we\'re here to help you '
-            f'stay nourished and feel your best every day.\n\n'
-            f'Go treat yourself — you deserve it! 🌿\n\n'
-            f'— The NourishAI Team'
-        ),
-        recipient=user.email,
-    )
+    try:
+        send_mail(
+            subject=f'Happy Birthday from NourishAI, {user.first_name}! 🎂',
+            message=(
+                f'Hi {user.first_name},\n\n'
+                f'The whole NourishAI team wishes you a wonderful birthday! 🎉🎂\n\n'
+                f'Today is your day — eat well, feel great, and celebrate.\n\n'
+                f'As you start this new year of your life, we\'re here to help you '
+                f'stay nourished and feel your best every day.\n\n'
+                f'Go treat yourself — you deserve it! 🌿\n\n'
+                f'— The NourishAI Team'
+            ),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+            fail_silently=True,
+        )
+    except Exception:
+        pass

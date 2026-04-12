@@ -6,7 +6,7 @@ import toast from 'react-hot-toast'
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || ''
 
-export default function GoogleAuthButton({ label = 'Continue with Google', onError }) {
+export default function GoogleAuthButton({ onError }) {
   const { setAuth } = useAuthStore()
   const navigate = useNavigate()
   const btnRef = useRef(null)

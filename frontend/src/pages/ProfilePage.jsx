@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { Save, Trash2 } from 'lucide-react'
 import { profileAPI } from '../api/client'
 import useAuthStore from '../store/authStore'
@@ -48,7 +47,6 @@ function ToggleBtn({ active, onClick, children }) {
 }
 
 export default function ProfilePage() {
-  const navigate = useNavigate()
   const { user, subscriptionTier, clearAuth, hasPassword } = useAuthStore()
   const [profile, setProfile] = useState(null)
   const [form, setForm] = useState({})
