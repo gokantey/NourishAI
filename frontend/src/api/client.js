@@ -32,6 +32,13 @@ api.interceptors.response.use(
     }
 
     if (error.response?.status === 401 && !original._retry) {
+      // Don't intercept 401s from auth endpoints — those are legitimate login failures
+      const url = original.url || ''
+      const isAuthEndpoint = url.includes('/auth/login') || url.includes('/auth/register') ||
+        url.includes('/auth/verify-otp') || url.includes('/auth/google') ||
+        url.includes('/auth/forgot-password') || url.includes('/auth/reset-password')
+      if (isAuthEndpoint) return Promise.reject(error)
+
       original._retry = true
       const refresh = localStorage.getItem('refresh_token')
       if (refresh) {

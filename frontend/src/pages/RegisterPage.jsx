@@ -92,16 +92,17 @@ export default function RegisterPage() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit}>
-            {/* Google sign-up */}
-            <div style={{ marginBottom: '1.25rem' }}>
-              <GoogleAuthButton label="Sign up with Google" />
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '1.125rem' }}>
-                <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontFamily: 'var(--font-body)', whiteSpace: 'nowrap' }}>or create account with email</span>
-                <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-              </div>
+          {/* Google sign-up — must be outside <form> to avoid nested form issue with GSI */}
+          <div style={{ marginBottom: '1.25rem' }}>
+            <GoogleAuthButton label="Sign up with Google" />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '1.125rem' }}>
+              <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontFamily: 'var(--font-body)', whiteSpace: 'nowrap' }}>or create account with email</span>
+              <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
             </div>
+          </div>
+
+          <form onSubmit={handleSubmit}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
               <FormField
                 label="First Name" name="first_name" placeholder="Kofi"

@@ -163,14 +163,15 @@ export default function LoginPage() {
             )}
           </AnimatePresence>
 
+          {/* Google sign-in — must be outside <form> to avoid nested form issue with GSI */}
+          <GoogleAuthButton label="Sign in with Google" onError={msg => setError(msg)} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', margin: '0.25rem 0' }}>
+            <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontFamily: 'var(--font-body)', whiteSpace: 'nowrap' }}>or sign in with email</span>
+            <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+          </div>
+
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.125rem' }}>
-            {/* Google sign-in */}
-            <GoogleAuthButton label="Sign in with Google" onError={msg => setError(msg)} />
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontFamily: 'var(--font-body)', whiteSpace: 'nowrap' }}>or sign in with email</span>
-              <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-            </div>
             <div>
               <label className="label">Username</label>
               <input type="text" className="input" placeholder="Your username" value={form.username}
