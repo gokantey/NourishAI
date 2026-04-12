@@ -155,7 +155,7 @@ export default function OnboardingPage() {
       else {
         await profileAPI.onboardingStep3(step3)
         setOnboardingComplete(true)
-        toast.success("Profile complete! Let's generate your first plan 🎉")
+        toast.success("Profile complete! Let's generate your first plan.")
         navigate('/dashboard')
       }
     } catch (err) {
