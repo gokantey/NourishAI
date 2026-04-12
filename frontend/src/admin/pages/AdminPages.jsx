@@ -185,7 +185,7 @@ export function AdminPayments() {
 export function AdminNotifications() {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [broadcast, setBroadcast] = useState({ title: '', message: '', target: 'all', type: 'general' })
+  const [broadcast, setBroadcast] = useState({ title: '', message: '', target: 'all', type: 'general', send_email: false })
   const [sending, setSending] = useState(false)
 
   useEffect(() => { adminAPI.notifications().then(r => setData(r.data)).finally(() => setLoading(false)) }, [])
@@ -196,7 +196,7 @@ export function AdminNotifications() {
     try {
       const res = await adminAPI.broadcast(broadcast)
       toast.success(res.data.message)
-      setBroadcast({ title: '', message: '', target: 'all', type: 'general' })
+      setBroadcast({ title: '', message: '', target: 'all', type: 'general', send_email: false })
     } catch { toast.error('Failed to send.') }
     finally { setSending(false) }
   }
@@ -235,8 +235,23 @@ export function AdminNotifications() {
             <label style={{ display: 'block', fontSize: '0.68rem', fontWeight: 600, color: TEXT_MUTED, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '0.3rem', fontFamily: 'var(--font-body)' }}>Message</label>
             <textarea value={broadcast.message} onChange={e => setBroadcast(b => ({ ...b, message: e.target.value }))} placeholder="Notification message" rows={3} style={{ ...inputStyle, resize: 'vertical' }} />
           </div>
+          {/* Email toggle */}
+          <div onClick={() => setBroadcast(b => ({ ...b, send_email: !b.send_email }))}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', cursor: 'pointer', userSelect: 'none' }}>
+            <div style={{ width: 36, height: 20, borderRadius: 100, background: broadcast.send_email ? AMBER : 'rgba(255,255,255,0.1)', transition: 'background 0.2s', position: 'relative', flexShrink: 0 }}>
+              <div style={{ position: 'absolute', width: 14, height: 14, borderRadius: '50%', background: 'white', top: 3, left: broadcast.send_email ? 19 : 3, transition: 'left 0.2s' }} />
+            </div>
+            <span style={{ fontSize: '0.82rem', color: broadcast.send_email ? AMBER : TEXT_MUTED, fontFamily: 'var(--font-body)', fontWeight: 600, transition: 'color 0.2s' }}>
+              Also send as email
+            </span>
+            {broadcast.send_email && (
+              <span style={{ fontSize: '0.72rem', color: TEXT_MUTED, fontFamily: 'var(--font-body)' }}>
+                — will email every user in the selected audience
+              </span>
+            )}
+          </div>
           <ActionBtn onClick={handleBroadcast} disabled={sending} color={AMBER}>
-            <Send size={13} /> {sending ? 'Sending...' : 'Send to All'}
+            <Send size={13} /> {sending ? 'Sending...' : broadcast.send_email ? 'Send Notification + Email' : 'Send Notification'}
           </ActionBtn>
         </div>
       </Card>

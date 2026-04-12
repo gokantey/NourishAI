@@ -236,6 +236,99 @@ def login_view(request):
         },
         'onboarding_complete': profile.onboarding_complete,
         'subscription_tier': profile.subscription_tier,
+        'has_password': user.has_usable_password(),
+    }, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def google_auth_view(request):
+    """
+    Receives a Google id_token from the frontend (after Google popup sign-in).
+    Verifies it with Google, then either creates a new user or logs in the existing one.
+    Returns JWT tokens + user info just like login_view.
+    """
+    import requests as http_requests
+
+    id_token = request.data.get('id_token', '').strip()
+    if not id_token:
+        return Response({'error': 'id_token is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Verify token with Google
+    google_resp = http_requests.get(
+        'https://oauth2.googleapis.com/tokeninfo',
+        params={'id_token': id_token},
+        timeout=10,
+    )
+    if google_resp.status_code != 200:
+        return Response({'error': 'Invalid Google token.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    payload = google_resp.json()
+
+    # Verify the token was issued for our app
+    client_id = settings.GOOGLE_CLIENT_ID
+    if client_id and payload.get('aud') != client_id:
+        return Response({'error': 'Token audience mismatch.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    email = payload.get('email', '').lower()
+    first_name = payload.get('given_name', '')
+    last_name = payload.get('family_name', '')
+    google_id = payload.get('sub', '')
+
+    if not email:
+        return Response({'error': 'Google account has no email.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Find or create user
+    user, created = User.objects.get_or_create(
+        email__iexact=email,
+        defaults={
+            'username': email.split('@')[0],
+            'email': email,
+            'first_name': first_name,
+            'last_name': last_name,
+        }
+    )
+
+    if created:
+        # Make sure username is unique
+        base = email.split('@')[0]
+        username = base
+        counter = 1
+        while User.objects.filter(username=username).exclude(pk=user.pk).exists():
+            username = f'{base}{counter}'
+            counter += 1
+        user.username = username
+        user.set_unusable_password()  # Google users don't have a password
+        user.save()
+
+        # Create profile
+        UserProfile.objects.get_or_create(user=user)
+
+        from emails import send_welcome_email
+        send_welcome_email(user)
+
+    if not user.is_active:
+        return Response(
+            {'error': 'Your account has been suspended. Contact team.nourishai@gmail.com.', 'error_code': 'account_suspended'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    profile, _ = UserProfile.objects.get_or_create(user=user)
+    tokens = get_tokens_for_user(user)
+
+    return Response({
+        'tokens': tokens,
+        'user': {
+            'id': user.id,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'username': user.username,
+            'email': user.email,
+        },
+        'onboarding_complete': profile.onboarding_complete,
+        'subscription_tier': profile.subscription_tier,
+        'has_password': user.has_usable_password(),
+        'is_new_user': created,
     }, status=status.HTTP_200_OK)
 
 
@@ -313,7 +406,30 @@ def profile_update_view(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# ─── Onboarding ───────────────────────────────────────────────────────────────
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def delete_account_view(request):
+    """Requires password confirmation. Google OAuth users confirm with their email instead."""
+    user = request.user
+    password = request.data.get('password', '')
+
+    if not password:
+        return Response({'error': 'Password is required to delete your account.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if user.has_usable_password():
+        # Regular email/password account — verify password
+        if not user.check_password(password):
+            return Response({'error': 'Incorrect password.'}, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        # Google OAuth account — no password set, verify by email address instead
+        if password.lower() != user.email.lower():
+            return Response({'error': 'Please enter your email address to confirm deletion.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    user.delete()  # CASCADE deletes profile, plans, meals, notifications, streak, etc.
+    return Response({'message': 'Account deleted.'}, status=status.HTTP_200_OK)
+
+
+
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])

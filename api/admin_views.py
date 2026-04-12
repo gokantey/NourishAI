@@ -393,18 +393,19 @@ def admin_payments_view(request):
         'monthly_revenue_estimate': total_revenue,
     })
 
-
 # ── Broadcast Notifications ───────────────────────────────────────────────────
 
 @api_view(['POST'])
 @permission_classes([IsStaff])
 def admin_broadcast_view(request):
     from meals.models import Notification
+    from django.core.mail import send_mail
 
     title = request.data.get('title', '').strip()
     message = request.data.get('message', '').strip()
     target = request.data.get('target', 'all')  # all | premium | free
     notif_type = request.data.get('type', 'general')
+    send_email = request.data.get('send_email', False)  # also send as email
 
     if not title or not message:
         return Response({'error': 'Title and message are required.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -415,13 +416,41 @@ def admin_broadcast_view(request):
     elif target == 'free':
         users = users.filter(profile__subscription_tier='free')
 
+    users = list(users)
+
     notifications = [
         Notification(user=u, type=notif_type, title=title, message=message)
         for u in users
     ]
     Notification.objects.bulk_create(notifications)
 
-    return Response({'message': f'Notification sent to {len(notifications)} users.'})
+    email_count = 0
+    if send_email:
+        email_body = f"""Hi,
+
+{message}
+
+— The NourishAI Team
+team.nourishai@gmail.com
+"""
+        for u in users:
+            try:
+                send_mail(
+                    subject=f'NourishAI — {title}',
+                    message=email_body,
+                    from_email='team.nourishai@gmail.com',
+                    recipient_list=[u.email],
+                    fail_silently=True,
+                )
+                email_count += 1
+            except Exception:
+                pass
+
+    result = {'message': f'Notification sent to {len(notifications)} users.'}
+    if send_email:
+        result['email_count'] = email_count
+        result['message'] += f' Emails sent to {email_count} users.'
+    return Response(result)
 
 
 @api_view(['GET'])

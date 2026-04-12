@@ -571,8 +571,9 @@ Respond ONLY with a valid JSON object, no extra text:
 
 def generate_snacks(meal_plan, profile):
     """Generate 3 snacks per day (morning, afternoon, evening) for the meal plan."""
-
-    days = list(meal_plan.meals.values_list('day', flat=True).distinct())
+    DAY_ORDER = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+    raw_days = list(meal_plan.meals.values_list('day', flat=True).distinct())
+    days = sorted(raw_days, key=lambda d: DAY_ORDER.index(d) if d in DAY_ORDER else 99)
     calorie_target = profile.daily_calorie_target or 2000
     snack_budget = int(calorie_target * 0.15)  # ~15% of daily calories for snacks
     dietary = profile.dietary_preference or 'none'
@@ -630,11 +631,16 @@ Return ONLY valid JSON in this exact format:
     "afternoon": {{"name": "snack name", "description": "brief description", "calories": 150, "protein": 6, "carbs": 18, "fats": 5, "portion": "serving size"}},
     "evening": {{"name": "snack name", "description": "brief description", "calories": 100, "protein": 4, "carbs": 12, "fats": 3, "portion": "serving size"}}
   }},
-  "tuesday": {{ ... }},
-  ...
+  "tuesday": {{ same structure }},
+  "wednesday": {{ same structure }},
+  "thursday": {{ same structure }},
+  "friday": {{ same structure }},
+  "saturday": {{ same structure }},
+  "sunday": {{ same structure }}
 }}
 
-Only include the days provided. Return ONLY the JSON, no other text."""
+Generate snacks for exactly these days: {', '.join(days)}
+Return ONLY the JSON, no other text."""
 
     response = client.chat.completions.create(
         model='llama-3.3-70b-versatile',

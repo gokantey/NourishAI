@@ -62,6 +62,7 @@ export const authAPI = {
   verifyOTP: (data) => api.post('/auth/verify-otp/', data),
   resendOTP: () => api.post('/auth/resend-otp/'),
   login: (data) => api.post('/auth/login/', data),
+  googleAuth: (id_token) => api.post('/auth/google/', { id_token }),
   forgotPassword: (data) => api.post('/auth/forgot-password/', data),
   resetPassword: (data) => api.post('/auth/reset-password/', data),
 }
@@ -70,6 +71,7 @@ export const authAPI = {
 export const profileAPI = {
   get: () => api.get('/profile/'),
   update: (data) => api.patch('/profile/update/', data),
+  deleteAccount: (password) => api.post('/profile/delete/', { password }),
   onboardingStep1: (data) => api.post('/onboarding/step1/', data),
   onboardingStep2: (data) => api.post('/onboarding/step2/', data),
   onboardingStep3: (data) => api.post('/onboarding/step3/', data),

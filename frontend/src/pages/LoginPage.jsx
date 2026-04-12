@@ -4,6 +4,7 @@ import { Eye, EyeOff, ArrowRight } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { authAPI } from '../api/client'
 import useAuthStore from '../store/authStore'
+import GoogleAuthButton from '../components/ui/GoogleAuthButton'
 import toast from 'react-hot-toast'
 
 const STATS = [['7', 'Day Plans'], ['21', 'Meals/Week'], ['16', 'Regions']]
@@ -22,6 +23,7 @@ export default function LoginPage() {
     const reason = params.get('reason')
     if (reason === 'account_suspended') setError('suspended')
     else if (reason === 'session_expired') setError('session_expired')
+    else if (reason === 'account_deleted') setError('account_deleted')
   }, [location.search])
 
   const handleSubmit = async (e) => {
@@ -31,7 +33,7 @@ export default function LoginPage() {
     try {
       const res = await authAPI.login(form)
       const { tokens, user, onboarding_complete, subscription_tier } = res.data
-      setAuth(user, tokens, onboarding_complete, subscription_tier)
+      setAuth(user, tokens, onboarding_complete, subscription_tier, res.data.has_password ?? true)
       toast.success(`Welcome back, ${user.first_name}!`)
       navigate(onboarding_complete ? '/dashboard' : '/onboarding')
     } catch (err) {
@@ -130,8 +132,15 @@ export default function LoginPage() {
           <AnimatePresence>
             {error && (
               <motion.div initial={{ opacity: 0, y: -8, height: 0 }} animate={{ opacity: 1, y: 0, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
-                style={{ background: (error === 'suspended' || error === 'session_expired') ? 'rgba(245,166,35,0.1)' : 'rgba(212,52,26,0.1)', border: `1px solid ${(error === 'suspended' || error === 'session_expired') ? 'rgba(245,166,35,0.35)' : 'rgba(212,52,26,0.25)'}`, borderRadius: 10, padding: '0.875rem 1rem', marginBottom: '1.25rem', fontFamily: 'var(--font-body)' }}>
-                {error === 'suspended' ? (
+                style={{ background: (error === 'suspended' || error === 'session_expired') ? 'rgba(245,166,35,0.1)' : error === 'account_deleted' ? 'rgba(52,211,153,0.1)' : 'rgba(212,52,26,0.1)', border: `1px solid ${(error === 'suspended' || error === 'session_expired') ? 'rgba(245,166,35,0.35)' : error === 'account_deleted' ? 'rgba(52,211,153,0.35)' : 'rgba(212,52,26,0.25)'}`, borderRadius: 10, padding: '0.875rem 1rem', marginBottom: '1.25rem', fontFamily: 'var(--font-body)' }}>
+                {error === 'account_deleted' ? (
+                  <>
+                    <div style={{ fontSize: '0.875rem', fontWeight: 700, color: '#34D399', marginBottom: '0.2rem' }}>Account Deleted</div>
+                    <div style={{ fontSize: '0.82rem', color: '#34D399', opacity: 0.85, lineHeight: 1.5 }}>
+                      Your account and all associated data have been permanently deleted.
+                    </div>
+                  </>
+                ) : error === 'suspended' ? (
                   <>
                     <div style={{ fontSize: '0.875rem', fontWeight: 700, color: '#F5A623', marginBottom: '0.2rem' }}>Account Suspended</div>
                     <div style={{ fontSize: '0.82rem', color: '#F5A623', opacity: 0.85, lineHeight: 1.5 }}>
@@ -155,6 +164,13 @@ export default function LoginPage() {
           </AnimatePresence>
 
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.125rem' }}>
+            {/* Google sign-in */}
+            <GoogleAuthButton label="Sign in with Google" onError={msg => setError(msg)} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontFamily: 'var(--font-body)', whiteSpace: 'nowrap' }}>or sign in with email</span>
+              <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+            </div>
             <div>
               <label className="label">Username</label>
               <input type="text" className="input" placeholder="Your username" value={form.username}

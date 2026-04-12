@@ -8,8 +8,9 @@ const useAuthStore = create(
       isAuthenticated: false,
       onboardingComplete: false,
       subscriptionTier: 'free',
+      hasPassword: true,
 
-      setAuth: (user, tokens, onboardingComplete, subscriptionTier) => {
+      setAuth: (user, tokens, onboardingComplete, subscriptionTier, hasPassword = true) => {
         localStorage.setItem('access_token', tokens.access)
         localStorage.setItem('refresh_token', tokens.refresh)
         set({
@@ -17,6 +18,7 @@ const useAuthStore = create(
           isAuthenticated: true,
           onboardingComplete: onboardingComplete ?? false,
           subscriptionTier: subscriptionTier ?? 'free',
+          hasPassword: hasPassword ?? true,
         })
       },
 
@@ -29,7 +31,15 @@ const useAuthStore = create(
       logout: () => {
         localStorage.removeItem('access_token')
         localStorage.removeItem('refresh_token')
-        set({ user: null, isAuthenticated: false, onboardingComplete: false, subscriptionTier: 'free' })
+        localStorage.removeItem('auth-storage')
+        set({ user: null, isAuthenticated: false, onboardingComplete: false, subscriptionTier: 'free', hasPassword: true })
+      },
+
+      clearAuth: () => {
+        localStorage.removeItem('access_token')
+        localStorage.removeItem('refresh_token')
+        localStorage.removeItem('auth-storage')
+        set({ user: null, isAuthenticated: false, onboardingComplete: false, subscriptionTier: 'free', hasPassword: true })
       },
 
       isPremium: () => {
@@ -44,6 +54,7 @@ const useAuthStore = create(
         isAuthenticated: state.isAuthenticated,
         onboardingComplete: state.onboardingComplete,
         subscriptionTier: state.subscriptionTier,
+        hasPassword: state.hasPassword,
       }),
     }
   )

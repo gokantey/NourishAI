@@ -22,9 +22,9 @@ const PREMIUM_FEATURES = [
   'AI taste learning from your ratings',
   'Unlimited saved plans',
   'Weekly meal summary emails (Sundays)',
-  'Export plans as PDF (coming soon)',
-  'Share meal plans publicly (coming soon)',
-  'Health streak tracking (coming soon)',
+  'Export plans as PDF',
+  'Share meal plans publicly',
+  'Health streak tracking',
   'Priority support',
 ]
 

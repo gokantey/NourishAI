@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
-import { Save } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Save, Trash2 } from 'lucide-react'
 import { profileAPI } from '../api/client'
 import useAuthStore from '../store/authStore'
+import ConfirmModal from '../components/ui/ConfirmModal'
 import toast from 'react-hot-toast'
 
 const REGION_OPTIONS = [
@@ -46,12 +48,34 @@ function ToggleBtn({ active, onClick, children }) {
 }
 
 export default function ProfilePage() {
-  const { user, subscriptionTier } = useAuthStore()
+  const navigate = useNavigate()
+  const { user, subscriptionTier, clearAuth, hasPassword } = useAuthStore()
   const [profile, setProfile] = useState(null)
   const [form, setForm] = useState({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+  const [deletePassword, setDeletePassword] = useState('')
+  const [deleteError, setDeleteError] = useState('')
+  const [deleting, setDeleting] = useState(false)
   const isPremium = subscriptionTier === 'premium'
+
+  const handleDeleteAccount = async () => {
+    if (!deletePassword) {
+      setDeleteError(hasPassword ? 'Please enter your password.' : 'Please enter your email address.')
+      return
+    }
+    setDeleting(true); setDeleteError('')
+    try {
+      await profileAPI.deleteAccount(deletePassword)
+      // clearAuth wipes tokens + Zustand state + auth-storage in one call.
+      // Must happen before navigate so no in-flight requests can trigger the interceptor.
+      clearAuth()
+      window.location.href = '/login?reason=account_deleted'
+    } catch (err) {
+      setDeleteError(err.response?.data?.error || 'Failed to delete account.')
+    } finally { setDeleting(false) }
+  }
 
   useEffect(() => {
     profileAPI.get().then((res) => {
@@ -232,7 +256,59 @@ export default function ProfilePage() {
             }
           </button>
         </form>
+
+        {/* Danger Zone */}
+        <div style={{ marginTop: '2rem', padding: '1.25rem 1.5rem', borderRadius: 16, border: '1px solid rgba(248,113,113,0.25)', background: 'rgba(248,113,113,0.04)' }}>
+          <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '0.9rem', fontWeight: 700, color: '#F87171', marginBottom: '0.375rem' }}>Danger Zone</h3>
+          <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontFamily: 'var(--font-body)', marginBottom: '1rem', lineHeight: 1.5 }}>
+            Permanently delete your account and all your data — meal plans, history, progress, and saved plans. This cannot be undone.
+          </p>
+          <button onClick={() => { setDeleteModalOpen(true); setDeletePassword(''); setDeleteError('') }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.5rem 1rem', borderRadius: 10, background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.3)', color: '#F87171', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-body)', transition: 'all 0.15s' }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(248,113,113,0.18)' }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(248,113,113,0.1)' }}>
+            <Trash2 size={14} /> Delete My Account
+          </button>
+        </div>
       </div>
+
+      {/* Delete Account Modal */}
+      {deleteModalOpen && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+          <div style={{ background: 'var(--surface)', border: '1px solid rgba(248,113,113,0.3)', borderRadius: 20, padding: '1.75rem', maxWidth: 420, width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.4)' }}>
+            <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', fontWeight: 700, color: 'var(--text)', marginBottom: '0.5rem' }}>Delete your account?</div>
+            <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', fontFamily: 'var(--font-body)', lineHeight: 1.6, marginBottom: '1.25rem' }}>
+              This will permanently delete your account, all your meal plans, progress, and saved data.{' '}
+              {hasPassword
+                ? 'Enter your password to confirm.'
+                : 'This is a Google account — enter your email address to confirm.'}
+            </p>
+            <div style={{ marginBottom: '0.75rem' }}>
+              <label className="label">{hasPassword ? 'Your password' : 'Your email address'}</label>
+              <input
+                type={hasPassword ? 'password' : 'email'}
+                className="input"
+                placeholder={hasPassword ? 'Enter your password' : 'Enter your email address'}
+                value={deletePassword}
+                onChange={e => { setDeletePassword(e.target.value); setDeleteError('') }}
+                autoFocus
+              />
+              {deleteError && <p style={{ fontSize: '0.8rem', color: '#F87171', marginTop: '0.375rem', fontFamily: 'var(--font-body)' }}>{deleteError}</p>}
+            </div>
+            <div style={{ display: 'flex', gap: '0.625rem', justifyContent: 'flex-end' }}>
+              <button onClick={() => setDeleteModalOpen(false)}
+                style={{ padding: '0.5rem 1rem', borderRadius: 10, background: 'var(--surface2)', border: '1px solid var(--border)', color: 'var(--text-muted)', fontSize: '0.875rem', cursor: 'pointer', fontFamily: 'var(--font-body)' }}>
+                Cancel
+              </button>
+              <button onClick={handleDeleteAccount} disabled={deleting}
+                style={{ padding: '0.5rem 1rem', borderRadius: 10, background: 'rgba(248,113,113,0.15)', border: '1px solid rgba(248,113,113,0.4)', color: '#F87171', fontSize: '0.875rem', fontWeight: 600, cursor: deleting ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-body)', display: 'flex', alignItems: 'center', gap: 6, opacity: deleting ? 0.6 : 1 }}>
+                {deleting ? <span style={{ width: 13, height: 13, border: '2px solid rgba(248,113,113,0.3)', borderTopColor: '#F87171', borderRadius: '50%', animation: 'spin 0.8s linear infinite', display: 'inline-block' }} /> : <Trash2 size={13} />}
+                {deleting ? 'Deleting...' : 'Yes, Delete Everything'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

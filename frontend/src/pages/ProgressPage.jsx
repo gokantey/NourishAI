@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Sparkles, Crown, Trophy, TrendingUp, Calendar, ChevronRight, Settings, Check, X } from 'lucide-react'
+import { AreaChart, Area, BarChart, Bar as RechartsBar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import { progressAPI } from '../api/client'
 import useAuthStore from '../store/authStore'
 import toast from 'react-hot-toast'
@@ -77,49 +78,106 @@ function Bar({ label, value, max, color, unit = '', icon = '' }) {
 
 function WeeklyChart({ data }) {
   if (!data?.length) return null
-  const max = Math.max(...data.map(d => d.calories), 1)
+  const [activeKey, setActiveKey] = useState('calories')
+
+  const METRICS = [
+    { key: 'calories', label: 'Calories', color: 'var(--lime)', unit: 'kcal' },
+    { key: 'protein',  label: 'Protein',  color: '#60A5FA', unit: 'g' },
+    { key: 'carbs',    label: 'Carbs',    color: 'var(--amber)', unit: 'g' },
+    { key: 'fats',     label: 'Fats',     color: '#F87171', unit: 'g' },
+  ]
+
+  const active = METRICS.find(m => m.key === activeKey)
+
+  const CustomTooltip = ({ active: a, payload }) => {
+    if (!a || !payload?.length) return null
+    return (
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border2)', borderRadius: 10, padding: '8px 12px', fontSize: '0.78rem', fontFamily: 'var(--font-body)' }}>
+        <div style={{ color: 'var(--text-muted)', marginBottom: 2 }}>{payload[0]?.payload?.label}</div>
+        <div style={{ color: active.color, fontWeight: 700 }}>{payload[0]?.value} {active.unit}</div>
+      </div>
+    )
+  }
+
   return (
-    <div style={{ display: 'flex', alignItems: 'flex-end', gap: '0.5rem', height: 90 }}>
-      {data.map((w, i) => {
-        const h = Math.max((w.calories / max) * 78, 3)
-        return (
-          <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-            <motion.div initial={{ height: 0 }} animate={{ height: h }} transition={{ duration: 0.5, delay: i * 0.07, ease: 'easeOut' }}
-              title={`${w.calories} kcal`}
-              style={{ width: '100%', background: 'var(--lime)', borderRadius: '5px 5px 3px 3px', opacity: 0.6 + i * 0.07 }} />
-            <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', fontFamily: 'var(--font-body)', fontWeight: 600 }}>{w.label}</span>
-          </div>
-        )
-      })}
+    <div>
+      <div style={{ display: 'flex', gap: '0.375rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
+        {METRICS.map(m => (
+          <button key={m.key} onClick={() => setActiveKey(m.key)}
+            style={{ padding: '3px 10px', borderRadius: 100, border: `1px solid ${activeKey === m.key ? m.color : 'var(--border)'}`, background: activeKey === m.key ? m.color + '20' : 'transparent', color: activeKey === m.key ? m.color : 'var(--text-muted)', fontSize: '0.7rem', fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-body)', transition: 'all 0.15s' }}>
+            {m.label}
+          </button>
+        ))}
+      </div>
+      <ResponsiveContainer width="100%" height={100}>
+        <BarChart data={data} margin={{ top: 4, right: 4, left: -28, bottom: 0 }}>
+          <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'var(--text-muted)', fontFamily: 'var(--font-body)' }} axisLine={false} tickLine={false} />
+          <YAxis hide />
+          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
+          <RechartsBar dataKey={activeKey} fill={active.color} radius={[4, 4, 2, 2]} opacity={0.85}
+            isAnimationActive={true} animationDuration={400} animationEasing="ease-out" />
+        </BarChart>
+      </ResponsiveContainer>
     </div>
   )
 }
 
 function CalHeatmap({ data }) {
-  const STATUS = { green: 'var(--lime)', yellow: 'var(--amber)', empty: 'var(--border)' }
-  
-  // Calculate offset so first day in grid aligns to correct weekday
-  // getDay() returns 0=Sun,1=Mon...6=Sat. We want Mon=0 offset.
+  const [hovered, setHovered] = useState(null)
+  const STATUS_COLOR = { green: 'var(--lime)', yellow: 'var(--amber)', empty: 'var(--border)' }
+  const STATUS_LABEL = { green: 'Consistent ✓', yellow: 'Partial', empty: 'No check-in' }
+
   const firstDate = data?.[0]?.date
   const offset = firstDate ? (() => {
     const d = new Date(firstDate + 'T00:00:00')
-    return (d.getDay() + 6) % 7 // Mon=0, Tue=1 ... Sun=6
+    return (d.getDay() + 6) % 7
   })() : 0
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
-      {['M','T','W','T','F','S','S'].map((d, i) => (
-        <div key={i} style={{ textAlign: 'center', fontSize: '0.58rem', color: 'var(--text-muted)', fontFamily: 'var(--font-body)', fontWeight: 700, marginBottom: 2 }}>{d}</div>
-      ))}
-      {Array.from({ length: offset }).map((_, i) => (
-        <div key={`pad-${i}`} />
-      ))}
-      {data?.map((day, i) => (
-        <motion.div key={i} initial={{ opacity: 0, scale: 0.4 }} animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: i * 0.007, duration: 0.18 }}
-          title={`${day.date} — ${day.items || 0} items`}
-          style={{ aspectRatio: '1', borderRadius: 4, background: STATUS[day.status], opacity: day.status === 'empty' ? 0.5 : 0.85 }} />
-      ))}
+    <div style={{ position: 'relative' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
+        {['M','T','W','T','F','S','S'].map((d, i) => (
+          <div key={i} style={{ textAlign: 'center', fontSize: '0.58rem', color: 'var(--text-muted)', fontFamily: 'var(--font-body)', fontWeight: 700, marginBottom: 2 }}>{d}</div>
+        ))}
+        {Array.from({ length: offset }).map((_, i) => (
+          <div key={`pad-${i}`} />
+        ))}
+        {data?.map((day, i) => (
+          <motion.div key={i}
+            initial={{ opacity: 0, scale: 0.4 }} animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: i * 0.007, duration: 0.18 }}
+            onMouseEnter={() => setHovered({ ...day, index: i })}
+            onMouseLeave={() => setHovered(null)}
+            style={{
+              aspectRatio: '1', borderRadius: 4,
+              background: STATUS_COLOR[day.status],
+              opacity: day.status === 'empty' ? 0.35 : 0.85,
+              cursor: 'pointer',
+              transition: 'opacity 0.15s, transform 0.15s',
+            }}
+            whileHover={{ opacity: 1, scale: 1.25 }}
+          />
+        ))}
+      </div>
+      {/* Tooltip */}
+      {hovered && (
+        <div style={{ position: 'absolute', bottom: '110%', left: '50%', transform: 'translateX(-50%)', background: 'var(--surface)', border: '1px solid var(--border2)', borderRadius: 10, padding: '8px 12px', fontSize: '0.78rem', fontFamily: 'var(--font-body)', whiteSpace: 'nowrap', pointerEvents: 'none', zIndex: 10, boxShadow: '0 4px 20px rgba(0,0,0,0.3)' }}>
+          <div style={{ color: 'var(--text-muted)', marginBottom: 2 }}>{hovered.date}</div>
+          <div style={{ color: STATUS_COLOR[hovered.status], fontWeight: 700 }}>{STATUS_LABEL[hovered.status]}</div>
+          {hovered.status !== 'empty' && (
+            <div style={{ color: 'var(--text-dim)', marginTop: 2 }}>{hovered.items} items checked</div>
+          )}
+        </div>
+      )}
+      {/* Legend */}
+      <div style={{ display: 'flex', gap: '1rem', marginTop: '0.75rem', justifyContent: 'center' }}>
+        {[['green', 'Consistent (4+)'], ['yellow', 'Partial'], ['empty', 'None']].map(([s, label]) => (
+          <div key={s} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            <div style={{ width: 10, height: 10, borderRadius: 3, background: STATUS_COLOR[s], opacity: s === 'empty' ? 0.35 : 0.85 }} />
+            <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontFamily: 'var(--font-body)' }}>{label}</span>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }

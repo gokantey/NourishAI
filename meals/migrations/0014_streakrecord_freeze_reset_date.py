@@ -12,7 +12,7 @@ class Migration(migrations.Migration):
         ('meals', '0013_mealplan_snacks'),
     ]
 
-    operations = [  
+    operations = [
         migrations.AddField(
             model_name='streakrecord',
             name='freeze_reset_date',

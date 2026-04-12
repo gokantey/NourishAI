@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff, Leaf, UserPlus, Shield } from 'lucide-react'
 import { authAPI } from '../api/client'
+import GoogleAuthButton from '../components/ui/GoogleAuthButton'
 import toast from 'react-hot-toast'
 
 // ── Defined outside component so it never gets recreated on render ──
@@ -92,6 +93,15 @@ export default function RegisterPage() {
           )}
 
           <form onSubmit={handleSubmit}>
+            {/* Google sign-up */}
+            <div style={{ marginBottom: '1.25rem' }}>
+              <GoogleAuthButton label="Sign up with Google" />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '1.125rem' }}>
+                <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontFamily: 'var(--font-body)', whiteSpace: 'nowrap' }}>or create account with email</span>
+                <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+              </div>
+            </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
               <FormField
                 label="First Name" name="first_name" placeholder="Kofi"

@@ -1,5 +1,18 @@
 from django.urls import path
 from rest_framework_simplejwt.views import TokenRefreshView
+from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
+from rest_framework.response import Response
+from rest_framework import status as drf_status
+
+class SafeTokenRefreshView(TokenRefreshView):
+    """Returns 401 instead of 500 when the user associated with the token no longer exists."""
+    def post(self, request, *args, **kwargs):
+        try:
+            return super().post(request, *args, **kwargs)
+        except Exception as e:
+            if 'DoesNotExist' in type(e).__name__ or 'matching query does not exist' in str(e):
+                return Response({'detail': 'User no longer exists.'}, status=drf_status.HTTP_401_UNAUTHORIZED)
+            raise
 from . import views, admin_views
 
 urlpatterns = [
@@ -8,13 +21,15 @@ urlpatterns = [
     path('auth/verify-otp/', views.verify_otp_view, name='api_verify_otp'),
     path('auth/resend-otp/', views.resend_otp_view, name='api_resend_otp'),
     path('auth/login/', views.login_view, name='api_login'),
-    path('auth/token/refresh/', TokenRefreshView.as_view(), name='api_token_refresh'),
+    path('auth/google/', views.google_auth_view, name='api_google_auth'),
+    path('auth/token/refresh/', SafeTokenRefreshView.as_view(), name='api_token_refresh'),
     path('auth/forgot-password/', views.forgot_password_view, name='api_forgot_password'),
     path('auth/reset-password/', views.reset_password_view, name='api_reset_password'),
 
     # Profile & onboarding
     path('profile/', views.profile_view, name='api_profile'),
     path('profile/update/', views.profile_update_view, name='api_profile_update'),
+    path('profile/delete/', views.delete_account_view, name='api_delete_account'),
     path('onboarding/step1/', views.onboarding_step1, name='api_onboarding_step1'),
     path('onboarding/step2/', views.onboarding_step2, name='api_onboarding_step2'),
     path('onboarding/step3/', views.onboarding_step3, name='api_onboarding_step3'),
