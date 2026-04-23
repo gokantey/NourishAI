@@ -1,4 +1,4 @@
-import random
+import secrets
 import hashlib
 import hmac
 import json
@@ -16,10 +16,21 @@ from django.http import HttpResponse
 from django.db import models as db_models
 
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
+from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 from rest_framework_simplejwt.tokens import RefreshToken
+
+# ── Custom throttle scopes ────────────────────────────────────────────────────
+class LoginThrottle(AnonRateThrottle):
+    scope = 'login'
+
+class OTPThrottle(AnonRateThrottle):
+    scope = 'otp'
+
+class GenerateThrottle(UserRateThrottle):
+    scope = 'generate'
 
 from users.models import UserProfile
 from meals.models import MealPlan, Meal, ShoppingList, ShoppingListItem, Notification
@@ -69,12 +80,13 @@ def cleanup_old_plans(user):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([LoginThrottle])
 def register_view(request):
     serializer = RegisterSerializer(data=request.data)
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    otp = str(random.randint(100000, 999999))
+    otp = str(secrets.randbelow(900000) + 100000)
     request.session['pending_registration'] = {
         'username': serializer.validated_data['username'],
         'email': serializer.validated_data['email'],
@@ -118,6 +130,7 @@ def register_view(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([OTPThrottle])
 def verify_otp_view(request):
     pending = request.session.get('pending_registration')
     if not pending:
@@ -166,12 +179,13 @@ def verify_otp_view(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([OTPThrottle])
 def resend_otp_view(request):
     pending = request.session.get('pending_registration')
     if not pending:
         return Response({'error': 'No pending registration.'}, status=status.HTTP_400_BAD_REQUEST)
 
-    new_otp = str(random.randint(100000, 999999))
+    new_otp = str(secrets.randbelow(900000) + 100000)
     pending['otp'] = new_otp
     pending['otp_created_at'] = timezone.now().isoformat()
     request.session['pending_registration'] = pending
@@ -198,6 +212,7 @@ def resend_otp_view(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([LoginThrottle])
 def login_view(request):
     username = request.data.get('username', '').strip()
     password = request.data.get('password', '')
@@ -242,6 +257,7 @@ def login_view(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([LoginThrottle])
 def google_auth_view(request):
     """
     Receives a Google id_token from the frontend (after Google popup sign-in).
@@ -496,6 +512,7 @@ def dashboard_view(request):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+@throttle_classes([GenerateThrottle])
 def generate_plan_view(request):
     profile = request.user.profile
     gen_status = profile.get_generation_status()

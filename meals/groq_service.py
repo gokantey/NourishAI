@@ -277,16 +277,31 @@ def get_age_note(age):
         return AGE_NUTRITION_NOTES['senior']
 
 
+def _sanitize_user_text(text, max_length=200):
+    """
+    Strip potential prompt injection from free-text user fields before
+    interpolating into Groq prompts. Removes newlines (which could break
+    prompt structure), trims whitespace, and caps length.
+    """
+    if not text:
+        return ''
+    # Collapse newlines and extra whitespace into a single space
+    sanitized = ' '.join(text.split())
+    # Hard cap — anything longer is suspicious
+    return sanitized[:max_length]
+
+
 def get_health_condition_rules(health_conditions, other_health_condition=''):
     rules = []
     if health_conditions:
         for condition in health_conditions:
             if condition in HEALTH_CONDITION_RULES:
                 rules.append(HEALTH_CONDITION_RULES[condition])
-    if other_health_condition and other_health_condition.strip():
+    cleaned = _sanitize_user_text(other_health_condition)
+    if cleaned:
         rules.append(f"""
 ADDITIONAL HEALTH CONDITION REPORTED BY USER:
-The user has reported the following health condition: "{other_health_condition.strip()}"
+The user has reported the following health condition: "{cleaned}"
 As a professional nutritionist, apply appropriate dietary guidance for this condition using your medical knowledge.
 Avoid foods that are commonly contraindicated for this condition and favour foods that support its management.
 """)
@@ -295,8 +310,9 @@ Avoid foods that are commonly contraindicated for this condition and favour food
 
 def get_allergy_summary(allergies, other_allergy=''):
     all_allergies = list(allergies) if allergies else []
-    if other_allergy and other_allergy.strip():
-        all_allergies.append(f"other: {other_allergy.strip()}")
+    cleaned = _sanitize_user_text(other_allergy)
+    if cleaned:
+        all_allergies.append(f"other: {cleaned}")
     return ', '.join(all_allergies) if all_allergies else 'None'
 
 
@@ -328,7 +344,7 @@ Generate a detailed 7-day meal plan for a person with the following profile:
 - Dietary Preference: {profile.dietary_preference}
 - Allergies (NEVER include these in any meal): {allergy_summary}
 - Health Conditions: {', '.join(profile.health_conditions) if profile.health_conditions else 'None'}
-- Other Health Condition: {profile.other_health_condition if getattr(profile, 'other_health_condition', '') else 'None'}
+- Other Health Condition: {_sanitize_user_text(getattr(profile, 'other_health_condition', '')) or 'None'}
 - Fitness Goal: {profile.fitness_goal}
 - Weekly Budget: ₵{profile.budget}
 - Generation timestamp (use this to vary your output): {timezone.now()}
@@ -502,7 +518,7 @@ Generate ONE new {meal_type} meal for {day} for this person:
 - Dietary Preference: {profile.dietary_preference}
 - Allergies (NEVER include these): {allergy_summary}
 - Health Conditions: {', '.join(profile.health_conditions) if profile.health_conditions else 'None'}
-- Other Health Condition: {profile.other_health_condition if getattr(profile, 'other_health_condition', '') else 'None'}
+- Other Health Condition: {_sanitize_user_text(getattr(profile, 'other_health_condition', '')) or 'None'}
 - Fitness Goal: {profile.fitness_goal}
 - Daily Calorie Target: {profile.daily_calorie_target} kcal
 - Generation timestamp (use this to vary your output): {timezone.now()}

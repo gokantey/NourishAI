@@ -6,59 +6,118 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
-// ── Attach access token to every request ──
+// ── Public endpoints that never need an access token ──
+const PUBLIC_ENDPOINTS = [
+  '/auth/login', '/auth/register', '/auth/verify-otp', '/auth/resend-otp',
+  '/auth/google', '/auth/forgot-password', '/auth/reset-password',
+  '/auth/token/refresh', '/shared/',
+]
+
+function isPublicEndpoint(url = '') {
+  return PUBLIC_ENDPOINTS.some(p => url.includes(p))
+}
+
+// ── Request interceptor: attach token OR abort if logged out ──
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('access_token')
-  if (token) config.headers.Authorization = `Bearer ${token}`
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  } else if (!isPublicEndpoint(config.url)) {
+    // No token and not a public endpoint — cancel the request immediately.
+    // This stops all in-flight requests the moment tokens are cleared,
+    // preventing the retry loop after suspension/deletion/logout.
+    const controller = new AbortController()
+    controller.abort()
+    config.signal = controller.signal
+  }
+
   return config
 })
 
-// ── Auto-refresh on 401, auto-logout on suspended/deleted ──
+// ── Single shared refresh promise ──
+let _refreshPromise = null
+
+async function refreshAccessToken() {
+  if (_refreshPromise) return _refreshPromise
+  _refreshPromise = axios
+    .post('http://localhost:8000/api/auth/token/refresh/', {
+      refresh: localStorage.getItem('refresh_token'),
+    })
+    .then((res) => {
+      localStorage.setItem('access_token', res.data.access)
+      return res.data.access
+    })
+    .catch((err) => {
+      const code = err.response?.data?.error_code
+      const detail = (err.response?.data?.detail || '').toLowerCase()
+      if (code === 'account_suspended' || detail.includes('inactive')) {
+        forceLogout('account_suspended')
+      } else {
+        forceLogout('session_expired')
+      }
+      throw err
+    })
+    .finally(() => { _refreshPromise = null })
+  return _refreshPromise
+}
+
+function forceLogout(reason) {
+  // Clear tokens first — the request interceptor will abort any new requests
+  localStorage.removeItem('access_token')
+  localStorage.removeItem('refresh_token')
+  localStorage.removeItem('auth-storage')
+  window.location.href = `/login?reason=${reason}`
+}
+
+// ── Response interceptor ──
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const original = error.config
-
-    // Suspended account — backend explicitly returns 403 + error_code
-    if (error.response?.status === 403) {
-      const code = error.response?.data?.error_code
-      if (code === 'account_suspended') {
-        localStorage.removeItem('access_token')
-        localStorage.removeItem('refresh_token')
-        localStorage.removeItem('auth-storage')
-        window.location.href = '/login?reason=account_suspended'
-        return Promise.reject(error)
-      }
+    // Aborted requests (from our request interceptor) — ignore silently
+    if (axios.isCancel(error) || error.code === 'ERR_CANCELED') {
+      return Promise.reject(error)
     }
 
-    if (error.response?.status === 401 && !original._retry) {
-      // Don't intercept 401s from auth endpoints — those are legitimate login failures
-      const url = original.url || ''
-      const isAuthEndpoint = url.includes('/auth/login') || url.includes('/auth/register') ||
-        url.includes('/auth/verify-otp') || url.includes('/auth/google') ||
-        url.includes('/auth/forgot-password') || url.includes('/auth/reset-password')
-      if (isAuthEndpoint) return Promise.reject(error)
+    const original = error.config
+    const status = error.response?.status
+    const data = error.response?.data || {}
+    const detail = (data.detail || '').toLowerCase()
 
-      original._retry = true
-      const refresh = localStorage.getItem('refresh_token')
-      if (refresh) {
+    // 403: explicitly suspended
+    if (status === 403 && data.error_code === 'account_suspended') {
+      forceLogout('account_suspended')
+      return Promise.reject(error)
+    }
+
+    if (status === 401) {
+      // Auth endpoints — pass through, don't retry
+      if (isPublicEndpoint(original.url || '')) return Promise.reject(error)
+
+      // Suspended user — detected via "inactive" in detail message
+      if (data.error_code === 'account_suspended' || detail.includes('inactive')) {
+        forceLogout('account_suspended')
+        return Promise.reject(error)
+      }
+
+      // Try refresh once
+      if (!original._retry) {
+        original._retry = true
+        const refresh = localStorage.getItem('refresh_token')
+        if (!refresh) {
+          window.location.href = '/login'
+          return Promise.reject(error)
+        }
         try {
-          const res = await axios.post('http://localhost:8000/api/auth/token/refresh/', { refresh })
-          const newAccess = res.data.access
-          localStorage.setItem('access_token', newAccess)
+          const newAccess = await refreshAccessToken()
           original.headers.Authorization = `Bearer ${newAccess}`
           return api(original)
         } catch {
-          // Refresh failed — token expired, user deleted, or any other termination
-          localStorage.removeItem('access_token')
-          localStorage.removeItem('refresh_token')
-          localStorage.removeItem('auth-storage')
-          window.location.href = '/login?reason=session_expired'
+          return Promise.reject(error)
         }
-      } else {
-        window.location.href = '/login'
       }
     }
+
     return Promise.reject(error)
   }
 )

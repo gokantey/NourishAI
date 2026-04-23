@@ -19,19 +19,30 @@ export default function NotificationBell() {
   const [loading, setLoading] = useState(false)
   const [panelPos, setPanelPos] = useState({ top: 64, right: 16 })
   const btnRef = useRef(null)
+  const intervalRef = useRef(null)
 
   const fetchNotifications = useCallback(async () => {
+    // Stop polling immediately if the user has been logged out
+    if (!localStorage.getItem('access_token')) {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+        intervalRef.current = null
+      }
+      return
+    }
     try {
       const res = await api.get('/notifications/')
       setNotifications(res.data.notifications)
       setUnreadCount(res.data.unread_count)
-    } catch { /* silent */ }
+    } catch { /* silent — interceptor handles auth errors */ }
   }, [])
 
   useEffect(() => {
     fetchNotifications()
-    const interval = setInterval(fetchNotifications, 30000)
-    return () => clearInterval(interval)
+    intervalRef.current = setInterval(fetchNotifications, 30000)
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current)
+    }
   }, [fetchNotifications])
 
   const handleOpen = () => {
@@ -67,7 +78,7 @@ export default function NotificationBell() {
     <AnimatePresence>
       {open && (
         <>
-          {/* Fullscreen backdrop — renders directly on document.body */}
+          {/* Fullscreen backdrop */}
           <div
             style={{ position: 'fixed', inset: 0, zIndex: 99998 }}
             onClick={() => setOpen(false)}
@@ -194,7 +205,6 @@ export default function NotificationBell() {
         )}
       </button>
 
-      {/* Render panel outside the component tree via portal */}
       {createPortal(panel, document.body)}
     </>
   )

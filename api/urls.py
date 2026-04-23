@@ -1,18 +1,32 @@
 from django.urls import path
 from rest_framework_simplejwt.views import TokenRefreshView
-from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 from rest_framework.response import Response
 from rest_framework import status as drf_status
 
 class SafeTokenRefreshView(TokenRefreshView):
-    """Returns 401 instead of 500 when the user associated with the token no longer exists."""
+    """
+    Wraps TokenRefreshView to handle two edge cases cleanly:
+    1. Deleted user — User.DoesNotExist → 401 instead of 500
+    2. Suspended user — is_active=False → 401 with error_code: account_suspended
+       so the frontend interceptor can redirect to the right banner
+    """
     def post(self, request, *args, **kwargs):
         try:
             return super().post(request, *args, **kwargs)
         except Exception as e:
-            if 'DoesNotExist' in type(e).__name__ or 'matching query does not exist' in str(e):
-                return Response({'detail': 'User no longer exists.'}, status=drf_status.HTTP_401_UNAUTHORIZED)
+            err_str = str(e)
+            if 'DoesNotExist' in type(e).__name__ or 'matching query does not exist' in err_str:
+                return Response(
+                    {'detail': 'User no longer exists.'},
+                    status=drf_status.HTTP_401_UNAUTHORIZED
+                )
+            if 'inactive' in err_str.lower() or 'is_active' in err_str.lower():
+                return Response(
+                    {'detail': 'User is inactive.', 'error_code': 'account_suspended'},
+                    status=drf_status.HTTP_401_UNAUTHORIZED
+                )
             raise
+
 from . import views, admin_views
 
 urlpatterns = [
@@ -58,11 +72,11 @@ urlpatterns = [
     path('notifications/read-all/', views.mark_all_read_view, name='api_notifications_read_all'),
     path('notifications/<int:pk>/read/', views.mark_read_view, name='api_notification_read'),
 
-    # Phase 9 — Snacks & Rebalancing
+    # Snacks & Rebalancing
     path('plans/<int:pk>/snacks/', views.snacks_view, name='plan_snacks'),
     path('plans/<int:pk>/rebalance/', views.rebalance_view, name='plan_rebalance'),
 
-    # Phase 8 — PDF & Share
+    # PDF & Share
     path('plans/<int:pk>/export-pdf/', views.export_pdf_view, name='export_pdf'),
     path('plans/<int:pk>/share/', views.share_plan_view, name='share_plan'),
     path('shared/<uuid:token>/', views.public_shared_plan_view, name='public_shared_plan'),
@@ -72,7 +86,8 @@ urlpatterns = [
     path('progress/checkin/', views.checkin_view, name='api_checkin'),
     path('progress/freeze/', views.use_freeze_view, name='api_freeze'),
     path('progress/checklist-prefs/', views.update_checklist_prefs_view, name='api_checklist_prefs'),
-    # ── Admin Portal ──────────────────────────────────────────────────────────
+
+    # Admin Portal
     path('admin-portal/login/',                      admin_views.admin_login_view,              name='admin_login'),
     path('admin-portal/dashboard/',                  admin_views.admin_dashboard_view,          name='admin_dashboard'),
     path('admin-portal/users/',                      admin_views.admin_users_view,              name='admin_users'),

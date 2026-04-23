@@ -11,8 +11,12 @@ from django.utils import timezone
 from django.db.models import Count, Sum, Avg, Q
 
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.throttling import AnonRateThrottle
+
+class AdminLoginThrottle(AnonRateThrottle):
+    scope = 'login'
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -26,6 +30,7 @@ class IsStaff(IsAuthenticated):
 
 @api_view(['POST'])
 @permission_classes([])
+@throttle_classes([AdminLoginThrottle])
 def admin_login_view(request):
     username = request.data.get('username')
     password = request.data.get('password')

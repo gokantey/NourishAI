@@ -146,7 +146,7 @@ export function UpgradePage() {
           {isPremium ? (
             <div>
               <div style={{ padding: '0.75rem', background: 'rgba(245,166,35,0.1)', borderRadius: 12, textAlign: 'center', fontSize: '0.875rem', fontWeight: 600, color: '#F4845F', marginBottom: '0.75rem' }}>
-                ✨ Active Plan
+                 Active Plan
               </div>
               <button
                 onClick={() => setCancelModalOpen(true)}
