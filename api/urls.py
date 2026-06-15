@@ -30,6 +30,9 @@ class SafeTokenRefreshView(TokenRefreshView):
 from . import views, admin_views
 
 urlpatterns = [
+    # Health check
+    path('health/', views.health_view, name='api_health'),
+
     # Auth
     path('auth/register/', views.register_view, name='api_register'),
     path('auth/verify-otp/', views.verify_otp_view, name='api_verify_otp'),

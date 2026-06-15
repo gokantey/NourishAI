@@ -76,6 +76,16 @@ def cleanup_old_plans(user):
     ).delete()
 
 
+# ─── Health check ─────────────────────────────────────────────────────────────
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+@authentication_classes([])
+def health_view(request):
+    """Simple public health check endpoint to wake up Render container on page load."""
+    return Response({'status': 'healthy'}, status=status.HTTP_200_OK)
+
+
 # ─── Auth ─────────────────────────────────────────────────────────────────────
 
 @api_view(['POST'])

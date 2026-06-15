@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff, Leaf, UserPlus, Shield } from 'lucide-react'
 import { authAPI } from '../api/client'
@@ -25,6 +25,11 @@ function FormField({ label, name, type = 'text', placeholder, value, onChange, e
 
 export default function RegisterPage() {
   const navigate = useNavigate()
+
+  useEffect(() => {
+    // Ping backend in background to warm it up on cold starts
+    authAPI.ping().catch(() => {})
+  }, [])
   const [form, setForm] = useState({
     first_name: '', last_name: '', username: '', email: '', password: '', password2: ''
   })

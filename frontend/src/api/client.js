@@ -10,6 +10,7 @@ const api = axios.create({
 
 // ── Public endpoints that never need an access token ──
 const PUBLIC_ENDPOINTS = [
+  '/health',
   '/auth/login', '/auth/register', '/auth/verify-otp', '/auth/resend-otp',
   '/auth/google', '/auth/forgot-password', '/auth/reset-password',
   '/auth/token/refresh', '/shared/',
@@ -126,6 +127,7 @@ api.interceptors.response.use(
 
 // ── Auth endpoints ──
 export const authAPI = {
+  ping: () => api.get('/health/'),
   register: (data) => api.post('/auth/register/', data),
   verifyOTP: (data) => api.post('/auth/verify-otp/', data),
   resendOTP: () => api.post('/auth/resend-otp/'),

@@ -19,6 +19,11 @@ export default function LoginPage() {
   const [error, setError] = useState('')
 
   useEffect(() => {
+    // Ping backend in background to warm it up on cold starts
+    authAPI.ping().catch(() => {})
+  }, [])
+
+  useEffect(() => {
     const params = new URLSearchParams(location.search)
     const reason = params.get('reason')
     if (reason === 'account_suspended') setError('suspended')
@@ -57,9 +62,11 @@ export default function LoginPage() {
         <div className="kente-strip" style={{ position: 'absolute', top: 0, left: 0, right: 0 }} />
 
         {/* Background pattern — subtle adinkra */}
-        {['✦','◈','◉','✧','⊕','◇'].map((s, i) => (
-          <div key={i} style={{ position: 'absolute', fontSize: '5rem', opacity: 0.03, lineHeight: 1, pointerEvents: 'none', userSelect: 'none', color: 'var(--lime)',
-            top: `${[10,25,45,60,75,88][i]}%`, left: `${[10,65,20,75,5,55][i]}%` }}>
+        {['✦', '◈', '◉', '✧', '⊕', '◇'].map((s, i) => (
+          <div key={i} style={{
+            position: 'absolute', fontSize: '5rem', opacity: 0.03, lineHeight: 1, pointerEvents: 'none', userSelect: 'none', color: 'var(--lime)',
+            top: `${[10, 25, 45, 60, 75, 88][i]}%`, left: `${[10, 65, 20, 75, 5, 55][i]}%`
+          }}>
             {s}
           </div>
         ))}
@@ -73,8 +80,8 @@ export default function LoginPage() {
           style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', position: 'relative' }}>
           <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--lime)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--night)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/>
-              <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
+              <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z" />
+              <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" />
             </svg>
           </div>
           <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 700, color: 'var(--text)' }}>
@@ -106,15 +113,15 @@ export default function LoginPage() {
 
       {/* Right panel */}
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem', background: 'var(--surface)' }}>
-        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.16,1,0.3,1] }}
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           style={{ width: '100%', maxWidth: 400 }}>
 
           {/* Mobile logo */}
           <div className="auth-mobile-logo" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '2.5rem' }}>
             <div style={{ width: 34, height: 34, borderRadius: 10, background: 'var(--lime)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--night)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/>
-                <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
+                <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z" />
+                <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" />
               </svg>
             </div>
             <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.2rem', fontWeight: 700, color: 'var(--text)' }}>
