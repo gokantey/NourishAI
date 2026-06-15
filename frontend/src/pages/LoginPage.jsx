@@ -122,7 +122,7 @@ export default function LoginPage() {
             </span>
           </div>
 
-          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.875rem', fontWeight: 800, color: 'var(--text)', marginBottom: '0.25rem', letterSpacing: '-0.02em' }}>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.875rem', fontWeight: 700, color: 'var(--text)', marginBottom: '0.25rem', letterSpacing: '-0.02em' }}>
             Welcome back
           </h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: '2rem', fontFamily: 'var(--font-body)' }}>
