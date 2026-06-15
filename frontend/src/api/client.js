@@ -1,7 +1,9 @@
 import axios from 'axios'
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'
+
 const api = axios.create({
-  baseURL: 'http://localhost:8000/api',
+  baseURL: API_BASE_URL,
   withCredentials: true,
   headers: { 'Content-Type': 'application/json' },
 })
@@ -41,7 +43,7 @@ let _refreshPromise = null
 async function refreshAccessToken() {
   if (_refreshPromise) return _refreshPromise
   _refreshPromise = axios
-    .post('http://localhost:8000/api/auth/token/refresh/', {
+    .post(`${API_BASE_URL}/auth/token/refresh/`, {
       refresh: localStorage.getItem('refresh_token'),
     })
     .then((res) => {

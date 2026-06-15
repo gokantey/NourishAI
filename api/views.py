@@ -16,7 +16,7 @@ from django.http import HttpResponse
 from django.db import models as db_models
 
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes, throttle_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
@@ -80,6 +80,7 @@ def cleanup_old_plans(user):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@authentication_classes([])
 @throttle_classes([LoginThrottle])
 def register_view(request):
     serializer = RegisterSerializer(data=request.data)
@@ -130,6 +131,7 @@ def register_view(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@authentication_classes([])
 @throttle_classes([OTPThrottle])
 def verify_otp_view(request):
     pending = request.session.get('pending_registration')
@@ -179,6 +181,7 @@ def verify_otp_view(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@authentication_classes([])
 @throttle_classes([OTPThrottle])
 def resend_otp_view(request):
     pending = request.session.get('pending_registration')
@@ -212,6 +215,7 @@ def resend_otp_view(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@authentication_classes([])
 @throttle_classes([LoginThrottle])
 def login_view(request):
     username = request.data.get('username', '').strip()
@@ -257,6 +261,7 @@ def login_view(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@authentication_classes([])
 @throttle_classes([LoginThrottle])
 def google_auth_view(request):
     """
@@ -350,6 +355,7 @@ def google_auth_view(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@authentication_classes([])
 def forgot_password_view(request):
     serializer = ForgotPasswordSerializer(data=request.data)
     if not serializer.is_valid():
@@ -360,7 +366,7 @@ def forgot_password_view(request):
         user = User.objects.get(email__iexact=email)
         token = default_token_generator.make_token(user)
         uid = urlsafe_base64_encode(force_bytes(user.pk))
-        frontend_url = 'http://localhost:5173'
+        frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:5173')
         reset_link = f'{frontend_url}/reset-password/{uid}/{token}'
         send_mail(
             subject='Reset your NourishAI password',
@@ -382,6 +388,7 @@ def forgot_password_view(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@authentication_classes([])
 def reset_password_view(request):
     serializer = ResetPasswordSerializer(data=request.data)
     if not serializer.is_valid():
