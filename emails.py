@@ -5,8 +5,19 @@ All outgoing emails live here. Import and call as needed from views and manageme
 
 from django.core.mail import send_mail
 from django.conf import settings
+import threading
+from functools import wraps
+
+def run_async(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        thread = threading.Thread(target=func, args=args, kwargs=kwargs)
+        thread.daemon = True
+        thread.start()
+    return wrapper
 
 
+@run_async
 def send_welcome_email(user):
     """Sent after OTP verified and account created."""
     try:
@@ -32,6 +43,7 @@ def send_welcome_email(user):
         pass
 
 
+@run_async
 def send_premium_upgrade_email(user):
     """Sent after successful payment and premium upgrade."""
     try:
@@ -59,6 +71,7 @@ def send_premium_upgrade_email(user):
         pass
 
 
+@run_async
 def send_cancellation_email(user):
     """Sent after subscription is cancelled."""
     try:
@@ -84,6 +97,7 @@ def send_cancellation_email(user):
         pass
 
 
+@run_async
 def send_payment_failed_email(user):
     """Sent when a recurring payment fails."""
     try:
@@ -106,6 +120,7 @@ def send_payment_failed_email(user):
         pass
 
 
+@run_async
 def send_save_limit_email(user):
     """Sent when a free user hits their 1 save limit."""
     try:
@@ -131,6 +146,7 @@ def send_save_limit_email(user):
         pass
 
 
+@run_async
 def send_weekly_summary_email(user, meal_plan):
     """
     Sent every Sunday at 7 PM to Premium users.
@@ -180,6 +196,7 @@ def send_weekly_summary_email(user, meal_plan):
     except Exception:
         pass
 
+@run_async
 def send_birthday_email(user):
     """Sent on the user's birthday."""
     try:
