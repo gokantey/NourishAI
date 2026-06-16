@@ -758,6 +758,9 @@ def rate_meal_view(request, pk):
 @permission_classes([IsAuthenticated])
 def create_checkout_view(request):
     try:
+        frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:5173')
+        callback_url = os.getenv('PAYSTACK_CALLBACK_URL', f'{frontend_url}/upgrade/success')
+
         response = http_requests.post(
             'https://api.paystack.co/transaction/initialize',
             headers={
@@ -767,7 +770,7 @@ def create_checkout_view(request):
             json={
                 'email': request.user.email,
                 'amount': 2000,
-                'callback_url': os.getenv('PAYSTACK_CALLBACK_URL', 'http://localhost:5173/upgrade/success'),  # use https:// in production
+                'callback_url': callback_url,
                 'metadata': {'user_id': request.user.id, 'plan': 'premium'}
             }
         )
