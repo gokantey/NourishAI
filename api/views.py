@@ -287,6 +287,8 @@ def resend_otp_view(request):
         request.session['pending_registration'] = pending
         request.session.modified = True
 
+        email_sent = True
+        _email_error = None
         try:
             # Keep UserProfile sync'd if it exists
             user = User.objects.filter(email__iexact=pending['email'], is_active=False).first()
@@ -309,9 +311,15 @@ def resend_otp_view(request):
                 fail_silently=False,
             )
         except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            email_sent = False
+            _email_error = e
 
-        return Response({'message': 'New code sent.'}, status=status.HTTP_200_OK)
+        response_data = {'message': 'New code sent.'}
+        if not email_sent:
+            response_data['dev_otp'] = new_otp
+            response_data['email_error'] = str(_email_error)
+            response_data['message'] = 'Email sending failed — use dev_otp below to verify.'
+        return Response(response_data, status=status.HTTP_200_OK)
 
     # 2. Database resend
     if not email:
@@ -328,6 +336,8 @@ def resend_otp_view(request):
     profile.otp_created_at = timezone.now()
     profile.save()
 
+    email_sent = True
+    _email_error = None
     try:
         send_mail(
             subject='Your new NourishAI verification code',
@@ -342,11 +352,17 @@ def resend_otp_view(request):
             fail_silently=False,
         )
     except Exception as e:
+        email_sent = False
+        _email_error = e
         import logging
         logging.getLogger(__name__).error(f'Email send failed: {e}')
-        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    return Response({'message': 'New code sent.'}, status=status.HTTP_200_OK)
+    response_data = {'message': 'New code sent.'}
+    if not email_sent:
+        response_data['dev_otp'] = new_otp
+        response_data['email_error'] = str(_email_error)
+        response_data['message'] = 'Email sending failed — use dev_otp below to verify.'
+    return Response(response_data, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])

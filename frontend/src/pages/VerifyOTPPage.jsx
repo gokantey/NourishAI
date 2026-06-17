@@ -81,11 +81,17 @@ export default function VerifyOTPPage() {
     setResending(true)
     const email = sessionStorage.getItem('reg_email')
     try {
-      await authAPI.resendOTP({ email })
+      const res = await authAPI.resendOTP({ email })
+      if (res.data && res.data.dev_otp) {
+        sessionStorage.setItem('dev_otp', res.data.dev_otp)
+        toast.success('New verification code generated (using dev_otp fallback)!')
+      } else {
+        sessionStorage.removeItem('dev_otp')
+        toast.success('New verification code sent!')
+      }
       setCountdown(120)
       setOtp(['', '', '', '', '', ''])
       setError('')
-      toast.success('New verification code sent!')
       inputs.current[0]?.focus()
     } catch {
       toast.error('Failed to resend code.')
