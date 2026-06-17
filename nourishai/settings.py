@@ -136,9 +136,10 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 465
 EMAIL_USE_SSL = True
 EMAIL_USE_TLS = False
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
-DEFAULT_FROM_EMAIL = 'NourishAI <noreply@nourishai.com>'
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '').strip()
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '').strip()
+EMAIL_TIMEOUT = 5
+DEFAULT_FROM_EMAIL = f"NourishAI <{EMAIL_HOST_USER}>"
 
 # CRONJOBS = [
 #     # Every Sunday at 7:00 PM

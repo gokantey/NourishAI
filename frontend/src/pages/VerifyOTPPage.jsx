@@ -117,6 +117,11 @@ export default function VerifyOTPPage() {
             We sent a 6-digit code to<br />
             <span style={{ fontWeight: 600, color: 'var(--text-dim)' }}>{maskedEmail}</span>
           </p>
+          {sessionStorage.getItem('dev_otp') && (
+            <div style={{ marginTop: '0.75rem', padding: '0.5rem', background: 'rgba(245,158,11,0.1)', border: '1px solid var(--amber)', borderRadius: 8, fontSize: '0.85rem', color: 'var(--amber)' }}>
+              🔑 Dev OTP (Email failed to send): <strong>{sessionStorage.getItem('dev_otp')}</strong>
+            </div>
+          )}
         </div>
 
         <div style={{ background: "var(--surface)", border: "1px solid var(--border2)", borderRadius: 20, padding: "1.5rem" }}>

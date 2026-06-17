@@ -58,7 +58,13 @@ export default function RegisterPage() {
       const res = await authAPI.register(form)
       sessionStorage.setItem('otp_email', res.data.masked_email)
       sessionStorage.setItem('reg_email', form.email)
-      toast.success('Verification code sent to your email!')
+      if (res.data.dev_otp) {
+        sessionStorage.setItem('dev_otp', res.data.dev_otp)
+        toast.success('Registration success (using dev_otp fallback)!')
+      } else {
+        sessionStorage.removeItem('dev_otp')
+        toast.success('Verification code sent to your email!')
+      }
       navigate('/verify-otp')
     } catch (err) {
       const data = err.response?.data
