@@ -178,12 +178,12 @@ class RegisterSerializer(serializers.Serializer):
     password2 = serializers.CharField(write_only=True)
 
     def validate_username(self, value):
-        if User.objects.filter(username=value).exists():
+        if User.objects.filter(username=value, is_active=True).exists():
             raise serializers.ValidationError('A user with this username already exists.')
         return value
 
     def validate_email(self, value):
-        if User.objects.filter(email__iexact=value).exists():
+        if User.objects.filter(email__iexact=value, is_active=True).exists():
             raise serializers.ValidationError('A user with this email already exists.')
         return value
 
@@ -194,6 +194,7 @@ class RegisterSerializer(serializers.Serializer):
 
 
 class VerifyOTPSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=False)
     otp = serializers.CharField(min_length=6, max_length=6)
 
 

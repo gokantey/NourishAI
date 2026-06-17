@@ -122,6 +122,18 @@ def register_view(request):
     profile.otp_created_at = timezone.now()
     profile.save()
 
+    # Save to session as fallback for legacy frontends
+    request.session['pending_registration'] = {
+        'username': username,
+        'email': email,
+        'first_name': serializer.validated_data['first_name'],
+        'last_name': serializer.validated_data['last_name'],
+        'password': serializer.validated_data['password'],
+        'otp': otp,
+        'otp_created_at': timezone.now().isoformat(),
+    }
+    request.session.modified = True
+
     email_sent = True
     _email_error = None
     try:
@@ -161,8 +173,62 @@ def verify_otp_view(request):
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    email = serializer.validated_data['email']
+    email = serializer.validated_data.get('email')
     entered_otp = serializer.validated_data['otp']
+
+    pending = request.session.get('pending_registration')
+
+    # 1. Fallback to session if email is not passed in the request
+    if not email and pending:
+        email = pending.get('email')
+        stored_otp = pending.get('otp')
+        otp_created_at_str = pending.get('otp_created_at')
+
+        if not stored_otp or not otp_created_at_str:
+            return Response({'error': 'invalid'}, status=status.HTTP_400_BAD_REQUEST)
+
+        created_at = datetime.fromisoformat(otp_created_at_str)
+        if created_at.tzinfo is None:
+            from django.utils.timezone import make_aware
+            created_at = make_aware(created_at)
+
+        if timezone.now() > created_at + timedelta(minutes=OTP_EXPIRY_MINUTES):
+            return Response({'error': 'expired'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if entered_otp != stored_otp:
+            return Response({'error': 'invalid'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # Check if user already exists from db-save during register
+            user = User.objects.filter(email__iexact=email, is_active=False).first()
+            if not user:
+                user = User.objects.create_user(
+                    username=pending['username'],
+                    email=pending['email'],
+                    first_name=pending['first_name'],
+                    last_name=pending['last_name'],
+                    password=pending['password'],
+                )
+            user.is_active = True
+            user.save()
+
+            # Clean session
+            del request.session['pending_registration']
+            request.session.modified = True
+
+            send_welcome_email(user)
+            tokens = get_tokens_for_user(user)
+            return Response({
+                'message': f'Welcome to NourishAI, {user.first_name}!',
+                'tokens': tokens,
+                'user': {'id': user.id, 'first_name': user.first_name, 'last_name': user.last_name, 'username': user.username, 'email': user.email},
+            }, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    # 2. Database-backed verification
+    if not email:
+        return Response({'error': 'No pending registration. Please register again.'}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
         user = User.objects.get(email__iexact=email, is_active=False)
@@ -189,6 +255,11 @@ def verify_otp_view(request):
         profile.otp_created_at = None
         profile.save()
 
+        # Clean session if it exists
+        if 'pending_registration' in request.session:
+            del request.session['pending_registration']
+            request.session.modified = True
+
         send_welcome_email(user)
         tokens = get_tokens_for_user(user)
         return Response({
@@ -205,7 +276,44 @@ def verify_otp_view(request):
 @authentication_classes([])
 @throttle_classes([OTPThrottle])
 def resend_otp_view(request):
+    pending = request.session.get('pending_registration')
     email = request.data.get('email')
+
+    # 1. Fallback to session resend if email is missing
+    if not email and pending:
+        new_otp = str(secrets.randbelow(900000) + 100000)
+        pending['otp'] = new_otp
+        pending['otp_created_at'] = timezone.now().isoformat()
+        request.session['pending_registration'] = pending
+        request.session.modified = True
+
+        try:
+            # Keep UserProfile sync'd if it exists
+            user = User.objects.filter(email__iexact=pending['email'], is_active=False).first()
+            if user:
+                profile = user.profile
+                profile.otp = new_otp
+                profile.otp_created_at = timezone.now()
+                profile.save()
+
+            send_mail(
+                subject='Your new NourishAI verification code',
+                message=(
+                    f'Hi {pending["first_name"]},\n\n'
+                    f'Your new verification code: {new_otp}\n\n'
+                    f'This code expires in {OTP_EXPIRY_MINUTES} minutes.\n\n'
+                    f'— The NourishAI Team'
+                ),
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[pending['email']],
+                fail_silently=False,
+            )
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        return Response({'message': 'New code sent.'}, status=status.HTTP_200_OK)
+
+    # 2. Database resend
     if not email:
         return Response({'error': 'Email is required.'}, status=status.HTTP_400_BAD_REQUEST)
 

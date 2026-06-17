@@ -122,6 +122,8 @@ class UserProfile(models.Model):
     paystack_subscription_code = models.CharField(max_length=100, blank=True, null=True)
     plan_generations_count = models.IntegerField(default=0)
     generation_reset_date = models.DateField(null=True, blank=True)
+    otp = models.CharField(max_length=6, blank=True, null=True)
+    otp_created_at = models.DateTimeField(blank=True, null=True)
 
     # Daily checklist customisation — stores list of active item keys
     # Defaults to all 6 items enabled
