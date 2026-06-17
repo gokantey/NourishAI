@@ -12,7 +12,7 @@ export default function VerifyOTPPage() {
   const [loading, setLoading] = useState(false)
   const [resending, setResending] = useState(false)
   const [error, setError] = useState('')
-  const [countdown, setCountdown] = useState(600)
+  const [countdown, setCountdown] = useState(120)
   const inputs = useRef([])
   const maskedEmail = sessionStorage.getItem('otp_email') || 'your email'
 
@@ -31,10 +31,13 @@ export default function VerifyOTPPage() {
   const submitOtp = async (code) => {
     setLoading(true)
     setError('')
+    const email = sessionStorage.getItem('reg_email')
     try {
-      const res = await authAPI.verifyOTP({ otp: code })
+      const res = await authAPI.verifyOTP({ email, otp: code })
       const { tokens, user } = res.data
       setAuth(user, tokens, false, 'free')
+      sessionStorage.removeItem('reg_email')
+      sessionStorage.removeItem('otp_email')
       toast.success(`Welcome to NourishAI, ${user.first_name}! 🎉`)
       navigate('/onboarding')
     } catch (err) {
@@ -76,9 +79,10 @@ export default function VerifyOTPPage() {
 
   const handleResend = async () => {
     setResending(true)
+    const email = sessionStorage.getItem('reg_email')
     try {
-      await authAPI.resendOTP()
-      setCountdown(600)
+      await authAPI.resendOTP({ email })
+      setCountdown(120)
       setOtp(['', '', '', '', '', ''])
       setError('')
       toast.success('New verification code sent!')

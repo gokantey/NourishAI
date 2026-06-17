@@ -131,6 +131,9 @@ function IntroSplash({ onStart }) {
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.4 }}
     >
+
+
+
       {/* Logo */}
       <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem' }}>

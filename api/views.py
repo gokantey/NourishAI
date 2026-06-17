@@ -54,7 +54,7 @@ import requests as http_requests
 import os
 
 User = get_user_model()
-OTP_EXPIRY_MINUTES = 10
+OTP_EXPIRY_MINUTES = 2
 PARTIAL_DAYS = ['monday', 'tuesday', 'wednesday']
 ALL_DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
 
@@ -97,16 +97,30 @@ def register_view(request):
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    email = serializer.validated_data['email']
+    username = serializer.validated_data['username']
+
+    # Clean up any existing inactive user with same email or username first
+    User.objects.filter(email__iexact=email, is_active=False).delete()
+    User.objects.filter(username__iexact=username, is_active=False).delete()
+
+    # Create user with is_active=False
+    user = User.objects.create_user(
+        username=username,
+        email=email,
+        first_name=serializer.validated_data['first_name'],
+        last_name=serializer.validated_data['last_name'],
+        password=serializer.validated_data['password'],
+    )
+    user.is_active = False
+    user.save()
+
+    # Generate OTP
     otp = str(secrets.randbelow(900000) + 100000)
-    request.session['pending_registration'] = {
-        'username': serializer.validated_data['username'],
-        'email': serializer.validated_data['email'],
-        'first_name': serializer.validated_data['first_name'],
-        'last_name': serializer.validated_data['last_name'],
-        'password': serializer.validated_data['password'],
-        'otp': otp,
-        'otp_created_at': timezone.now().isoformat(),
-    }
+    profile = user.profile
+    profile.otp = otp
+    profile.otp_created_at = timezone.now()
+    profile.save()
 
     email_sent = True
     _email_error = None
@@ -120,7 +134,7 @@ def register_view(request):
                 f'— The NourishAI Team'
             ),
             from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[serializer.validated_data['email']],
+            recipient_list=[email],
             fail_silently=False,
         )
     except Exception as e:
@@ -129,7 +143,6 @@ def register_view(request):
         import logging
         logging.getLogger(__name__).error(f'Email send failed: {e}')
 
-    email = serializer.validated_data['email']
     masked = email[:2] + '***' + email[email.index('@'):]
     response_data = {'message': 'Verification code sent.', 'masked_email': masked}
     if not email_sent:
@@ -144,40 +157,38 @@ def register_view(request):
 @authentication_classes([])
 @throttle_classes([OTPThrottle])
 def verify_otp_view(request):
-    pending = request.session.get('pending_registration')
-    if not pending:
-        return Response({'error': 'No pending registration. Please register again.'}, status=status.HTTP_400_BAD_REQUEST)
-
     serializer = VerifyOTPSerializer(data=request.data)
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    email = serializer.validated_data['email']
     entered_otp = serializer.validated_data['otp']
-    stored_otp = pending.get('otp')
-    otp_created_at = pending.get('otp_created_at')
 
-    created_at = datetime.fromisoformat(otp_created_at)
-    if created_at.tzinfo is None:
-        from django.utils.timezone import make_aware
-        created_at = make_aware(created_at)
+    try:
+        user = User.objects.get(email__iexact=email, is_active=False)
+    except User.DoesNotExist:
+        return Response({'error': 'No pending registration. Please register again.'}, status=status.HTTP_400_BAD_REQUEST)
 
-    if timezone.now() > created_at + timedelta(minutes=OTP_EXPIRY_MINUTES):
+    profile = user.profile
+    stored_otp = profile.otp
+    otp_created_at = profile.otp_created_at
+
+    if not stored_otp or not otp_created_at:
+        return Response({'error': 'invalid'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if timezone.now() > otp_created_at + timedelta(minutes=OTP_EXPIRY_MINUTES):
         return Response({'error': 'expired'}, status=status.HTTP_400_BAD_REQUEST)
 
     if entered_otp != stored_otp:
         return Response({'error': 'invalid'}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        user = User.objects.create_user(
-            username=pending['username'],
-            email=pending['email'],
-            first_name=pending['first_name'],
-            last_name=pending['last_name'],
-            password=pending['password'],
-        )
-        UserProfile.objects.get_or_create(user=user)
-        del request.session['pending_registration']
-        request.session.modified = True
+        user.is_active = True
+        user.save()
+        profile.otp = None
+        profile.otp_created_at = None
+        profile.save()
+
         send_welcome_email(user)
         tokens = get_tokens_for_user(user)
         return Response({
@@ -194,30 +205,37 @@ def verify_otp_view(request):
 @authentication_classes([])
 @throttle_classes([OTPThrottle])
 def resend_otp_view(request):
-    pending = request.session.get('pending_registration')
-    if not pending:
+    email = request.data.get('email')
+    if not email:
+        return Response({'error': 'Email is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        user = User.objects.get(email__iexact=email, is_active=False)
+    except User.DoesNotExist:
         return Response({'error': 'No pending registration.'}, status=status.HTTP_400_BAD_REQUEST)
 
     new_otp = str(secrets.randbelow(900000) + 100000)
-    pending['otp'] = new_otp
-    pending['otp_created_at'] = timezone.now().isoformat()
-    request.session['pending_registration'] = pending
-    request.session.modified = True
+    profile = user.profile
+    profile.otp = new_otp
+    profile.otp_created_at = timezone.now()
+    profile.save()
 
     try:
         send_mail(
             subject='Your new NourishAI verification code',
             message=(
-                f'Hi {pending["first_name"]},\n\n'
+                f'Hi {user.first_name},\n\n'
                 f'Your new verification code: {new_otp}\n\n'
                 f'This code expires in {OTP_EXPIRY_MINUTES} minutes.\n\n'
                 f'— The NourishAI Team'
             ),
             from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[pending['email']],
+            recipient_list=[email],
             fail_silently=False,
         )
     except Exception as e:
+        import logging
+        logging.getLogger(__name__).error(f'Email send failed: {e}')
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     return Response({'message': 'New code sent.'}, status=status.HTTP_200_OK)

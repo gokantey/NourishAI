@@ -57,6 +57,7 @@ export default function RegisterPage() {
     try {
       const res = await authAPI.register(form)
       sessionStorage.setItem('otp_email', res.data.masked_email)
+      sessionStorage.setItem('reg_email', form.email)
       toast.success('Verification code sent to your email!')
       navigate('/verify-otp')
     } catch (err) {
