@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Leaf, ChevronRight, ChevronLeft, Check } from 'lucide-react'
+import { Leaf, ChevronRight, ChevronLeft, Check, Utensils, HeartPulse, Wallet, Zap } from 'lucide-react'
 import { profileAPI } from '../api/client'
 import useAuthStore from '../store/authStore'
 import toast from 'react-hot-toast'
 
-const STEPS = ['Your Body', 'Diet & Health', 'Goals & Region']
+// Step -1 is the intro splash, steps 0-2 are data collection
+const STEPS = ['Your Body', 'Diet & Allergies', 'Goals & Region']
 
 const ALLERGY_OPTIONS = [
   ['nuts', '🥜 Nuts'], ['gluten', '🌾 Gluten'], ['dairy', '🥛 Dairy'],
@@ -15,26 +16,6 @@ const ALLERGY_OPTIONS = [
 const DIET_OPTIONS = [
   ['none', '🍽️ No Restriction'], ['vegan', '🌱 Vegan'], ['vegetarian', '🥦 Vegetarian'],
   ['keto', '🥩 Keto'], ['halal', '☪️ Halal'], ['gluten_free', '🌾 Gluten Free'], ['paleo', '🦴 Paleo'],
-]
-const HEALTH_GROUPS = [
-  { label: 'Metabolic & Endocrine', conditions: [
-    ['type1_diabetes', 'Type 1 Diabetes'], ['type2_diabetes', 'Type 2 Diabetes'],
-    ['hypertension', 'Hypertension'], ['high_cholesterol', 'High Cholesterol'],
-    ['hypothyroidism', 'Hypothyroidism'], ['hyperthyroidism', 'Hyperthyroidism'],
-    ['fatty_liver', 'Fatty Liver'], ['gout', 'Gout'],
-  ]},
-  { label: 'Blood & Immune', conditions: [
-    ['anaemia', 'Anaemia'], ['sickle_cell', 'Sickle Cell'], ['hiv_aids', 'HIV/AIDS'],
-  ]},
-  { label: 'Digestive', conditions: [
-    ['celiac_disease', 'Celiac Disease'], ['lactose_intolerance', 'Lactose Intolerance'],
-    ['gastritis', 'Gastritis / Acid Reflux'], ['ibs', 'IBS'], ['kidney_disease', 'Kidney Disease'],
-  ]},
-  { label: 'Hormonal, Respiratory & Other', conditions: [
-    ['pcos', 'PCOS'], ['asthma', 'Asthma'], ['heart_disease', 'Heart Disease'],
-    ['stroke_history', 'Stroke History'], ['cancer', 'Cancer'], ['osteoporosis', 'Osteoporosis'],
-    ['arthritis', 'Arthritis'],
-  ]},
 ]
 const REGION_OPTIONS = [
   ['greater_accra', 'Greater Accra'], ['ashanti', 'Ashanti'], ['western', 'Western'],
@@ -45,6 +26,15 @@ const REGION_OPTIONS = [
 ]
 const FITNESS_OPTIONS = [
   ['lose_weight', '📉 Lose Weight'], ['maintain', '⚖️ Maintain Weight'], ['build_muscle', '💪 Build Muscle'],
+]
+const SEX_OPTIONS = [
+  ['male', '♂ Male'], ['female', '♀ Female'], ['prefer_not_to_say', '— Prefer not to say'],
+]
+const ACTIVITY_OPTIONS = [
+  ['sedentary', '🪑 Sedentary', 'Desk job, little exercise'],
+  ['lightly_active', '🚶 Lightly Active', 'Light exercise 1–3×/week'],
+  ['moderately_active', '🏃 Moderately Active', 'Moderate exercise 3–5×/week'],
+  ['very_active', '⚡ Very Active', 'Hard exercise 6–7×/week'],
 ]
 
 // ── Helpers ──
@@ -63,7 +53,7 @@ function getBMICategory(bmi) {
   return { label: 'Obese', color: '#ef4444' }
 }
 
-// ── Sub-components outside parent ──
+// ── Sub-components ──
 function ToggleButton({ active, onClick, children }) {
   return (
     <button type="button" onClick={onClick}
@@ -77,6 +67,32 @@ function ToggleButton({ active, onClick, children }) {
         cursor: 'pointer', transition: 'all 0.15s', textAlign: 'left',
       }}>
       {children}
+    </button>
+  )
+}
+
+function ActivityToggle({ active, onClick, label, description }) {
+  return (
+    <button type="button" onClick={onClick}
+      style={{
+        display: 'flex', alignItems: 'flex-start', gap: '0.625rem',
+        padding: '0.625rem 0.75rem', borderRadius: '0.75rem', width: '100%',
+        border: `1px solid ${active ? '#2D6A4F' : '#E0E0D8'}`,
+        background: active ? '#f0fdf4' : 'white',
+        cursor: 'pointer', transition: 'all 0.15s', textAlign: 'left',
+      }}>
+      <div style={{
+        width: 16, height: 16, borderRadius: '50%',
+        border: `2px solid ${active ? '#2D6A4F' : '#C8C8BE'}`,
+        background: active ? '#2D6A4F' : 'transparent',
+        flexShrink: 0, marginTop: 2, display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        {active && <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'white' }} />}
+      </div>
+      <div>
+        <div style={{ fontWeight: 600, fontSize: '0.85rem', color: active ? '#2D6A4F' : '#3a3a35' }}>{label}</div>
+        <div style={{ fontSize: '0.75rem', color: '#88887E', marginTop: 2 }}>{description}</div>
+      </div>
     </button>
   )
 }
@@ -100,15 +116,129 @@ function CheckboxItem({ label, checked, onChange }) {
   )
 }
 
+// ── Intro Splash (step -1) ──
+function IntroSplash({ userName, onStart }) {
+  const features = [
+    { icon: <Utensils size={16} />, title: 'Culturally tailored meals', desc: 'Ghanaian dishes matched to your region and taste' },
+    { icon: <HeartPulse size={16} />, title: 'Health-aware nutrition', desc: 'Respects your conditions, allergies & dietary needs' },
+    { icon: <Wallet size={16} />, title: 'Budget-conscious', desc: 'Meal plans that fit your weekly food spend' },
+  ]
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.4 }}
+    >
+      {/* Logo */}
+      <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem' }}>
+          <div style={{ width: 40, height: 40, background: '#2D6A4F', borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 16px rgba(45,106,79,0.35)' }}>
+            <Leaf size={20} color="white" />
+          </div>
+          <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.4rem', fontWeight: 700, color: 'var(--text)' }}>
+            Nourish<span style={{ color: '#F4845F' }}>AI</span>
+          </span>
+        </div>
+
+        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.8rem', fontWeight: 700, color: 'var(--text)', lineHeight: 1.2, marginBottom: '0.625rem' }}>
+          Your personal Ghanaian<br />meal plan, built for you
+        </h1>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: 1.6, maxWidth: 320, margin: '0 auto' }}>
+          We'll use your body data, health needs, and budget to generate a 7-day plan of authentic Ghanaian meals you'll actually enjoy.
+        </p>
+      </div>
+
+      {/* Illustrated mock plan preview */}
+      <div style={{ position: 'relative', marginBottom: '1.75rem' }}>
+        <div style={{
+          background: 'linear-gradient(135deg, #f0fdf4, #fef9f0)',
+          border: '1px solid #d1fae5', borderRadius: 20, padding: '1.25rem',
+          display: 'flex', flexDirection: 'column', gap: '0.625rem',
+          filter: 'blur(1.5px)', opacity: 0.7,
+          pointerEvents: 'none', userSelect: 'none',
+        }}>
+          {['🍚 Waakye with boiled egg & shito', '🍲 Fufu with groundnut soup', '🥘 Jollof rice & grilled tilapia'].map((meal, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.625rem 0.75rem', background: 'white', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+              <span style={{ fontSize: '1.1rem' }}>{meal.split(' ')[0]}</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#2D2D28' }}>{meal.slice(2)}</div>
+                <div style={{ fontSize: '0.72rem', color: '#88887E', marginTop: 2 }}>~{[450, 680, 580][i]} kcal · {['breakfast', 'lunch', 'dinner'][i]}</div>
+              </div>
+              <div style={{ width: 28, height: 28, borderRadius: 8, background: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 700, color: '#2D6A4F' }}>{['Mon', 'Mon', 'Mon'][i]}</div>
+            </div>
+          ))}
+        </div>
+        {/* Overlay label */}
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: 'rgba(45,106,79,0.92)', borderRadius: 14, padding: '0.625rem 1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem', backdropFilter: 'blur(4px)' }}>
+            <Zap size={14} color="#c8f135" fill="#c8f135" />
+            <span style={{ color: 'white', fontSize: '0.85rem', fontWeight: 600 }}>Your plan generates in seconds</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Feature pills */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem', marginBottom: '1.75rem' }}>
+        {features.map(({ icon, title, desc }, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, x: -12 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.15 + i * 0.1 }}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '0.875rem',
+              padding: '0.75rem 1rem', borderRadius: 14,
+              background: 'var(--surface)', border: '1px solid var(--border)',
+              boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+            }}
+          >
+            <div style={{ width: 34, height: 34, borderRadius: 10, background: '#f0fdf4', border: '1px solid #d1fae5', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2D6A4F', flexShrink: 0 }}>
+              {icon}
+            </div>
+            <div>
+              <div style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--text)' }}>{title}</div>
+              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: 2 }}>{desc}</div>
+            </div>
+            <Check size={15} color="#2D6A4F" style={{ marginLeft: 'auto', flexShrink: 0 }} />
+          </motion.div>
+        ))}
+      </div>
+
+      <button onClick={onStart}
+        style={{
+          width: '100%', padding: '0.875rem 1rem',
+          background: 'linear-gradient(135deg, #2D6A4F, #1B4332)',
+          color: 'white', border: 'none', borderRadius: 14,
+          fontWeight: 700, fontSize: '1rem', cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+          boxShadow: '0 4px 20px rgba(45,106,79,0.4)',
+          fontFamily: 'var(--font-display)',
+          transition: 'transform 0.15s, box-shadow 0.15s',
+        }}
+        onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 6px 24px rgba(45,106,79,0.5)' }}
+        onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 4px 20px rgba(45,106,79,0.4)' }}
+      >
+        Get started — takes 2 minutes <ChevronRight size={18} />
+      </button>
+      <p style={{ textAlign: 'center', fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.75rem' }}>
+        Free to use · No credit card required
+      </p>
+    </motion.div>
+  )
+}
+
 export default function OnboardingPage() {
   const navigate = useNavigate()
   const { setOnboardingComplete, user } = useAuthStore()
-  const [step, setStep] = useState(0)
+  // step -1 = intro, 0/1/2 = data collection
+  const [step, setStep] = useState(-1)
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState({})
 
-  const [step1, setStep1] = useState({ date_of_birth: '', height: '', weight: '' })
-  const [step2, setStep2] = useState({ dietary_preference: 'none', allergies: [], other_allergy: '', health_conditions: [], other_health_condition: '' })
+  const [step1, setStep1] = useState({ date_of_birth: '', height: '', weight: '', sex: '', activity_level: 'lightly_active' })
+  const [step2, setStep2] = useState({ dietary_preference: 'none', allergies: [], other_allergy: '' })
   const [step3, setStep3] = useState({ region: '', fitness_goal: 'maintain', budget: '' })
 
   // Live BMI calculation
@@ -136,6 +266,7 @@ export default function OnboardingPage() {
       }
       if (!step1.height) errs.height = 'Required'
       if (!step1.weight) errs.weight = 'Required'
+      if (!step1.sex) errs.sex = 'Please select one'
     }
     if (step === 2) {
       if (!step3.region) errs.region = 'Please select your region'
@@ -167,6 +298,17 @@ export default function OnboardingPage() {
     }
   }
 
+  // ── Render intro splash outside the card layout ──
+  if (step === -1) {
+    return (
+      <div style={{ minHeight: '100vh', background: 'var(--deep)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem 1rem' }}>
+        <div style={{ width: '100%', maxWidth: 480 }}>
+          <IntroSplash userName={user?.first_name} onStart={() => setStep(0)} />
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div style={{ minHeight: '100vh', background: 'var(--deep)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem 1rem' }}>
       <div style={{ width: '100%', maxWidth: 500 }}>
@@ -181,7 +323,7 @@ export default function OnboardingPage() {
             </span>
           </div>
           <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.6rem', fontWeight: 700, color: 'var(--text)', marginBottom: '0.25rem' }}>
-            Let's set up your profile, {user?.first_name} 
+            Let's set up your profile, {user?.first_name}
           </h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Step {step + 1} of 3 — {STEPS[step]}</p>
         </div>
@@ -202,7 +344,7 @@ export default function OnboardingPage() {
             <div>
               <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.15rem', fontWeight: 700, marginBottom: '0.1rem', color: 'var(--text)' }}>{STEPS[step]}</h2>
               <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                {['Enter your body measurements for accurate nutrition targets', 'Tell us about your dietary preferences and health', 'Set your goals and weekly food budget'][step]}
+                {['Enter your body measurements for accurate nutrition targets', 'Tell us about your dietary preferences and allergies', 'Set your goals and weekly food budget'][step]}
               </p>
             </div>
           </div>
@@ -233,6 +375,35 @@ export default function OnboardingPage() {
                         </div>
                       ))}
                     </div>
+
+                    {/* Sex */}
+                    <div>
+                      <label className="label" style={{ marginBottom: '0.5rem' }}>Biological Sex <span style={{ color: '#ef4444' }}>*</span></label>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.4rem' }}>
+                        {SEX_OPTIONS.map(([value, label]) => (
+                          <ToggleButton key={value} active={step1.sex === value} onClick={() => { setStep1((s) => ({ ...s, sex: value })); setErrors((e) => ({ ...e, sex: '' })) }}>
+                            {label}
+                          </ToggleButton>
+                        ))}
+                      </div>
+                      {errors.sex && <p className="error-text">{errors.sex}</p>}
+                    </div>
+
+                    {/* Activity Level */}
+                    <div>
+                      <label className="label" style={{ marginBottom: '0.5rem' }}>Activity Level</label>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+                        {ACTIVITY_OPTIONS.map(([value, label, description]) => (
+                          <ActivityToggle
+                            key={value}
+                            active={step1.activity_level === value}
+                            onClick={() => setStep1((s) => ({ ...s, activity_level: value }))}
+                            label={label}
+                            description={description}
+                          />
+                        ))}
+                      </div>
+                    </div>
                   </div>
 
                   {/* Live BMI preview */}
@@ -259,7 +430,7 @@ export default function OnboardingPage() {
                 </div>
               )}
 
-              {/* ── Step 2: Diet & Health ── */}
+              {/* ── Step 2: Diet & Allergies only ── */}
               {step === 1 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                   <div>
@@ -286,24 +457,13 @@ export default function OnboardingPage() {
                       onChange={(e) => setStep2((s) => ({ ...s, other_allergy: e.target.value }))} />
                   </div>
 
-                  <div>
-                    <label className="label" style={{ marginBottom: '0.5rem' }}>
-                      Health Conditions <span style={{ color: 'var(--text-muted)', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span>
-                    </label>
-                    {HEALTH_GROUPS.map((group) => (
-                      <div key={group.label} style={{ marginBottom: '1rem' }}>
-                        <p style={{ fontSize: '0.68rem', fontWeight: 700, color: '#7c3aed', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.4rem' }}>{group.label}</p>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.35rem' }}>
-                          {group.conditions.map(([value, label]) => (
-                            <CheckboxItem key={value} label={label} checked={step2.health_conditions.includes(value)} onChange={() => toggleArray(setStep2, 'health_conditions', value)} />
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                    <textarea className="input" rows={2} style={{ resize: 'none', fontSize: '0.875rem' }}
-                      placeholder="Other condition not listed..."
-                      value={step2.other_health_condition}
-                      onChange={(e) => setStep2((s) => ({ ...s, other_health_condition: e.target.value }))} />
+                  {/* Soft prompt to add health conditions later */}
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.625rem', padding: '0.75rem 0.875rem', background: 'rgba(99,102,241,0.06)', borderRadius: 12, border: '1px solid rgba(99,102,241,0.15)' }}>
+                    <HeartPulse size={16} color="#6366f1" style={{ flexShrink: 0, marginTop: 2 }} />
+                    <p style={{ fontSize: '0.8rem', color: '#5a5aad', lineHeight: 1.5, margin: 0 }}>
+                      Have a health condition like diabetes or hypertension?{' '}
+                      <strong>You can add it after setup</strong> in your Profile — your meal plan will update automatically.
+                    </p>
                   </div>
                 </div>
               )}
@@ -348,19 +508,17 @@ export default function OnboardingPage() {
 
         {/* Navigation */}
         <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.25rem' }}>
-          {step > 0 && (
-            <button onClick={() => setStep(step - 1)} disabled={loading} className="btn btn-ghost"
-              style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-              <ChevronLeft size={16} /> Back
-            </button>
-          )}
+          <button onClick={() => setStep(step > 0 ? step - 1 : -1)} disabled={loading} className="btn btn-ghost"
+            style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+            <ChevronLeft size={16} /> Back
+          </button>
           <button onClick={handleNext} disabled={loading} className="btn btn-primary btn-lg"
             style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
             {loading
               ? <span style={{ width: 20, height: 20, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin 1s linear infinite', display: 'inline-block' }} />
               : step === 2
-              ? <><Check size={18} /> Complete Setup</>
-              : <>Continue <ChevronRight size={18} /></>
+                ? <><Check size={18} /> Complete Setup</>
+                : <>Continue <ChevronRight size={18} /></>
             }
           </button>
         </div>

@@ -335,6 +335,8 @@ Generate meals that are primarily Ghanaian and West African — dishes like waak
 Generate a detailed 7-day meal plan for a person with the following profile:
 - Name: {profile.user.first_name}
 - Age: {profile.age if profile.age else 'Not specified'}
+- Sex: {profile.get_sex_display() if profile.sex else 'Not specified'}
+- Activity Level: {profile.get_activity_level_display() if profile.activity_level else 'Not specified'}
 - Region: {profile.get_region_display() if profile.region else 'Not specified'}
 - Height: {profile.height}cm
 - Weight: {profile.weight}kg
@@ -392,11 +394,14 @@ Follow these strict Ghanaian meal timing rules:
 """
 
     if profile.fitness_goal == 'lose_weight':
-        prompt += "\nWEIGHT LOSS GUIDELINES: Keep each meal under 500 calories. High protein, high fibre, low fat. Prefer grilled, steamed, or boiled. Daily total close to 1800 kcal.\n"
+        per_meal = round(profile.daily_calorie_target / 3) if profile.daily_calorie_target else 600
+        prompt += f"\nWEIGHT LOSS GUIDELINES: Keep each meal around {per_meal} calories. High protein, high fibre, low fat. Prefer grilled, steamed, or boiled. Daily total close to {profile.daily_calorie_target} kcal.\n"
     elif profile.fitness_goal == 'build_muscle':
-        prompt += "\nMUSCLE BUILDING GUIDELINES: Calorie-dense meals, high protein at every meal, complex carbohydrates. Daily total close to 3000 kcal.\n"
+        per_meal = round(profile.daily_calorie_target / 3) if profile.daily_calorie_target else 1000
+        prompt += f"\nMUSCLE BUILDING GUIDELINES: Calorie-dense meals, high protein at every meal, complex carbohydrates. Daily total close to {profile.daily_calorie_target} kcal.\n"
     elif profile.fitness_goal == 'maintain':
-        prompt += "\nMAINTENANCE GUIDELINES: Balanced macronutrients, moderate portions. Daily total close to 2200 kcal.\n"
+        per_meal = round(profile.daily_calorie_target / 3) if profile.daily_calorie_target else 730
+        prompt += f"\nMAINTENANCE GUIDELINES: Balanced macronutrients, moderate portions. Daily total close to {profile.daily_calorie_target} kcal.\n"
 
     if liked_meals:
         prompt += f"\nThe user highly rated these meals — include similar dishes: {', '.join(liked_meals)}."
@@ -514,6 +519,8 @@ You are a professional nutritionist specializing in Ghanaian cuisine and West Af
 
 Generate ONE new {meal_type} meal for {day} for this person:
 - Age: {profile.age if profile.age else 'Not specified'}
+- Sex: {profile.get_sex_display() if profile.sex else 'Not specified'}
+- Activity Level: {profile.get_activity_level_display() if profile.activity_level else 'Not specified'}
 - Region: {profile.get_region_display() if profile.region else 'Not specified'}
 - Dietary Preference: {profile.dietary_preference}
 - Allergies (NEVER include these): {allergy_summary}
@@ -543,9 +550,11 @@ SWAP RULES:
 """
 
     if profile.fitness_goal == 'lose_weight':
-        prompt += "Keep this meal under 500 calories. High protein, high fibre, low fat. Prefer grilled, steamed, or boiled.\n"
+        per_meal = round(profile.daily_calorie_target / 3) if profile.daily_calorie_target else 600
+        prompt += f"Keep this meal around {per_meal} calories. High protein, high fibre, low fat. Prefer grilled, steamed, or boiled.\n"
     elif profile.fitness_goal == 'build_muscle':
-        prompt += "Make this meal calorie-dense and high in protein with complex carbohydrates.\n"
+        per_meal = round(profile.daily_calorie_target / 3) if profile.daily_calorie_target else 1000
+        prompt += f"Make this meal calorie-dense (~{per_meal} kcal) and high in protein with complex carbohydrates.\n"
 
     prompt += f"""
 Respond ONLY with a valid JSON object, no extra text:

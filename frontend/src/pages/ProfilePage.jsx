@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Save, Trash2 } from 'lucide-react'
+import { Save, Trash2, HeartPulse } from 'lucide-react'
 import { profileAPI } from '../api/client'
 import useAuthStore from '../store/authStore'
 import ConfirmModal from '../components/ui/ConfirmModal'
@@ -25,6 +25,36 @@ const DIET_OPTIONS = [
 
 const FITNESS_OPTIONS = [
   ['lose_weight', '📉 Lose Weight'], ['maintain', '⚖️ Maintain Weight'], ['build_muscle', '💪 Build Muscle'],
+]
+
+const SEX_OPTIONS = [
+  ['male', '♂ Male'], ['female', '♀ Female'], ['prefer_not_to_say', '— Prefer not to say'],
+]
+
+const ACTIVITY_OPTIONS = [
+  ['sedentary', '🪑 Sedentary'], ['lightly_active', '🚶 Lightly Active'],
+  ['moderately_active', '🏃 Moderately Active'], ['very_active', '⚡ Very Active'],
+]
+
+const HEALTH_GROUPS = [
+  { label: 'Metabolic & Endocrine', conditions: [
+    ['type1_diabetes', 'Type 1 Diabetes'], ['type2_diabetes', 'Type 2 Diabetes'],
+    ['hypertension', 'Hypertension'], ['high_cholesterol', 'High Cholesterol'],
+    ['hypothyroidism', 'Hypothyroidism'], ['hyperthyroidism', 'Hyperthyroidism'],
+    ['fatty_liver', 'Fatty Liver'], ['gout', 'Gout'],
+  ]},
+  { label: 'Blood & Immune', conditions: [
+    ['anaemia', 'Anaemia'], ['sickle_cell', 'Sickle Cell'], ['hiv_aids', 'HIV/AIDS'],
+  ]},
+  { label: 'Digestive', conditions: [
+    ['celiac_disease', 'Celiac Disease'], ['lactose_intolerance', 'Lactose Intolerance'],
+    ['gastritis', 'Gastritis / Acid Reflux'], ['ibs', 'IBS'], ['kidney_disease', 'Kidney Disease'],
+  ]},
+  { label: 'Hormonal, Respiratory & Other', conditions: [
+    ['pcos', 'PCOS'], ['asthma', 'Asthma'], ['heart_disease', 'Heart Disease'],
+    ['stroke_history', 'Stroke History'], ['cancer', 'Cancer'], ['osteoporosis', 'Osteoporosis'],
+    ['arthritis', 'Arthritis'],
+  ]},
 ]
 
 // ── Defined outside to avoid remount ──
@@ -80,6 +110,7 @@ export default function ProfilePage() {
       setProfile(res.data)
       setForm({
         date_of_birth: res.data.date_of_birth || '', height: res.data.height || '', weight: res.data.weight || '',
+        sex: res.data.sex || '', activity_level: res.data.activity_level || 'lightly_active',
         region: res.data.region || '', dietary_preference: res.data.dietary_preference || 'none',
         allergies: res.data.allergies || [], other_allergy: res.data.other_allergy || '',
         health_conditions: res.data.health_conditions || [],
@@ -176,7 +207,7 @@ export default function ProfilePage() {
           {/* Body */}
           <section>
             <h3 style={{ fontWeight: 600, color: 'var(--text-dim)', fontSize: '0.875rem', marginBottom: '1rem', paddingBottom: '0.5rem', borderBottom: '1px solid var(--border)' }}>Body Measurements</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
               <div>
                 <label className="label">Date of Birth</label>
                 <input type="date" className="input"
@@ -191,6 +222,24 @@ export default function ProfilePage() {
                     <input type="number" className="input" placeholder={p} value={form[f] || ''} onChange={(e) => setForm((s) => ({ ...s, [f]: e.target.value }))} />
                   </div>
                 ))}
+              </div>
+              {/* Sex */}
+              <div>
+                <label className="label" style={{ marginBottom: '0.5rem' }}>Biological Sex</label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.4rem' }}>
+                  {SEX_OPTIONS.map(([v, l]) => (
+                    <ToggleBtn key={v} active={form.sex === v} onClick={() => setForm((s) => ({ ...s, sex: v }))}>{l}</ToggleBtn>
+                  ))}
+                </div>
+              </div>
+              {/* Activity Level */}
+              <div>
+                <label className="label" style={{ marginBottom: '0.5rem' }}>Activity Level</label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.4rem' }}>
+                  {ACTIVITY_OPTIONS.map(([v, l]) => (
+                    <ToggleBtn key={v} active={form.activity_level === v} onClick={() => setForm((s) => ({ ...s, activity_level: v }))}>{l}</ToggleBtn>
+                  ))}
+                </div>
               </div>
             </div>
           </section>
@@ -245,6 +294,33 @@ export default function ProfilePage() {
               <label className="label">Weekly Budget (₵)</label>
               <input type="number" className="input" placeholder="50" value={form.budget || ''} onChange={(e) => setForm((s) => ({ ...s, budget: e.target.value }))} />
             </div>
+          </section>
+
+          {/* Health Conditions */}
+          <section>
+            <h3 style={{ fontWeight: 600, color: 'var(--text-dim)', fontSize: '0.875rem', marginBottom: '0.625rem', paddingBottom: '0.5rem', borderBottom: '1px solid var(--border)' }}>Health Conditions</h3>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', padding: '0.625rem 0.75rem', background: 'rgba(99,102,241,0.06)', borderRadius: 10, border: '1px solid rgba(99,102,241,0.15)', marginBottom: '1rem' }}>
+              <HeartPulse size={15} color="#6366f1" style={{ flexShrink: 0, marginTop: 2 }} />
+              <p style={{ fontSize: '0.78rem', color: '#5a5aad', lineHeight: 1.5, margin: 0 }}>
+                Selecting your conditions helps us tailor meals — e.g. low-GI foods for diabetes, low-sodium for hypertension.
+              </p>
+            </div>
+            {HEALTH_GROUPS.map((group) => (
+              <div key={group.label} style={{ marginBottom: '1rem' }}>
+                <p style={{ fontSize: '0.68rem', fontWeight: 700, color: '#7c3aed', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.4rem' }}>{group.label}</p>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.35rem' }}>
+                  {group.conditions.map(([v, l]) => (
+                    <ToggleBtn key={v} active={(form.health_conditions || []).includes(v)} onClick={() => toggleArray('health_conditions', v)}>
+                      {l}
+                    </ToggleBtn>
+                  ))}
+                </div>
+              </div>
+            ))}
+            <textarea className="input" rows={2} style={{ resize: 'none', fontSize: '0.875rem' }}
+              placeholder="Other condition not listed (e.g. Scoliosis, Lupus...)"
+              value={form.other_health_condition || ''}
+              onChange={(e) => setForm((s) => ({ ...s, other_health_condition: e.target.value }))} />
           </section>
 
           <button type="submit" disabled={saving} className="btn btn-primary btn-lg" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>

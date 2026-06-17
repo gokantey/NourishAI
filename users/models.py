@@ -28,6 +28,19 @@ class UserProfile(models.Model):
         ('premium', 'Premium'),
     ]
 
+    SEX_CHOICES = [
+        ('male', 'Male'),
+        ('female', 'Female'),
+        ('prefer_not_to_say', 'Prefer not to say'),
+    ]
+
+    ACTIVITY_CHOICES = [
+        ('sedentary', 'Sedentary'),
+        ('lightly_active', 'Lightly Active'),
+        ('moderately_active', 'Moderately Active'),
+        ('very_active', 'Very Active'),
+    ]
+
     ALLERGY_CHOICES = [
         ('nuts', 'Nuts'),
         ('gluten', 'Gluten'),
@@ -85,6 +98,8 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     # date_of_birth replaces age — age is now always computed from DOB
     date_of_birth = models.DateField(null=True, blank=True, help_text="User's date of birth (DD/MM/YYYY)")
+    sex = models.CharField(max_length=20, choices=SEX_CHOICES, null=True, blank=True)
+    activity_level = models.CharField(max_length=30, choices=ACTIVITY_CHOICES, default='lightly_active', null=True, blank=True)
     region = models.CharField(max_length=50, choices=REGION_CHOICES, null=True, blank=True)
     dietary_preference = models.CharField(max_length=50, choices=DIETARY_CHOICES, default='none')
     allergies = models.JSONField(default=list, blank=True)
@@ -147,13 +162,40 @@ class UserProfile(models.Model):
                 self.bmi_category = 'Obese'
 
     def calculate_daily_targets(self):
-        if self.fitness_goal:
+        """Calculate TDEE using Mifflin-St Jeor BMR if enough data is available.
+        Falls back to flat values for existing users without sex/age."""
+        ACTIVITY_MULTIPLIERS = {
+            'sedentary': 1.2,
+            'lightly_active': 1.375,
+            'moderately_active': 1.55,
+            'very_active': 1.725,
+        }
+
+        if self.height and self.weight and self.sex in ('male', 'female') and self.age:
+            # Mifflin-St Jeor BMR
+            if self.sex == 'male':
+                bmr = (10 * self.weight) + (6.25 * self.height) - (5 * self.age) + 5
+            else:
+                bmr = (10 * self.weight) + (6.25 * self.height) - (5 * self.age) - 161
+
+            multiplier = ACTIVITY_MULTIPLIERS.get(self.activity_level or 'lightly_active', 1.375)
+            tdee = round(bmr * multiplier)
+
+            if self.fitness_goal == 'lose_weight':
+                self.daily_calorie_target = max(1200, tdee - 500)
+            elif self.fitness_goal == 'build_muscle':
+                self.daily_calorie_target = tdee + 300
+            else:
+                self.daily_calorie_target = tdee
+        else:
+            # Fallback for existing users without sex/age
             if self.fitness_goal == 'lose_weight':
                 self.daily_calorie_target = 1800
             elif self.fitness_goal == 'build_muscle':
                 self.daily_calorie_target = 3000
             else:
                 self.daily_calorie_target = 2200
+
         if self.weight:
             self.daily_water_intake = round(self.weight * 0.033, 1)
 

@@ -7,13 +7,13 @@ import useAuthStore from '../store/authStore'
 import toast from 'react-hot-toast'
 
 const MESSAGES = [
-  { text: 'Consulting the fufu elders',    sub: 'Deep in culinary thought' },
+  { text: 'Consulting the fufu elders', sub: 'Deep in culinary thought' },
   { text: 'Weighing your macros carefully', sub: 'Precision nutrition in progress' },
   { text: 'Sourcing from Ghanaian markets', sub: 'Farm to your plan' },
-  { text: 'Crafting your waakye week',      sub: 'Culture meets nutrition' },
-  { text: 'Balancing kelewele and kale',    sub: 'The perfect union' },
-  { text: 'Asking Auntie Ama for secrets',  sub: 'Family recipes unlocked' },
-  { text: 'Your plan is taking shape',      sub: 'Almost ready for you' },
+  { text: 'Crafting your waakye week', sub: 'Culture meets nutrition' },
+  { text: 'Balancing kelewele and kale', sub: 'The perfect union' },
+  { text: 'Asking Auntie Ama for secrets', sub: 'Family recipes unlocked' },
+  { text: 'Your plan is taking shape', sub: 'Almost ready for you' },
 ]
 
 const FOOD_WORDS = ['Waakye', 'Jollof', 'Fufu', 'Banku', 'Kelewele', 'Kontomire', 'Abenkwan', 'Kenkey']
@@ -47,9 +47,10 @@ function GeneratingAnimation({ msgIdx }) {
         <motion.div key={word}
           animate={{ y: [0, -12, 0], opacity: [0.04, 0.08, 0.04] }}
           transition={{ duration: 3 + i * 0.4, repeat: Infinity, delay: i * 0.5 }}
-          style={{ position: 'absolute', fontFamily: 'var(--font-display)', fontSize: `${1.2 + (i % 3) * 0.4}rem`, fontWeight: 700, color: 'var(--lime)', pointerEvents: 'none', userSelect: 'none',
-            top: `${[8,18,32,48,60,72,80,90][i]}%`,
-            left: `${[5,65,20,80,8,58,30,75][i]}%`,
+          style={{
+            position: 'absolute', fontFamily: 'var(--font-display)', fontSize: `${1.2 + (i % 3) * 0.4}rem`, fontWeight: 700, color: 'var(--lime)', pointerEvents: 'none', userSelect: 'none',
+            top: `${[8, 18, 32, 48, 60, 72, 80, 90][i]}%`,
+            left: `${[5, 65, 20, 80, 8, 58, 30, 75][i]}%`,
           }}>
           {word}
         </motion.div>
@@ -114,7 +115,7 @@ function GeneratingAnimation({ msgIdx }) {
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: 5, height: 36, marginTop: '1.5rem' }}>
         {Array.from({ length: 9 }).map((_, i) => (
           <motion.div key={i}
-            animate={{ height: [8, [24,32,18,36,22,30,16,28,20][i], 8] }}
+            animate={{ height: [8, [24, 32, 18, 36, 22, 30, 16, 28, 20][i], 8] }}
             transition={{ duration: 0.6 + i * 0.08, repeat: Infinity, ease: 'easeInOut', delay: i * 0.06 }}
             style={{ width: 4, borderRadius: 4, background: i % 3 === 0 ? 'var(--amber)' : 'var(--lime)', opacity: 0.7 }}
           />
@@ -138,7 +139,7 @@ export default function GeneratePlanPage() {
   const isPremium = subscriptionTier === 'premium'
 
   useEffect(() => {
-    profileAPI.get().then(r => setProfile(r.data)).catch(() => {}).finally(() => setLoading(false))
+    profileAPI.get().then(r => setProfile(r.data)).catch(() => { }).finally(() => setLoading(false))
   }, [])
 
   useEffect(() => {
@@ -194,12 +195,12 @@ export default function GeneratePlanPage() {
             Your profile at a glance
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.625rem' }}>
-            <ProfileStat icon={Flame}     label="Calories"  value={profile.daily_calorie_target ? `${profile.daily_calorie_target} kcal` : null} color="#FF6B35" />
-            <ProfileStat icon={TrendingUp} label="BMI"       value={profile.bmi ? `${profile.bmi} (${profile.bmi_category})` : null}              color="var(--lime)" />
-            <ProfileStat icon={Utensils}   label="Diet"      value={profile.dietary_preference?.replace('_',' ') || 'None'}                        color="#A78BFA" />
-            <ProfileStat icon={Wallet}     label="Budget"    value={profile.budget ? `₵${profile.budget}` : null}                                  color="var(--amber)" />
-            <ProfileStat icon={Droplets}   label="Water"     value={profile.daily_water_intake ? `${profile.daily_water_intake}L/day` : null}       color="#60A5FA" />
-            <ProfileStat icon={Target}     label="Goal"      value={profile.fitness_goal?.replace(/_/g,' ') || null}                               color="var(--lime-dim)" />
+            <ProfileStat icon={Flame} label="Calories" value={profile.daily_calorie_target ? `${profile.daily_calorie_target} kcal` : null} color="#FF6B35" />
+            <ProfileStat icon={TrendingUp} label="BMI" value={profile.bmi ? `${profile.bmi} (${profile.bmi_category})` : null} color="var(--lime)" />
+            <ProfileStat icon={Utensils} label="Diet" value={profile.dietary_preference?.replace('_', ' ') || 'None'} color="#A78BFA" />
+            <ProfileStat icon={Wallet} label="Budget" value={profile.budget ? `₵${profile.budget}` : null} color="var(--amber)" />
+            <ProfileStat icon={Droplets} label="Water" value={profile.daily_water_intake ? `${profile.daily_water_intake}L/day` : null} color="#60A5FA" />
+            <ProfileStat icon={Target} label="Goal" value={profile.fitness_goal?.replace(/_/g, ' ') || null} color="var(--lime-dim)" />
           </div>
         </motion.div>
       )}
@@ -272,14 +273,18 @@ export default function GeneratePlanPage() {
                 {isPremium
                   ? 'Your AI-powered full plan, shaped by your taste ratings and health profile.'
                   : isPartial ? 'Generations 8–10 on the free tier. Upgrade for full plans anytime.'
-                  : 'Your first personalised meal plan, built around your body and Ghanaian food culture.'}
+                    : 'Your first personalised meal plan, built around your body and Ghanaian food culture.'}
               </p>
 
               <motion.button onClick={handleGenerate} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
-                className="btn btn-primary btn-lg" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', boxShadow: '0 6px 24px var(--lime-glow)' }}>
+                className="btn btn-primary btn-lg" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', boxShadow: '0 6px 24px var(--lime-glow)', marginBottom: '1.5rem' }}>
                 <Sparkles size={16} />
                 {isPartial ? 'Generate 3-Day Preview' : 'Generate Full Plan'}
               </motion.button>
+
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', lineHeight: 1.5, maxWidth: 460, margin: '0 auto', opacity: 0.75, fontFamily: 'var(--font-body)' }}>
+                Your meal plan is a personalised starting point based on your body measurements, health conditions, and Ghanaian food preferences. Calorie targets are general estimates. For medical-grade precision, consult a licensed dietitian.
+              </p>
             </motion.div>
           )}
 

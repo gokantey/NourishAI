@@ -20,7 +20,7 @@ A full-stack AI-powered meal planning web application built for Ghanaian users. 
 | **Payments** | Paystack (GHS 20/month) |
 | **Email** | Gmail SMTP |
 | **PDF Export** | ReportLab |
-| **Deployment** | Railway |
+| **Deployment** | Render / Railway / Heroku / VPS |
 
 ---
 
@@ -34,6 +34,9 @@ A full-stack AI-powered meal planning web application built for Ghanaian users. 
 - Meal ratings (1–5 stars)
 - Snack suggestions per plan
 - Goal estimate (weeks/months to target weight)
+- **Precision Calorie Calculator**: Uses the Mifflin-St Jeor formula with activity multipliers and fitness goals to calculate personalized TDEE targets (backed by user sex, age, height, weight, activity level, and goals)
+- **Simplified Onboarding**: 2-minute setup with an overview splash screen, deferring detailed health conditions to the Profile Page to reduce signup fatigue
+- **Medical Disclaimer**: Dietitian warning notice integrated on the meal generation screen
 - BMI calculator + daily calorie and water targets
 - In-app notification bell (polls every 30s)
 - Shopping list
@@ -131,10 +134,13 @@ NourishAI/                          ← project root (manage.py lives here)
 
 ### Backend
 
+> [!IMPORTANT]
+> Always activate the virtual environment (`venv`) before installing dependencies or running backend commands to avoid `ModuleNotFoundError` exceptions (e.g. for `whitenoise`).
+
 ```bash
 # From the project root (where manage.py is)
 python -m venv venv
-source venv/bin/activate        # Windows: venv\Scripts\activate
+source venv/bin/activate        # Windows: venv\Scripts\Activate.ps1 (PowerShell) or venv\Scripts\activate.bat (CMD)
 pip install -r requirements.txt
 ```
 
@@ -175,11 +181,12 @@ Vite proxies all `/api/*` requests to Django automatically.
 
 ## Running Tests
 
+Ensure your virtual environment is active first:
 ```bash
-python manage.py test --settings=nourishai.settings_test --verbosity=2
+venv\Scripts\python manage.py test --settings=nourishai.settings_test --verbosity=2
 ```
 
-Tests cover: generation window logic (7 full / 3 partial / blocked at 10 / 30-day reset), save limits, BMI calculation, calorie targets, and API endpoint auth/ownership checks.
+Tests cover: generation window logic (7 full / 3 partial / blocked at 10 / 30-day reset), Mifflin-St Jeor TDEE formulas, save limits, BMI calculation, calorie targets, and API endpoint auth/ownership checks.
 
 ---
 
@@ -278,19 +285,19 @@ python manage.py send_checkin_reminders
 # Birthday wishes
 python manage.py send_birthday_wishes
 
-# Activate cron jobs (Linux/Railway only)
+# Activate cron jobs (Linux / compatible environments only)
 python manage.py crontab add
 ```
 
 ---
 
-## Production Checklist (Railway)
+## Production Checklist
 
 - [ ] Update `CORS_ALLOWED_ORIGINS` in `settings.py` with production domain
 - [ ] Update `frontend_url` in `api/views.py` (Paystack callback + password reset links)
 - [ ] `npm run build` in `frontend/` — Django serves `dist/index.html` for all non-API routes
 - [ ] Set `DEBUG=False` and configure `STATIC_ROOT`
-- [ ] Add all env vars to Railway dashboard
+- [ ] Add all required environment variables to your hosting provider's configuration dashboard (e.g., Render, Railway, Heroku, VPS)
 - [ ] Register Paystack webhook URL: `https://yourdomain.com/api/webhook/paystack/`
-- [ ] `python manage.py crontab add` for scheduled commands (Linux only)
+- [ ] `python manage.py crontab add` for scheduled commands (Linux / compatible hosts only)
 - [ ] Regenerate `requirements.txt` on Unix: `pip freeze > requirements.txt`

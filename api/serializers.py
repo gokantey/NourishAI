@@ -33,6 +33,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'daily_calorie_target', 'daily_water_intake', 'subscription_tier',
             'onboarding_complete', 'plan_generations_count',
             'generation_status', 'can_save',
+            'sex', 'activity_level',
         ]
 
     def get_generation_status(self, obj):
@@ -49,7 +50,7 @@ class UserProfileUpdateSerializer(serializers.ModelSerializer):
         fields = [
             'date_of_birth', 'region', 'dietary_preference', 'allergies', 'other_allergy',
             'health_conditions', 'other_health_condition', 'budget', 'fitness_goal',
-            'height', 'weight',
+            'height', 'weight', 'sex', 'activity_level',
         ]
 
     def validate_date_of_birth(self, value):
@@ -67,7 +68,7 @@ class UserProfileUpdateSerializer(serializers.ModelSerializer):
 class OnboardingStep1Serializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
-        fields = ['date_of_birth', 'height', 'weight']
+        fields = ['date_of_birth', 'height', 'weight', 'sex', 'activity_level']
 
     def validate_date_of_birth(self, value):
         if value:
