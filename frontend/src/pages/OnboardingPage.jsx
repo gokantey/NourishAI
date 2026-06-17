@@ -117,7 +117,7 @@ function CheckboxItem({ label, checked, onChange }) {
 }
 
 // ── Intro Splash (step -1) ──
-function IntroSplash({ userName, onStart }) {
+function IntroSplash({ onStart }) {
   const features = [
     { icon: <Utensils size={16} />, title: 'Culturally tailored meals', desc: 'Ghanaian dishes matched to your region and taste' },
     { icon: <HeartPulse size={16} />, title: 'Health-aware nutrition', desc: 'Respects your conditions, allergies & dietary needs' },
@@ -303,7 +303,7 @@ export default function OnboardingPage() {
     return (
       <div style={{ minHeight: '100vh', background: 'var(--deep)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem 1rem' }}>
         <div style={{ width: '100%', maxWidth: 480 }}>
-          <IntroSplash userName={user?.first_name} onStart={() => setStep(0)} />
+          <IntroSplash onStart={() => setStep(0)} />
         </div>
       </div>
     )
